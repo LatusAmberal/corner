@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>一隅·aCorner</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
   <style>
     /* ===== 默认深色 (黑+青绿) ===== */
     * {
@@ -37,6 +39,7 @@
       --input-bg: #1a242a;
       --toggle-bg: #2a3a42;
       --toggle-active: #0f9960;
+      --profile-bg-image: none;
     }
 
     /* 浅色主题 (白天模式) */
@@ -336,7 +339,7 @@
     }
 
     .config-group {
-      display: flex; flex-direction: column; gap: 8px;
+      display: flex; flex-direction: column; gap: 9px;
     }
     .config-group label {
       font-size: 13px; font-weight: 500; color: var(--text-secondary);
@@ -439,6 +442,347 @@
       font-size: 16px;
       color: var(--text-secondary);
     }
+
+    /* 设置视图（替代聊天区） */
+    .settings-view {
+      flex: 1;
+      background: var(--bg-chat-main);
+      padding: 24px 32px;
+      overflow-y: auto;
+      color: var(--text-primary);
+    }
+    .settings-card {
+      background: var(--bg-header);
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      border: 1px solid var(--border-light);
+    }
+    .settings-card h3 {
+      font-size: 18px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .view-toggle {
+      display: none;
+    }
+    .view-active {
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-main .chat-view {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .settings-view {
+      display: none;
+    }
+    .settings-view.active {
+      display: block;
+    }
+    .chat-main.chat-hidden .chat-view {
+      display: none;
+    }
+    .chat-main.chat-hidden .settings-view {
+      display: block;
+    }
+
+    /* 用户头像 - 左下角固定 */
+    .sidebar-footer {
+      margin-top: auto;
+      padding-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .user-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 22px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: 2px solid var(--border-light);
+      overflow: hidden;
+    }
+    .user-avatar:hover {
+      opacity: 0.9;
+      transform: scale(1.02);
+    }
+    .user-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* ========== 个人主页视图 ========== */
+    .profile-view {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-chat-main);
+        position: relative;
+        overflow-y: auto;
+        color: var(--text-primary);
+        display: none;
+    }
+
+    /* 背景图横幅 —— 铺满上方，无圆角，无卡片边框 */
+    .profile-banner {
+        position: relative;
+        width: 100%;
+        min-height: 110px;          /* 足够容纳头像和文字 */
+        background-color: var(--bg-header);
+        background-image: var(--profile-bg-image);
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        border-bottom: 1px solid var(--border-light);
+        flex-shrink: 0;
+    }
+
+    /* 半透明蒙版 —— 保证文字在任何背景图下都能阅读 */
+    .profile-banner::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.5); //黑色模式个人主页背景蒙版透明度
+        pointer-events: none;
+        z-index: 1;
+    }
+    body.light-theme .profile-banner::before {
+        background: rgba(255, 255, 255, 0.75); //白色模式个人主页蒙版透明度
+    }
+
+    /* 内容层置于蒙版之上 */
+    .profile-banner-content {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        padding: 24px 32px;
+        height: 100%;
+        min-height: 110px;
+    }
+
+    /* 大头像：圆形 + 描边 + 阴影，更醒目 */
+    .profile-avatar-large {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        background: var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 40px;
+        color: white;
+        border: 4px solid var(--accent);
+        box-shadow: 0 0 0 3px var(--bg-chat-main), 0 4px 12px rgba(0,0,0,0.3);
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+    .profile-avatar-large img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* 文字信息区域 */
+    .profile-info {
+        flex: 1;
+    }
+    .profile-info h2 {
+        font-size: 28px;
+        margin-bottom: 6px;
+        color: #ffffff;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+        font-weight: 600;
+    }
+    .profile-info p {
+        font-size: 15px;
+        color: rgba(255,255,255,0.9);
+        text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    }
+    body.light-theme .profile-info h2,
+    body.light-theme .profile-info p {
+        color: #1e2b34;
+        text-shadow: 0 1px 4px rgba(255,255,255,0.7);
+    }
+
+    /* 编辑按钮优化 —— 与主题协调 */
+    .profile-banner .btn-secondary {
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255,255,255,0.2);
+        color: white;
+        font-weight: 500;
+        padding: 10px 18px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    .profile-banner .btn-secondary:hover {
+        background: var(--accent);
+        border-color: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+    }
+    body.light-theme .profile-banner .btn-secondary {
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(0,0,0,0.1);
+        color: #1e2b34;
+    }
+    body.light-theme .profile-banner .btn-secondary:hover {
+        background: var(--accent);
+        color: white;
+    }
+
+    /* 左下角小头像也加描边（保持统一） */
+    .user-avatar {
+        border: 2px solid var(--accent) !important;
+        box-shadow: 0 0 0 2px var(--bg-sidebar);
+    }
+    .user-avatar.active {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px var(--accent);
+    }
+
+    /* 下方内容区域（待开发） */
+    .profile-content {
+        flex: 1;
+        background: var(--bg-chat-main);
+        padding: 24px 32px;
+    }
+
+    /* 清理旧的重复样式，确保没有冲突 */
+    .profile-header,
+    .profile-view .profile-header,
+    .profile-view::before {
+        display: none !important;
+    }
+
+    /* 保持视图切换逻辑不变 */
+    .chat-main.profile-hidden .chat-view,
+    .chat-main.profile-hidden .settings-view {
+        display: none;
+    }
+    .chat-main.profile-hidden .profile-view {
+        display: flex;
+    }
+
+    .chat-main.chat-hidden .chat-view,
+    .chat-main.chat-hidden .profile-view {
+      display: none;
+    }
+    .chat-main.chat-hidden .settings-view {
+      display: block;
+    }
+
+    .chat-main.profile-hidden .chat-view,
+    .chat-main.profile-hidden .settings-view {
+      display: none;
+    }
+    .chat-main.profile-hidden .profile-view {
+      display: block;
+    }
+
+    /* 模态框样式 */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-container {
+      background: var(--drawer-bg);
+      border-radius: 16px;
+      width: 500px;
+      max-width: 90%;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--border-light);
+    }
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-header h3 { margin: 0; }
+    .modal-close {
+      background: none; border: none;
+      font-size: 24px; color: var(--text-secondary);
+      cursor: pointer;
+    }
+    .config-group {
+    margin-top: 10px;   /* 调整这个值来控制距离上一个输入框的间距 */
+    }
+    .config-group:first-of-type {
+        margin-top: 0;     /* 第一个配置组不要上边距 */
+    }
+    .modal-body {
+      padding: 20px;
+      flex: 1;
+      overflow: auto;
+    }
+    .crop-container {
+      max-height: 300px;
+      display: flex;
+      justify-content: center;
+    }
+    .crop-container img {
+      max-width: 100%;
+      max-height: 300px;
+      display: block;
+    }
+    .modal-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border-light);
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+    /* 统一交互光标样式 */
+    .chat-title,
+    .sidebar-icon,
+    .menu-btn,
+    .send-btn,
+    .user-avatar,
+    .btn,
+    .close-drawer,
+    .modal-close {
+      user-select: none;
+    }
+
+    /* 可点击元素保留手型指针（如果希望） */
+    .sidebar-icon,
+    .menu-btn,
+    .send-btn,
+    .user-avatar,
+    .btn,
+    .close-drawer,
+    .modal-close {
+      cursor: pointer;
+    }
+
+    /* 如果希望标题栏文字显示默认箭头，单独设置 */
+    .chat-title {
+      cursor: default;
+    }
   </style>
 </head>
 <body>
@@ -450,34 +794,223 @@
     <div class="sidebar-divider"></div>
     <div class="sidebar-icon" title="设置"><i class="fas fa-cog"></i></div>
     <div class="sidebar-icon" title="更多"><i class="fas fa-plus"></i></div>
+
+    <div class="sidebar-footer">
+      <div class="user-avatar" id="userAvatarBtn" title="个人主页">
+        <i class="fas fa-user"></i>
+      </div>
+    </div>
   </aside>
 
   <!-- 聊天主体 -->
-  <main class="chat-main">
-    <header class="chat-header">
-      <div class="header-left"></div>
-      <div class="chat-title" id="chatTitleDisplay">✨ 青绿角色</div>
-      <div class="header-right">
-        <button class="menu-btn" id="configMenuBtn" title="API 设置 · 主题切换"><i class="fas fa-ellipsis-h"></i></button>
+  <main class="chat-main" id="chatMain">
+    <!-- 聊天视图 -->
+    <div class="chat-view" id="chatView">
+      <header class="chat-header">
+        <div class="header-left"></div>
+        <div class="chat-title" id="chatTitleDisplay">✨ 青绿角色</div>
+        <div class="header-right">
+          <button class="menu-btn" id="configMenuBtn" title="API 设置 · 主题切换"><i class="fas fa-ellipsis-h"></i></button>
+        </div>
+      </header>
+      <div class="messages-area" id="messagesArea">
+        <div class="message-row assistant">
+          <div class="message-bubble">
+            你好！我是青绿色调的角色。点击左侧齿轮设置 API。
+            <div class="message-time">刚刚</div>
+          </div>
+        </div>
       </div>
-    </header>
-
-    <div class="messages-area" id="messagesArea">
-      <div class="message-row assistant">
-        <div class="message-bubble">
-          你好！我是青绿色调的角色。点击右上角「···」配置 API 或切换白天/黑夜模式。
-          <div class="message-time">刚刚</div>
+      <div class="input-area">
+        <div class="input-container">
+          <textarea id="messageInput" placeholder="输入消息… (Enter发送)" rows="1"></textarea>
+          <button class="send-btn" id="sendBtn" title="发送"><i class="fas fa-paper-plane"></i></button>
         </div>
       </div>
     </div>
 
-    <div class="input-area">
-      <div class="input-container">
-        <textarea id="messageInput" placeholder="输入消息… (Enter发送)" rows="1"></textarea>
-        <button class="send-btn" id="sendBtn" title="发送"><i class="fas fa-paper-plane"></i></button>
+    <!-- 设置视图（初始隐藏） -->
+    <div class="settings-view" id="settingsView">
+      <h2 style="margin-bottom: 20px; font-weight: 500;"><i class="fas fa-cog" style="margin-right: 12px;"></i>设置</h2>
+
+      <!-- 主题卡片 -->
+      <div class="settings-card">
+        <h3><i class="fas fa-palette"></i> 外观</h3>
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <span class="theme-toggle-label">
+            <i class="fas fa-moon"></i> 深色模式
+          </span>
+          <div class="apple-toggle" id="themeToggleSettings"></div>
+        </div>
+        <div style="margin-top: 8px; font-size: 13px; color: var(--text-secondary);">
+          <span id="themeLabelTextSettings">深色模式</span>
+        </div>
+      </div>
+
+      <!-- API 配置卡片 -->
+      <div class="settings-card">
+        <h3><i class="fas fa-cloud"></i> API 配置</h3>
+
+        <div class="config-group">
+          <label>API 服务商</label>
+          <select id="apiProviderSelect">
+            <option value="deepseek">DeepSeek</option>
+            <option value="openai">OpenAI</option>
+            <option value="openrouter">OpenRouter</option>
+            <option value="groq">Groq</option>
+            <option value="custom">自定义</option>
+          </select>
+        </div>
+
+        <div class="config-group">
+          <label>API 地址</label>
+          <input type="text" id="apiUrlInput" placeholder="https://..." value="https://api.deepseek.com/v1/chat/completions">
+        </div>
+
+        <div class="config-group">
+          <label>模型</label>
+          <select id="modelSelect">
+            <optgroup label="DeepSeek">
+              <option value="deepseek-chat">DeepSeek Chat</option>
+              <option value="deepseek-reasoner">DeepSeek Reasoner</option>
+            </optgroup>
+            <optgroup label="OpenAI">
+              <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+              <option value="gpt-4o">GPT-4o</option>
+            </optgroup>
+            <optgroup label="OpenRouter (免费/收费)">
+              <option value="google/gemini-2.0-flash-exp:free">Gemini 2.0 Flash (免费)</option>
+              <option value="meta-llama/llama-3.2-3b-instruct:free">Llama 3.2 3B (免费)</option>
+              <option value="openai/gpt-3.5-turbo">GPT-3.5 (OpenRouter)</option>
+            </optgroup>
+            <optgroup label="Groq">
+              <option value="llama3-8b-8192">Llama 3 8B</option>
+              <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
+            </optgroup>
+            <optgroup label="其他">
+              <option value="custom">自定义</option>
+            </optgroup>
+          </select>
+          <input type="text" id="modelInput" placeholder="自定义模型ID" value="deepseek-chat" style="margin-top: 8px;">
+        </div>
+
+        <div class="config-group">
+          <label>API Key</label>
+          <input type="password" id="apiKeyInput" placeholder="sk-..." autocomplete="off">
+          <span class="status-badge" id="apiStatus">未设置</span>
+        </div>
+
+        <div class="config-group">
+          <label>角色名称</label>
+          <input type="text" id="characterNameInput" value="青绿助手">
+        </div>
+
+        <div class="config-group">
+          <label>人设提示词</label>
+          <textarea id="systemPromptInput" rows="3">你是一个冷静又带点青涩的助手，说话简洁但偶尔流露出温柔。</textarea>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 16px;">
+          <button class="btn btn-primary" id="saveConfigBtn"><i class="fas fa-save"></i> 保存配置</button>
+          <button class="btn btn-secondary" id="testConnectionBtn"><i class="fas fa-vial"></i> 测试连接</button>
+        </div>
+
+        <div style="margin-top: 16px; font-size: 12px; color: var(--text-secondary); background: var(--input-bg); padding: 12px; border-radius: 8px; border-left: 3px solid var(--accent);">
+          <i class="fas fa-info-circle"></i> <strong>免费 API 推荐</strong><br>
+          • DeepSeek：注册送额度，地址 <code>https://api.deepseek.com/v1/chat/completions</code><br>
+          • Groq：免费，地址 <code>https://api.groq.com/openai/v1/chat/completions</code><br>
+          • OpenRouter：有免费模型，地址 <code>https://openrouter.ai/api/v1/chat/completions</code>
+        </div>
+      </div>
+    </div>
+     <!-- 个人主页视图 -->
+    <div class="profile-view" id="profileView">
+      <!-- 背景图区域（覆盖上方） -->
+      <div class="profile-banner">
+        <div class="profile-banner-content">
+          <div class="profile-avatar-large" id="profileAvatarLarge">
+            <i class="fas fa-user"></i>
+          </div>
+          <div class="profile-info">
+            <h2 id="profileDisplayName">用户</h2>
+            <p id="profileBioDisplay"><i class="fas fa-quote-left" style="margin-right: 8px;"></i>在一隅，遇见自己。</p>
+          </div>
+          <button class="btn btn-secondary" id="editProfileBtn">
+            <i class="fas fa-pen"></i> 编辑个人资料
+          </button>
+        </div>
+      </div>
+
+      <!-- 下方待开发区域 -->
+      <div class="profile-content">
+        <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+          <i class="fas fa-tools" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
+          <h3 style="font-weight: 400; margin-bottom: 8px;">更多功能开发中</h3>
+          <p>敬请期待</p>
+        </div>
       </div>
     </div>
   </main>
+
+<!-- 图片裁剪模态框 -->
+<div class="modal-overlay" id="cropModalOverlay" style="display: none;">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h3>调整图片</h3>
+      <button class="modal-close" id="closeCropModal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="crop-container">
+        <img id="cropImage" src="" alt="裁剪图片">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="cancelCropBtn">取消</button>
+      <button class="btn btn-primary" id="saveCropBtn">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 编辑个人资料模态框 -->
+<div class="modal-overlay" id="editProfileModalOverlay" style="display: none;">
+  <div class="modal-container" style="width: 450px;">
+    <div class="modal-header">
+      <h3>编辑个人资料</h3>
+      <button class="modal-close" id="closeEditProfileModal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="config-group">
+        <label>显示名称</label>
+        <input type="text" id="editProfileNameInput" placeholder="你的名字" value="用户">
+      </div>
+      <div class="config-group">
+        <label>个性签名</label>
+        <input type="text" id="editProfileBioInput" placeholder="写点什么..." value="在一隅，遇见自己。">
+      </div>
+      <div class="config-group">
+        <label>头像</label>
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <button class="btn btn-secondary" id="editUploadAvatarBtn" style="flex: 1;">
+            <i class="fas fa-camera"></i> 上传头像
+          </button>
+          <span style="font-size: 12px; color: var(--text-secondary);">1:1</span>
+        </div>
+      </div>
+      <div class="config-group">
+        <label>主页背景</label>
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <button class="btn btn-secondary" id="editUploadCoverBtn" style="flex: 1;">
+            <i class="fas fa-image"></i> 上传背景图
+          </button>
+          <span style="font-size: 12px; color: var(--text-secondary);">16:9</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="cancelEditProfileBtn">取消</button>
+      <button class="btn btn-primary" id="saveEditProfileBtn">保存</button>
+    </div>
+  </div>
 </div>
 
 <!-- 遮罩 + 抽屉 -->
@@ -487,77 +1020,19 @@
     <h3><i class="fas fa-sliders-h" style="margin-right: 8px;"></i> 控制中心</h3>
     <button class="close-drawer" id="closeDrawerBtn"><i class="fas fa-times"></i></button>
   </div>
+
   <div class="drawer-content">
-    <!-- 主题切换开关 -->
-    <div class="theme-toggle-row">
-      <span class="theme-toggle-label">
-        <i class="fas fa-sun toggle-icon"></i>
-        <span id="themeLabelText">深色模式</span>
-      </span>
-      <div class="apple-toggle" id="themeToggle"></div>
-    </div>
-     <div class="config-group">
-      <label><i class="fas fa-key"></i> API Key</label>
-      <input type="password" id="apiKeyInput" placeholder="sk-... 或 gsk_..." autocomplete="off">
-      <span class="status-badge" id="apiStatus">未设置</span>
+    <!-- 快捷操作 -->
+    <div style="margin-top: 20px;">
+      <button class="btn btn-warning" id="clearChatBtn" style="width: 100%;">
+        <i class="fas fa-trash-alt"></i> 清空对话记录
+      </button>
     </div>
 
-    <!-- 替换 API 地址输入框 -->
-    <div class="config-group">
-      <label><i class="fas fa-globe"></i> API 服务商</label>
-      <select id="apiProviderSelect" style="background: var(--input-bg); border: 1px solid var(--border-strong); border-radius: 8px; padding: 10px 12px; color: var(--text-primary); font-size: 14px;">
-        <option value="openai">OpenAI (官方)</option>
-        <option value="openrouter">OpenRouter (多模型聚合)</option>
-        <option value="groq">Groq (高速免费)</option>
-        <option value="custom">自定义地址</option>
-      </select>
-      <input type="text" id="apiUrlInput" placeholder="https://..." value="https://api.openai.com/v1/chat/completions" style="margin-top: 8px;">
+    <!-- 提示信息 -->
+    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-light);">
+      <i class="fas fa-info-circle"></i> 完整 API 设置请点击左侧齿轮图标。
     </div>
-
-    <!-- 替换模型输入框 -->
-    <div class="config-group">
-      <label><i class="fas fa-robot"></i> 模型</label>
-      <select id="modelSelect" style="background: var(--input-bg); border: 1px solid var(--border-strong); border-radius: 8px; padding: 10px 12px; color: var(--text-primary); font-size: 14px;">
-        <optgroup label="OpenAI">
-          <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-          <option value="gpt-4o">GPT-4o</option>
-        </optgroup>
-        <optgroup label="OpenRouter (免费/收费)">
-          <option value="google/gemini-2.0-flash-exp:free">Gemini 2.0 Flash (免费)</option>
-          <option value="meta-llama/llama-3.2-3b-instruct:free">Llama 3.2 3B (免费)</option>
-          <option value="openai/gpt-3.5-turbo">GPT-3.5 (OpenRouter)</option>
-        </optgroup>
-        <optgroup label="Groq">
-          <option value="llama3-8b-8192">Llama 3 8B</option>
-          <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
-        </optgroup>
-        <optgroup label="其他">
-          <option value="custom">自定义模型</option>
-        </optgroup>
-      </select>
-      <input type="text" id="modelInput" placeholder="或输入自定义模型ID" value="gpt-3.5-turbo" style="margin-top: 8px;">
-    </div>
-    <div class="config-group">
-      <label><i class="fas fa-user-tag"></i> 角色名称</label>
-      <input type="text" id="characterNameInput" placeholder="傲娇助手" value="青绿助手">
-    </div>
-    <div class="config-group">
-      <label><i class="fas fa-scroll"></i> 人设提示词</label>
-      <textarea id="systemPromptInput" placeholder="设定角色的性格...">你是一个冷静又带点青涩的助手，说话简洁但偶尔流露出温柔。请用中文交流，保持角色。</textarea>
-    </div>
-    <div style="display: flex; gap: 8px; margin-top: 8px;">
-      <button class="btn btn-secondary" id="testConnectionBtn"><i class="fas fa-vial"></i> 测试</button>
-      <button class="btn btn-warning" id="clearChatBtn"><i class="fas fa-trash-alt"></i> 清空对话</button>
-    </div>
-    <!-- 公开API提示 -->
-    <div style="font-size: 12px; color: var(--text-secondary); background: var(--input-bg); padding: 10px; border-radius: 8px; border-left: 3px solid var(--accent);">
-      <i class="fas fa-info-circle"></i> <strong>公开测试API推荐</strong><br>
-      • Groq: 免费, API地址 <code>https://api.groq.com/openai/v1/chat/completions</code> , 模型如 <code>llama3-8b-8192</code><br>
-      • OpenRouter: 有免费模型, 地址 <code>https://openrouter.ai/api/v1/chat/completions</code>
-    </div>
-  </div>
-  <div class="drawer-footer">
-    <button class="btn btn-primary" id="saveConfigBtn"><i class="fas fa-save"></i> 保存配置</button>
   </div>
 </div>
 
@@ -579,19 +1054,17 @@
     const overlay = document.getElementById('drawerOverlay');
     const closeDrawerBtn = document.getElementById('closeDrawerBtn');
 
-    const apiKeyInput = document.getElementById('apiKeyInput');
-    const apiUrlInput = document.getElementById('apiUrlInput');
     const modelInput = document.getElementById('modelInput');
     const characterNameInput = document.getElementById('characterNameInput');
     const systemPromptInput = document.getElementById('systemPromptInput');
-    const apiStatus = document.getElementById('apiStatus');
 
     const testConnectionBtn = document.getElementById('testConnectionBtn');
     const clearChatBtn = document.getElementById('clearChatBtn');
     const saveConfigBtn = document.getElementById('saveConfigBtn');
 
-    const themeToggle = document.getElementById('themeToggle');
-    const themeLabelText = document.getElementById('themeLabelText');
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const apiUrlInput = document.getElementById('apiUrlInput');
+    const apiStatus = document.getElementById('apiStatus');
 
     // 状态
     let messages = [
@@ -599,8 +1072,8 @@
     ];
     let config = {
       apiKey: '',
-      apiUrl: 'https://api.openai.com/v1/chat/completions',
-      model: 'gpt-3.5-turbo',
+      apiUrl: 'https://api.deepseek.com/v1/chat/completions',
+      model: 'deepseek-chat',
       characterName: '青绿助手',
       systemPrompt: '你是一个冷静又带点青涩的助手，说话简洁但偶尔流露出温柔。请用中文交流，保持角色。'
     };
@@ -612,15 +1085,20 @@
     function applyTheme(theme) {
       if (theme === 'light') {
         document.body.classList.add('light-theme');
-        themeToggle.classList.add('active');
-        themeLabelText.innerHTML = '<i class="fas fa-sun toggle-icon" style="margin-right:4px;"></i> 浅色模式';
       } else {
         document.body.classList.remove('light-theme');
-        themeToggle.classList.remove('active');
-        themeLabelText.innerHTML = '<i class="fas fa-moon toggle-icon" style="margin-right:4px;"></i> 深色模式';
       }
       currentTheme = theme;
       localStorage.setItem('chat_theme', theme);
+
+      const themeToggleSettings = document.getElementById('themeToggleSettings');
+      if (themeToggleSettings) {
+        themeToggleSettings.classList.toggle('active', theme === 'light');
+      }
+      const themeLabelTextSettings = document.getElementById('themeLabelTextSettings');
+      if (themeLabelTextSettings) {
+        themeLabelTextSettings.textContent = theme === 'light' ? '浅色模式' : '深色模式';
+      }
     }
 
     function toggleTheme() {
@@ -789,20 +1267,17 @@
 
     // 抽屉控制
     function openDrawer() {
-      drawer.classList.add('open'); overlay.classList.add('show');
-      syncConfigFromForm(); updateApiStatusBadge();
+      drawer.classList.add('open');
+      overlay.classList.add('show');
     }
     function closeDrawer() {
-      drawer.classList.remove('open'); overlay.classList.remove('show');
-      apiKeyInput.value = config.apiKey;
-      apiUrlInput.value = config.apiUrl;
-      modelInput.value = config.model;
-      characterNameInput.value = config.characterName;
-      systemPromptInput.value = config.systemPrompt;
+      drawer.classList.remove('open');
+      overlay.classList.remove('show');
     }
 
     // 预设 API 地址映射
     const apiUrlPresets = {
+      deepseek: 'https://api.deepseek.com/v1/chat/completions',
       openai: 'https://api.openai.com/v1/chat/completions',
       openrouter: 'https://openrouter.ai/api/v1/chat/completions',
       groq: 'https://api.groq.com/openai/v1/chat/completions',
@@ -831,7 +1306,8 @@
     function populateSelectsFromConfig() {
       // 尝试匹配服务商
       const url = config.apiUrl;
-      if (url.includes('openrouter.ai')) apiProviderSelect.value = 'openrouter';
+      if (url.includes('deepseek.com')) apiProviderSelect.value = 'deepseek';
+      else if (url.includes('openrouter.ai')) apiProviderSelect.value = 'openrouter';
       else if (url.includes('groq.com')) apiProviderSelect.value = 'groq';
       else if (url.includes('api.openai.com')) apiProviderSelect.value = 'openai';
       else apiProviderSelect.value = 'custom';
@@ -866,13 +1342,166 @@
     //   config.model = modelInput.value.trim();
     // 保持不变即可，因为输入框会随下拉变化。
 
+    // 裁剪相关变量
+    let cropper = null;
+    let currentCropType = 'avatar'; // 'avatar' 或 'cover'
+    const cropModalOverlay = document.getElementById('cropModalOverlay');
+    const cropImage = document.getElementById('cropImage');
+    const closeCropModal = document.getElementById('closeCropModal');
+    const cancelCropBtn = document.getElementById('cancelCropBtn');
+    const saveCropBtn = document.getElementById('saveCropBtn');
+
+    // 打开裁剪模态框
+    function openCropModal(file, type) {
+      currentCropType = type;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        cropImage.src = e.target.result;
+        cropModalOverlay.style.display = 'flex';
+        // 初始化 Cropper
+        if (cropper) cropper.destroy();
+        cropper = new Cropper(cropImage, {
+          aspectRatio: type === 'avatar' ? 1 : 16 / 9, // 头像1:1，背景16:9
+          viewMode: 1,
+          autoCropArea: 1,
+          responsive: true,
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // 关闭模态框
+    function closeCropModalFunc() {
+      cropModalOverlay.style.display = 'none';
+      if (cropper) {
+        cropper.destroy();
+        cropper = null;
+      }
+    }
+
+    // 保存裁剪结果
+    function saveCroppedImage() {
+      if (!cropper) return;
+      const canvas = cropper.getCroppedCanvas();
+      const dataURL = canvas.toDataURL('image/jpeg', 0.9);
+
+      if (currentCropType === 'avatar') {
+        // 更新头像显示
+        const avatarImg = document.querySelector('#userAvatarBtn i');
+        // 如果原来有 i 标签，替换为 img
+        const avatarContainer = document.getElementById('userAvatarBtn');
+        avatarContainer.innerHTML = ''; // 清空
+        const img = document.createElement('img');
+        img.src = dataURL;
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        avatarContainer.appendChild(img);
+
+        // 同时更新个人主页的大头像
+        const largeAvatar = document.getElementById('profileAvatarLarge');
+        largeAvatar.innerHTML = '';
+        const largeImg = document.createElement('img');
+        largeImg.src = dataURL;
+        largeImg.style.width = '100%';
+        largeImg.style.height = '100%';
+        largeImg.style.objectFit = 'cover';
+        largeAvatar.appendChild(largeImg);
+
+        // 存储到 localStorage
+        localStorage.setItem('user_avatar', dataURL);
+      } else {
+        // 背景图：应用到个人主页
+        document.documentElement.style.setProperty('--profile-bg-image', `url(${dataURL})`);
+        localStorage.setItem('user_cover', dataURL);
+      }
+
+      closeCropModalFunc();
+    }
+
+    // 绑定上传按钮事件
+    function initUploadButtons() {
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = 'image/*';
+      fileInput.style.display = 'none';
+      document.body.appendChild(fileInput);
+
+      // 编辑弹窗中的上传按钮
+      const editUploadAvatarBtn = document.getElementById('editUploadAvatarBtn');
+      const editUploadCoverBtn = document.getElementById('editUploadCoverBtn');
+
+      if (editUploadAvatarBtn) {
+          editUploadAvatarBtn.addEventListener('click', () => {
+              fileInput.onchange = (e) => {
+                  const file = e.target.files[0];
+                  if (file) openCropModal(file, 'avatar');
+                  fileInput.value = '';
+              };
+              fileInput.click();
+          });
+      }
+
+      if (editUploadCoverBtn) {
+          editUploadCoverBtn.addEventListener('click', () => {
+              fileInput.onchange = (e) => {
+                  const file = e.target.files[0];
+                  if (file) openCropModal(file, 'cover');
+                  fileInput.value = '';
+              };
+              fileInput.click();
+          });
+      }
+
+    // 裁剪模态框关闭事件
+    closeCropModal.addEventListener('click', closeCropModalFunc);
+    cancelCropBtn.addEventListener('click', closeCropModalFunc);
+    saveCropBtn.addEventListener('click', saveCroppedImage);
+    cropModalOverlay.addEventListener('click', (e) => {
+        if (e.target === cropModalOverlay) closeCropModalFunc();
+    });
+}
+
+    // 加载已保存的头像和背景
+    function loadUserImages() {
+      const savedAvatar = localStorage.getItem('user_avatar');
+      if (savedAvatar) {
+        const avatarContainer = document.getElementById('userAvatarBtn');
+        avatarContainer.innerHTML = '';
+        const img = document.createElement('img');
+        img.src = savedAvatar;
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        avatarContainer.appendChild(img);
+
+        const largeAvatar = document.getElementById('profileAvatarLarge');
+        largeAvatar.innerHTML = '';
+        const largeImg = document.createElement('img');
+        largeImg.src = savedAvatar;
+        largeImg.style.width = '100%';
+        largeImg.style.height = '100%';
+        largeImg.style.objectFit = 'cover';
+        largeAvatar.appendChild(largeImg);
+      }
+
+      const savedCover = localStorage.getItem('user_cover');
+      if (savedCover) {
+        document.documentElement.style.setProperty('--profile-bg-image', `url(${savedCover})`);
+      }
+    }
+
     // 初始化
     function init() {
       loadTheme();
       loadConfigFromStorage();
       renderMessages();
 
-      themeToggle.addEventListener('click', toggleTheme);
+      const themeToggleSettings = document.getElementById('themeToggleSettings');
+      if (themeToggleSettings) {
+        themeToggleSettings.addEventListener('click', toggleTheme);
+      }
+
       sendBtn.addEventListener('click', handleSendMessage);
       messageInput.addEventListener('keydown', e => {
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); }
@@ -885,6 +1514,93 @@
       testConnectionBtn.addEventListener('click', testConnection);
       clearChatBtn.addEventListener('click', ()=>{ if(confirm('清空对话？')) resetConversation(); });
       updateChatTitle();
+
+      // 视图元素
+      const gearIcon = document.querySelector('.sidebar-icon[title="设置"]');
+      const chatMain = document.getElementById('chatMain');
+      const userAvatarBtn = document.getElementById('userAvatarBtn');
+      const chatIcon = document.querySelector('.sidebar-icon[title="当前对话"]');
+
+      // 齿轮点击：切换到设置视图
+      gearIcon.addEventListener('click', () => {
+        chatMain.classList.remove('profile-hidden');
+        chatMain.classList.add('chat-hidden');
+        document.querySelectorAll('.sidebar-icon').forEach(icon => icon.classList.remove('active'));
+        gearIcon.classList.add('active');
+        userAvatarBtn.classList.remove('active');
+      });
+
+      // 对话图标点击：返回聊天视图
+      chatIcon.addEventListener('click', () => {
+        chatMain.classList.remove('profile-hidden', 'chat-hidden');
+        document.querySelectorAll('.sidebar-icon').forEach(icon => icon.classList.remove('active'));
+        chatIcon.classList.add('active');
+        userAvatarBtn.classList.remove('active');
+      });
+
+      // 头像点击：进入个人主页
+      userAvatarBtn.addEventListener('click', () => {
+        chatMain.classList.add('profile-hidden');
+        chatMain.classList.remove('chat-hidden');
+        document.querySelectorAll('.sidebar-icon').forEach(icon => icon.classList.remove('active'));
+        userAvatarBtn.classList.add('active');
+      });
+
+      // 个人资料相关
+      const profileDisplayName = document.getElementById('profileDisplayName');
+
+      // ⭐ 提前声明编辑弹窗中的输入框
+      const editProfileNameInput = document.getElementById('editProfileNameInput');
+      const editProfileBioInput = document.getElementById('editProfileBioInput');
+
+      function loadProfile() {
+        const savedName = localStorage.getItem('profile_name') || '用户';
+        const savedBio = localStorage.getItem('profile_bio') || '在一隅，遇见自己。';
+        // 更新顶部显示
+        profileDisplayName.textContent = savedName;
+        document.getElementById('profileBioDisplay').innerHTML = `<i class="fas fa-quote-left" style="margin-right: 8px;"></i>${savedBio}`;
+        // 同步到弹窗输入框
+        editProfileNameInput.value = savedName;
+        editProfileBioInput.value = savedBio;
+      }
+      loadProfile();
+
+      // 打开编辑弹窗相关
+      const editProfileBtn = document.getElementById('editProfileBtn');
+      const editProfileModalOverlay = document.getElementById('editProfileModalOverlay');
+      const closeEditProfileModal = document.getElementById('closeEditProfileModal');
+      const cancelEditProfileBtn = document.getElementById('cancelEditProfileBtn');
+      const saveEditProfileBtn = document.getElementById('saveEditProfileBtn');
+
+      // 打开弹窗
+      editProfileBtn.addEventListener('click', () => {
+          editProfileModalOverlay.style.display = 'flex';
+      });
+
+      function closeEditModal() {
+        editProfileModalOverlay.style.display = 'none';
+      }
+
+      closeEditProfileModal.addEventListener('click', closeEditModal);
+      cancelEditProfileBtn.addEventListener('click', closeEditModal);
+      editProfileModalOverlay.addEventListener('click', (e) => {
+        if (e.target === editProfileModalOverlay) closeEditModal();
+      });
+
+      // 保存编辑资料
+      saveEditProfileBtn.addEventListener('click', () => {
+        const name = editProfileNameInput.value.trim() || '用户';
+        const bio = editProfileBioInput.value.trim() || '在一隅，遇见自己。';
+        localStorage.setItem('profile_name', name);
+        localStorage.setItem('profile_bio', bio);
+        profileDisplayName.textContent = name;
+        document.getElementById('profileBioDisplay').innerHTML = `<i class="fas fa-quote-left" style="margin-right: 8px;"></i>${bio}`;
+        closeEditModal();
+      });
+
+      // 初始化上传和加载图片
+      initUploadButtons();
+      loadUserImages();
     }
 
     init();
