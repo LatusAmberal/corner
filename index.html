@@ -1,806 +1,828 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>一隅·aCorner</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-  <style>
-    /* ===== 默认深色 (黑+青绿) ===== */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>一隅·aCorner</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <style>
+        /* ===== 默认深色 (黑+青绿) ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
 
-    :root {
-      /* 深色主题 (默认) */
-      --bg-app: #0a0c0e;
-      --bg-sidebar: #0d1114;
-      --bg-chat-main: #12171a;
-      --bg-header: #0f1417;
-      --bg-input-area: #0f1417;
-      --bg-bubble-assistant: #1a252c;
-      --bg-bubble-user: #0f9960;      /* 青绿色 */
-      --text-primary: #e3e9ed;
-      --text-secondary: #9ab3c0;
-      --text-bubble-user: #ffffff;
-      --border-light: #1f2a30;
-      --border-strong: #2a3a42;
-      --accent: #0f9960;
-      --accent-hover: #0bb07a;
-      --menu-btn-hover: #1e2c34;
-      --shadow: rgba(0,0,0,0.5);
-      --drawer-bg: #12181c;
-      --drawer-border: #1e2a30;
-      --input-bg: #1a242a;
-      --toggle-bg: #2a3a42;
-      --toggle-active: #0f9960;
-      --profile-bg-image: none;
-    }
+        :root {
+            /* 深色主题 (默认) */
+            --bg-app: #0a0c0e;
+            --bg-sidebar: #0d1114;
+            --bg-chat-main: #12171a;
+            --bg-header: #0f1417;
+            --bg-input-area: #0f1417;
+            --bg-bubble-assistant: #1a252c;
+            --bg-bubble-user: #0f9960;      /* 青绿色 */
+            --text-primary: #e3e9ed;
+            --text-secondary: #9ab3c0;
+            --text-bubble-user: #ffffff;
+            --border-light: #1f2a30;
+            --border-strong: #2a3a42;
+            --accent: #0f9960;
+            --accent-hover: #0bb07a;
+            --menu-btn-hover: #1e2c34;
+            --shadow: rgba(0,0,0,0.5);
+            --drawer-bg: #12181c;
+            --drawer-border: #1e2a30;
+            --input-bg: #1a242a;
+            --toggle-bg: #2a3a42;
+            --toggle-active: #0f9960;
+            --profile-bg-image: none;
+        }
 
-    /* 浅色主题 (白天模式) */
-    body.light-theme {
-      --bg-app: #f5f7f9;
-      --bg-sidebar: #eef1f3;
-      --bg-chat-main: #ffffff;
-      --bg-header: #f8fafc;
-      --bg-input-area: #f8fafc;
-      --bg-bubble-assistant: #e6edf2;
-      --bg-bubble-user: #0f9960;
-      --text-primary: #1e2b34;
-      --text-secondary: #3f5562;
-      --text-bubble-user: #ffffff;
-      --border-light: #d0d9e0;
-      --border-strong: #b6c4ce;
-      --accent: #0f9960;
-      --accent-hover: #0bb07a;
-      --menu-btn-hover: #e0e8ef;
-      --shadow: rgba(0,0,0,0.08);
-      --drawer-bg: #ffffff;
-      --drawer-border: #d0d9e0;
-      --input-bg: #ffffff;
-      --toggle-bg: #cfdbe5;
-      --toggle-active: #0f9960;
-    }
+        /* 浅色主题 (白天模式) */
+        body.light-theme {
+            --bg-app: #f5f7f9;
+            --bg-sidebar: #eef1f3;
+            --bg-chat-main: #ffffff;
+            --bg-header: #f8fafc;
+            --bg-input-area: #f8fafc;
+            --bg-bubble-assistant: #e6edf2;
+            --bg-bubble-user: #0f9960;
+            --text-primary: #1e2b34;
+            --text-secondary: #3f5562;
+            --text-bubble-user: #ffffff;
+            --border-light: #d0d9e0;
+            --border-strong: #b6c4ce;
+            --accent: #0f9960;
+            --accent-hover: #0bb07a;
+            --menu-btn-hover: #e0e8ef;
+            --shadow: rgba(0,0,0,0.08);
+            --drawer-bg: #ffffff;
+            --drawer-border: #d0d9e0;
+            --input-bg: #ffffff;
+            --toggle-bg: #cfdbe5;
+            --toggle-active: #0f9960;
+        }
 
-    body {
-      background: var(--bg-app);  /* 让背景色跟随主题，不再有外层深色背景 */
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin: 0;          /* 确保没有外边距 */
-      padding: 0;
-    }
+        body {
+            background: var(--bg-app);  /* 让背景色跟随主题，不再有外层深色背景 */
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;          /* 确保没有外边距 */
+            padding: 0;
+        }
 
-    /* 主应用卡片 */
-    .app {
-      display: flex;
-      width: 100%;         /* 宽度占满 */
-      height: 100vh;       /* 高度占满视口 */
-      max-width: none;     /* 移除最大宽度限制 */
-      max-height: none;    /* 移除最大高度限制 */
-      background: var(--bg-app);
-      border-radius: 0;    /* 去掉圆角 */
-      box-shadow: none;    /* 去掉阴影 */
-      overflow: hidden;
-      border: none;        /* 去掉边框 */
-    }
+        /* 主应用卡片 */
+        .app {
+            display: flex;
+            width: 100%;         /* 宽度占满 */
+            height: 100vh;       /* 高度占满视口 */
+            max-width: none;     /* 移除最大宽度限制 */
+            max-height: none;    /* 移除最大高度限制 */
+            background: var(--bg-app);
+            border-radius: 0;    /* 去掉圆角 */
+            box-shadow: none;    /* 去掉阴影 */
+            overflow: hidden;
+            border: none;        /* 去掉边框 */
+        }
 
-    /* ========= 左侧菜单栏 ========= */
-    .sidebar {
-      width: 72px;
-      background: var(--bg-sidebar);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 16px 0;
-      gap: 12px;
-      transition: background 0.2s;
-    }
+        /* ========= 左侧菜单栏 ========= */
+        .sidebar {
+            width: 72px;
+            background: var(--bg-sidebar);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 0;
+            gap: 12px;
+            transition: background 0.2s;
+        }
 
-    .sidebar-icon {
-      width: 48px;
-      height: 48px;
-      background: var(--bg-chat-main);
-      border-radius: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-secondary);
-      font-size: 24px;
-      transition: all 0.15s;
-      cursor: pointer;
-      border: 1px solid var(--border-light);
-    }
+        .sidebar-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--bg-chat-main);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 24px;
+            transition: all 0.15s;
+            cursor: pointer;
+            border: 1px solid var(--border-light);
+        }
 
-    .sidebar-icon:hover {
-      background: var(--accent);
-      color: white;
-      border-radius: 16px;
-      border-color: var(--accent);
-    }
+        .sidebar-icon:hover {
+            background: var(--accent);
+            color: white;
+            border-radius: 16px;
+            border-color: var(--accent);
+        }
 
-    .sidebar-icon.active {
-      background: var(--accent);
-      color: white;
-      border-radius: 16px;
-      border-color: var(--accent);
-    }
+        .sidebar-icon.active {
+            background: var(--accent);
+            color: white;
+            border-radius: 16px;
+            border-color: var(--accent);
+        }
 
-    .sidebar-divider {
-      width: 32px;
-      height: 2px;
-      background: var(--border-strong);
-      margin: 8px 0;
-    }
+        .sidebar-divider {
+            width: 32px;
+            height: 2px;
+            background: var(--border-strong);
+            margin: 8px 0;
+        }
 
-    /* ========= 右侧聊天区 ========= */
-    .chat-main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      background: var(--bg-chat-main);
-      position: relative;
-      min-width: 0;
-    }
+        /* ========= 右侧聊天区 ========= */
+            .chat-main {
+              flex: 1;
+              display: flex;
+              flex-direction: column;
+              background: var(--bg-chat-main);
+              position: relative;
+              min-width: 0;
+        }
 
-    .chat-header {
-      height: 56px;
-      background: var(--bg-header);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 16px 0 20px;
-      flex-shrink: 0;
-      transition: background 0.2s;
-    }
+        .chat-header {
+            height: 56px;
+            background: var(--bg-header);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px 0 20px;
+            flex-shrink: 0;
+            transition: background 0.2s;
+        }
 
-    .header-left { width: 40px; }
-    .chat-title {
-      font-weight: 600;
-      font-size: 16px;
-      color: var(--text-primary);
-      text-align: center;
-      flex: 1;
-    }
+        .header-left { width: 40px; }
+        .chat-title {
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--text-primary);
+            text-align: center;
+            flex: 1;
+        }
 
-    .menu-btn {
-      background: transparent;
-      border: none;
-      color: var(--text-secondary);
-      font-size: 22px;
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: 0.15s;
-    }
-    .menu-btn:hover {
-      background: var(--menu-btn-hover);
-      color: var(--accent);
-    }
+        .menu-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 22px;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .menu-btn:hover {
+            background: var(--menu-btn-hover);
+            color: var(--accent);
+        }
 
-    /* 消息区 */
-    .messages-area {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px 20px 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      scroll-behavior: smooth;
-    }
+        /* 消息区 */
+        .messages-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            scroll-behavior: smooth;
+        }
 
-    .message-row { display: flex; width: 100%; }
-    .message-row.assistant { justify-content: flex-start; }
-    .message-row.user { justify-content: flex-end; }
+        .message-row { display: flex; width: 100%; }
+        .message-row.assistant { justify-content: flex-start; }
+        .message-row.user { justify-content: flex-end; }
 
-    .message-bubble {
-      max-width: 70%;
-      padding: 12px 16px;
-      border-radius: 20px;
-      font-size: 15px;
-      line-height: 1.5;
-      word-break: break-word;
-      box-shadow: 0 2px 4px var(--shadow);
-    }
+        .message-bubble {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 20px;
+            font-size: 15px;
+            line-height: 1.5;
+            word-break: break-word;
+            box-shadow: 0 2px 4px var(--shadow);
+        }
 
-    .assistant .message-bubble {
-      background: var(--bg-bubble-assistant);
-      color: var(--text-primary);
-      border-top-left-radius: 6px;
-    }
+        .assistant .message-bubble {
+            background: var(--bg-bubble-assistant);
+            color: var(--text-primary);
+            border-top-left-radius: 6px;
+        }
 
-    .user .message-bubble {
-      background: var(--bg-bubble-user);
-      color: var(--text-bubble-user);
-      border-top-right-radius: 6px;
-    }
+        .user .message-bubble {
+            background: var(--bg-bubble-user);
+            color: var(--text-bubble-user);
+            border-top-right-radius: 6px;
+        }
 
-    .message-time {
-      font-size: 11px;
-      opacity: 0.7;
-      margin-top: 6px;
-      text-align: right;
-    }
+        .message-time {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-top: 6px;
+            text-align: right;
+        }
 
-    /* 打字效果 */
-    .typing-indicator {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 12px 16px;
-    }
-    .typing-indicator span {
-      width: 8px;
-      height: 8px;
-      background: var(--text-secondary);
-      border-radius: 50%;
-      animation: typing 1.4s infinite ease-in-out;
-    }
-    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes typing {
-      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-      30% { transform: translateY(-8px); opacity: 1; }
-    }
+        /* 打字效果 */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 12px 16px;
+        }
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: var(--text-secondary);
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-8px); opacity: 1; }
+        }
 
-    /* 输入区域 */
-    .input-area {
-      background: var(--bg-input-area);
-      padding: 16px 20px;
-      flex-shrink: 0;
-    }
+        /* 输入区域 */
+        .input-area {
+            background: var(--bg-input-area);
+            padding: 16px 20px;
+            flex-shrink: 0;
+        }
 
-    .input-container {
-      display: flex;
-      align-items: flex-end;
-      gap: 12px;
-      background: var(--input-bg);
-      border-radius: 24px;
-      padding: 6px 8px 6px 18px;
-      border: 1px solid var(--border-strong);
-    }
+        .input-container {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            background: var(--input-bg);
+            border-radius: 24px;
+            padding: 6px 8px 6px 18px;
+            border: 1px solid var(--border-strong);
+        }
 
-    .input-container textarea {
-      flex: 1;
-      background: transparent;
-      border: none;
-      outline: none;
-      color: var(--text-primary);
-      font-size: 15px;
-      resize: none;
-      max-height: 120px;
-      min-height: 24px;
-      padding: 8px 0;
-      line-height: 1.4;
-    }
-    .input-container textarea::placeholder { color: var(--text-secondary); }
+        .input-container textarea {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            font-size: 15px;
+            resize: none;
+            max-height: 120px;
+            min-height: 24px;
+            padding: 8px 0;
+            line-height: 1.4;
+        }
+        .input-container textarea::placeholder { color: var(--text-secondary); }
 
-    .send-btn {
-      background: var(--accent);
-      border: none;
-      color: white;
-      width: 40px;
-      height: 40px;
-      border-radius: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 18px;
-      transition: 0.15s;
-      flex-shrink: 0;
-    }
-    .send-btn:hover {
-      background: var(--accent-hover);
-      transform: scale(0.96);
-    }
-    .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .send-btn {
+            background: var(--accent);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+            transition: 0.15s;
+            flex-shrink: 0;
+        }
+        .send-btn:hover {
+            background: var(--accent-hover);
+            transform: scale(0.96);
+        }
+        .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    /* ========= 右侧配置抽屉 ========= */
-    .config-drawer {
-      position: fixed;
-      top: 0; right: -360px;
-      width: 340px; height: 100vh;
-      background: var(--drawer-bg);
-      box-shadow: -5px 0 20px var(--shadow);
-      transition: right 0.25s ease;
-      z-index: 1000;
-      display: flex;
-      flex-direction: column;
-      border-left: 1px solid var(--drawer-border);
-      color: var(--text-primary);
-    }
-    .config-drawer.open { right: 0; }
+        /* ========= 右侧配置抽屉 ========= */
+        .config-drawer {
+            position: fixed;
+            top: 0; right: -360px;
+            width: 340px; height: 100vh;
+            background: var(--drawer-bg);
+            box-shadow: -5px 0 20px var(--shadow);
+            transition: right 0.25s ease;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid var(--drawer-border);
+            color: var(--text-primary);
+        }
+        .config-drawer.open { right: 0; }
 
-    .drawer-header {
-      padding: 20px 20px 12px;
-      display: flex; align-items: center; justify-content: space-between;
-      border-bottom: 1px solid var(--border-light);
-    }
-    .drawer-header h3 { font-size: 18px; font-weight: 600; }
-    .close-drawer {
-      background: none; border: none; color: var(--text-secondary);
-      font-size: 22px; cursor: pointer; padding: 4px;
-    }
+        .drawer-header {
+            padding: 20px 20px 12px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .drawer-header h3 { font-size: 18px; font-weight: 600; }
+        .close-drawer {
+            background: none; border: none; color: var(--text-secondary);
+            font-size: 22px; cursor: pointer; padding: 4px;
+        }
 
-    .drawer-content {
-      flex: 1; overflow-y: auto; padding: 18px 20px;
-      display: flex; flex-direction: column; gap: 18px;
-    }
+        .drawer-content {
+            flex: 1; overflow-y: auto; padding: 18px 20px;
+            display: flex; flex-direction: column; gap: 18px;
+        }
 
-    .config-group {
-      display: flex; flex-direction: column; gap: 9px;
-    }
-    .config-group label {
-      font-size: 13px; font-weight: 500; color: var(--text-secondary);
-      text-transform: uppercase; letter-spacing: 0.5px;
-    }
-    .config-group input, .config-group textarea, .config-group select {
-      background: var(--input-bg);
-      border: 1px solid var(--border-strong);
-      border-radius: 8px; padding: 10px 12px;
-      color: var(--text-primary); font-size: 14px; outline: none;
-    }
-    .config-group input:focus, .config-group textarea:focus {
-      border-color: var(--accent);
-    }
-    .config-group textarea { min-height: 100px; resize: vertical; }
+        .config-group {
+            display: flex; flex-direction: column; gap: 9px;
+        }
+        .config-group label {
+            font-size: 13px; font-weight: 500; color: var(--text-secondary);
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .config-group input, .config-group textarea, .config-group select {
+            background: var(--input-bg);
+            border: 1px solid var(--border-strong);
+            border-radius: 8px; padding: 10px 12px;
+            color: var(--text-primary); font-size: 14px; outline: none;
+        }
+        .config-group input:focus, .config-group textarea:focus {
+            border-color: var(--accent);
+        }
+        .config-group textarea { min-height: 100px; resize: vertical; }
 
-    .drawer-footer {
-      padding: 16px 20px 24px; border-top: 1px solid var(--border-light);
-      display: flex; gap: 10px;
-    }
-    .btn {
-      padding: 10px 16px; border-radius: 8px; font-weight: 500;
-      border: none; cursor: pointer; font-size: 14px; transition: 0.15s;
-    }
-    .btn-primary {
-      background: var(--accent); color: white; flex: 2;
-    }
-    .btn-primary:hover { background: var(--accent-hover); }
-    .btn-secondary {
-      background: var(--menu-btn-hover); color: var(--text-primary); flex: 1;
-      border: 1px solid var(--border-light);
-    }
-    .btn-warning {
-      background: #b02e2e; color: white;
-    }
-    .btn-warning:hover { background: #c43c3c; }
+        .drawer-footer {
+            padding: 16px 20px 24px; border-top: 1px solid var(--border-light);
+            display: flex; gap: 10px;
+        }
+        .btn {
+            padding: 10px 16px; border-radius: 8px; font-weight: 500;
+            border: none; cursor: pointer; font-size: 14px; transition: 0.15s;
+        }
+        .btn-primary {
+            background: var(--accent); color: white; flex: 2;
+        }
+        .btn-primary:hover { background: var(--accent-hover); }
+        .btn-secondary {
+            background: var(--menu-btn-hover); color: var(--text-primary); flex: 1;
+            border: 1px solid var(--border-light);
+        }
+        .btn-warning {
+            background: #b02e2e; color: white;
+        }
+        .btn-warning:hover { background: #c43c3c; }
 
-    .status-badge {
-      font-size: 12px; padding: 2px 8px; border-radius: 12px;
-      background: var(--border-strong); align-self: flex-start;
-    }
+        .status-badge {
+            font-size: 12px; padding: 2px 8px; border-radius: 12px;
+            background: var(--border-strong); align-self: flex-start;
+        }
 
-    /* 遮罩 */
-    .drawer-overlay {
-      position: fixed; top:0; left:0; width:100%; height:100%;
-      background: rgba(0,0,0,0.3); z-index: 999;
-      opacity: 0; visibility: hidden; transition: 0.2s;
-    }
-    .drawer-overlay.show { opacity: 1; visibility: visible; }
+        /* 遮罩 */
+        .drawer-overlay {
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.3); z-index: 999;
+            opacity: 0; visibility: hidden; transition: 0.2s;
+        }
+        .drawer-overlay.show { opacity: 1; visibility: visible; }
 
-    /* 滚动条 */
-    .messages-area::-webkit-scrollbar { width: 6px; }
-    .messages-area::-webkit-scrollbar-track { background: transparent; }
-    .messages-area::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 6px; }
+        /* 滚动条 */
+        .messages-area::-webkit-scrollbar { width: 6px; }
+        .messages-area::-webkit-scrollbar-track { background: transparent; }
+        .messages-area::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 6px; }
 
-    /* ===== 苹果风格切换开关 (toggle) ===== */
-    .theme-toggle-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 8px;
-      padding-top: 8px;
-      border-top: 1px solid var(--border-light);
-    }
-    .theme-toggle-label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--text-primary);
-      font-weight: 500;
-    }
-    .apple-toggle {
-      position: relative;
-      width: 48px;
-      height: 26px;
-      background: var(--toggle-bg);
-      border-radius: 26px;
-      border: 1px solid var(--border-strong);
-      cursor: pointer;
-      transition: background 0.25s;
-      display: inline-block;
-    }
-    .apple-toggle::after {
-      content: "";
-      position: absolute;
-      width: 22px; height: 22px;
-      background: white;
-      border-radius: 22px;
-      top: 1px; left: 2px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-      transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.4, 1);
-    }
-    .apple-toggle.active {
-      background: var(--toggle-active);
-    }
-    .apple-toggle.active::after {
-      transform: translateX(22px);
-    }
-    .toggle-icon {
-      font-size: 16px;
-      color: var(--text-secondary);
-    }
+        /* ===== 苹果风格切换开关 (toggle) ===== */
+        .theme-toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border-light);
+        }
+        .theme-toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        .apple-toggle {
+            position: relative;
+            width: 48px;
+            height: 26px;
+            background: var(--toggle-bg);
+            border-radius: 26px;
+            border: 1px solid var(--border-strong);
+            cursor: pointer;
+            transition: background 0.25s;
+            display: inline-block;
+        }
+        .apple-toggle::after {
+            content: "";
+            position: absolute;
+            width: 22px; height: 22px;
+            background: white;
+            border-radius: 22px;
+            top: 1px; left: 2px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.4, 1);
+        }
+        .apple-toggle.active {
+            background: var(--toggle-active);
+        }
+        .apple-toggle.active::after {
+            transform: translateX(22px);
+        }
+        .toggle-icon {
+            font-size: 16px;
+            color: var(--text-secondary);
+        }
 
-    /* 设置视图（替代聊天区） */
-    .settings-view {
-      flex: 1;
-      background: var(--bg-chat-main);
-      padding: 24px 32px;
-      overflow-y: auto;
-      color: var(--text-primary);
-    }
-    .settings-card {
-      background: var(--bg-header);
-      border-radius: 16px;
-      padding: 20px 24px;
-      margin-bottom: 24px;
-      border: 1px solid var(--border-light);
-    }
-    .settings-card h3 {
-      font-size: 18px;
-      margin-bottom: 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .view-toggle {
-      display: none;
-    }
-    .view-active {
-      display: flex;
-      flex-direction: column;
-    }
-    .chat-main .chat-view {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-    }
-    .settings-view {
-      display: none;
-    }
-    .settings-view.active {
-      display: block;
-    }
-    .chat-main.chat-hidden .chat-view {
-      display: none;
-    }
-    .chat-main.chat-hidden .settings-view {
-      display: block;
-    }
+        /* 设置视图（替代聊天区） */
+        .settings-view {
+            flex: 1;
+            background: var(--bg-chat-main);
+            padding: 24px 32px;
+            overflow-y: auto;
+            color: var(--text-primary);
+        }
+        .settings-card {
+            background: var(--bg-header);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-light);
+        }
+        .settings-card h3 {
+            font-size: 18px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .view-toggle {
+            display: none;
+        }
+        .view-active {
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-main .chat-view {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .settings-view {
+            display: none;
+        }
+        .settings-view.active {
+            display: block;
+        }
+        .chat-main.chat-hidden .chat-view {
+            display: none;
+        }
+        .chat-main.chat-hidden .settings-view {
+            display: block;
+        }
 
-    /* 用户头像 - 左下角固定 */
-    .sidebar-footer {
-      margin-top: auto;
-      padding-bottom: 16px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .user-avatar {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: var(--accent);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 22px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.15s;
-      border: 2px solid var(--border-light);
-      overflow: hidden;
-    }
-    .user-avatar:hover {
-      opacity: 0.9;
-      transform: scale(1.02);
-    }
-    .user-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+        /* 用户头像 - 左下角固定 */
+        .sidebar-footer {
+            margin-top: auto;
+            padding-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 22px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            border: 2px solid var(--border-light);
+            overflow: hidden;
+        }
+        .user-avatar:hover {
+            opacity: 0.9;
+            transform: scale(1.02);
+        }
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
 
-    /* ========== 个人主页视图 ========== */
-    .profile-view {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        background: var(--bg-chat-main);
-        position: relative;
-        overflow-y: auto;
-        color: var(--text-primary);
-        display: none;
-    }
+        /* ========== 个人主页视图 ========== */
+        .profile-view {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-chat-main);
+            position: relative;
+            overflow-y: auto;
+            color: var(--text-primary);
+            display: none;
+        }
 
-    /* 背景图横幅 —— 铺满上方，无圆角，无卡片边框 */
-    .profile-banner {
-        position: relative;
-        width: 100%;
-        min-height: 110px;          /* 足够容纳头像和文字 */
-        background-color: var(--bg-header);
-        background-image: var(--profile-bg-image);
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        border-bottom: 1px solid var(--border-light);
-        flex-shrink: 0;
-    }
+        /* 背景图横幅 —— 铺满上方，无圆角，无卡片边框 */
+        .profile-banner {
+            position: relative;
+            width: 100%;
+            min-height: 110px;          /* 足够容纳头像和文字 */
+            background-color: var(--bg-header);
+            background-image: var(--profile-bg-image);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            border-bottom: 1px solid var(--border-light);
+            flex-shrink: 0;
+        }
 
-    /* 半透明蒙版 —— 保证文字在任何背景图下都能阅读 */
-    .profile-banner::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0, 0, 0, 0.5); //黑色模式个人主页背景蒙版透明度
-        pointer-events: none;
-        z-index: 1;
-    }
-    body.light-theme .profile-banner::before {
-        background: rgba(255, 255, 255, 0.75); //白色模式个人主页蒙版透明度
-    }
+        /* 半透明蒙版 —— 保证文字在任何背景图下都能阅读 */
+        .profile-banner::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5); /*黑色模式个人主页背景蒙版透明度*/
+            pointer-events: none;
+            z-index: 1;
+        }
+        body.light-theme .profile-banner::before {
+            background: rgba(255, 255, 255, 0.75); /*白色模式个人主页蒙版透明度*/
+        }
 
-    /* 内容层置于蒙版之上 */
-    .profile-banner-content {
-        position: relative;
-        z-index: 2;
-        display: flex;
-        align-items: center;
-        gap: 24px;
-        padding: 24px 32px;
-        height: 100%;
-        min-height: 110px;
-    }
+        /* 内容层置于蒙版之上 */
+        .profile-banner-content {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            padding: 24px 32px;
+            height: 100%;
+            min-height: 110px;
+        }
 
-    /* 大头像：圆形 + 描边 + 阴影，更醒目 */
-    .profile-avatar-large {
-        width: 90px;
-        height: 90px;
-        border-radius: 50%;
-        background: var(--accent);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 40px;
-        color: white;
-        border: 4px solid var(--accent);
-        box-shadow: 0 0 0 3px var(--bg-chat-main), 0 4px 12px rgba(0,0,0,0.3);
-        overflow: hidden;
-        flex-shrink: 0;
-    }
-    .profile-avatar-large img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
+        /* 大头像：圆形 + 描边 + 阴影，更醒目 */
+        .profile-avatar-large {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: white;
+            border: 4px solid var(--accent);
+            box-shadow: 0 0 0 3px var(--bg-chat-main), 0 4px 12px rgba(0,0,0,0.3);
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .profile-avatar-large img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
 
-    /* 文字信息区域 */
-    .profile-info {
-        flex: 1;
-    }
-    .profile-info h2 {
-        font-size: 28px;
-        margin-bottom: 6px;
-        color: #ffffff;
-        text-shadow: 0 2px 8px rgba(0,0,0,0.6);
-        font-weight: 600;
-    }
-    .profile-info p {
-        font-size: 15px;
-        color: rgba(255,255,255,0.9);
-        text-shadow: 0 1px 4px rgba(0,0,0,0.5);
-    }
-    body.light-theme .profile-info h2,
-    body.light-theme .profile-info p {
-        color: #1e2b34;
-        text-shadow: 0 1px 4px rgba(255,255,255,0.7);
-    }
+        /* 文字信息区域 */
+        .profile-info {
+            flex: 1;
+        }
+        .profile-info h2 {
+            font-size: 28px;
+            margin-bottom: 6px;
+            color: #ffffff;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+            font-weight: 600;
+        }
+        .profile-info p {
+            font-size: 15px;
+            color: rgba(255,255,255,0.9);
+            text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+        }
+        body.light-theme .profile-info h2,
+        body.light-theme .profile-info p {
+            color: #1e2b34;
+            text-shadow: 0 1px 4px rgba(255,255,255,0.7);
+        }
 
-    /* 编辑按钮优化 —— 与主题协调 */
-    .profile-banner .btn-secondary {
-        background: rgba(0, 0, 0, 0.3);
-        backdrop-filter: blur(4px);
-        border: 1px solid rgba(255,255,255,0.2);
-        color: white;
-        font-weight: 500;
-        padding: 10px 18px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    }
-    .profile-banner .btn-secondary:hover {
-        background: var(--accent);
-        border-color: var(--accent);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(0,0,0,0.3);
-    }
-    body.light-theme .profile-banner .btn-secondary {
-        background: rgba(255, 255, 255, 0.6);
-        backdrop-filter: blur(4px);
-        border: 1px solid rgba(0,0,0,0.1);
-        color: #1e2b34;
-    }
-    body.light-theme .profile-banner .btn-secondary:hover {
-        background: var(--accent);
-        color: white;
-    }
+        /* 编辑按钮优化 —— 与主题协调 */
+        .profile-banner .btn-secondary {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            font-weight: 500;
+            padding: 10px 18px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .profile-banner .btn-secondary:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+        body.light-theme .profile-banner .btn-secondary {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(0,0,0,0.1);
+            color: #1e2b34;
+        }
+        body.light-theme .profile-banner .btn-secondary:hover {
+            background: var(--accent);
+            color: white;
+        }
 
-    /* 左下角小头像也加描边（保持统一） */
-    .user-avatar {
-        border: 2px solid var(--accent) !important;
-        box-shadow: 0 0 0 2px var(--bg-sidebar);
-    }
-    .user-avatar.active {
-        border-color: var(--accent);
-        box-shadow: 0 0 0 2px var(--accent);
-    }
+        /* 左下角小头像也加描边（保持统一） */
+        .user-avatar {
+            border: 2px solid var(--accent) !important;
+            box-shadow: 0 0 0 2px var(--bg-sidebar);
+        }
+        .user-avatar.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent);
+        }
 
-    /* 下方内容区域（待开发） */
-    .profile-content {
-        flex: 1;
-        background: var(--bg-chat-main);
-        padding: 24px 32px;
-    }
+        /* 下方内容区域（待开发） */
+        .profile-content {
+            flex: 1;
+            background: var(--bg-chat-main);
+            padding: 24px 32px;
+        }
 
-    /* 清理旧的重复样式，确保没有冲突 */
-    .profile-header,
-    .profile-view .profile-header,
-    .profile-view::before {
-        display: none !important;
-    }
+        /* 清理旧的重复样式，确保没有冲突 */
+        .profile-header,
+        .profile-view .profile-header,
+        .profile-view::before {
+            display: none !important;
+        }
 
-    /* 保持视图切换逻辑不变 */
-    .chat-main.profile-hidden .chat-view,
-    .chat-main.profile-hidden .settings-view {
-        display: none;
-    }
-    .chat-main.profile-hidden .profile-view {
-        display: flex;
-    }
+        /* 保持视图切换逻辑不变 */
+        .chat-main.profile-hidden .chat-view,
+        .chat-main.profile-hidden .settings-view {
+            display: none;
+        }
+        .chat-main.profile-hidden .profile-view {
+            display: flex;
+        }
 
-    .chat-main.chat-hidden .chat-view,
-    .chat-main.chat-hidden .profile-view {
-      display: none;
-    }
-    .chat-main.chat-hidden .settings-view {
-      display: block;
-    }
+        .chat-main.chat-hidden .chat-view,
+        .chat-main.chat-hidden .profile-view {
+          display: none;
+        }
+        .chat-main.chat-hidden .settings-view {
+          display: block;
+        }
 
-    .chat-main.profile-hidden .chat-view,
-    .chat-main.profile-hidden .settings-view {
-      display: none;
-    }
-    .chat-main.profile-hidden .profile-view {
-      display: block;
-    }
+        .chat-main.profile-hidden .chat-view,
+        .chat-main.profile-hidden .settings-view {
+          display: none;
+        }
+        .chat-main.profile-hidden .profile-view {
+          display: block;
+        }
 
-    /* 模态框样式 */
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.7);
-      z-index: 2000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .modal-container {
-      background: var(--drawer-bg);
-      border-radius: 16px;
-      width: 500px;
-      max-width: 90%;
-      max-height: 80vh;
-      display: flex;
-      flex-direction: column;
-      border: 1px solid var(--border-light);
-    }
-    .modal-header {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--border-light);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .modal-header h3 { margin: 0; }
-    .modal-close {
-      background: none; border: none;
-      font-size: 24px; color: var(--text-secondary);
-      cursor: pointer;
-    }
-    .config-group {
-    margin-top: 10px;   /* 调整这个值来控制距离上一个输入框的间距 */
-    }
-    .config-group:first-of-type {
-        margin-top: 0;     /* 第一个配置组不要上边距 */
-    }
-    .modal-body {
-      padding: 20px;
-      flex: 1;
-      overflow: auto;
-    }
-    .crop-container {
-      max-height: 300px;
-      display: flex;
-      justify-content: center;
-    }
-    .crop-container img {
-      max-width: 100%;
-      max-height: 300px;
-      display: block;
-    }
-    .modal-footer {
-      padding: 16px 20px;
-      border-top: 1px solid var(--border-light);
-      display: flex;
-      gap: 12px;
-      justify-content: flex-end;
-    }
-    /* 统一交互光标样式 */
-    .chat-title,
-    .sidebar-icon,
-    .menu-btn,
-    .send-btn,
-    .user-avatar,
-    .btn,
-    .close-drawer,
-    .modal-close {
-      user-select: none;
-    }
+        /* 模态框样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-container {
+            background: var(--drawer-bg);
+            border-radius: 16px;
+            width: 500px;
+            max-width: 90%;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border-light);
+        }
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .modal-header h3 { margin: 0; }
+        .modal-close {
+            background: none; border: none;
+            font-size: 24px; color: var(--text-secondary);
+            cursor: pointer;
+        }
+        .config-group {
+            margin-top: 10px;   /* 调整这个值来控制距离上一个输入框的间距 */
+        }
+        .config-group:first-of-type {
+            margin-top: 0;     /* 第一个配置组不要上边距 */
+        }
+        .modal-body {
+            padding: 20px;
+            flex: 1;
+            overflow: auto;
+        }
+        .crop-container {
+            max-height: 300px;
+            display: flex;
+            justify-content: center;
+        }
+        .crop-container img {
+            max-width: 100%;
+            max-height: 300px;
+            display: block;
+        }
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        /* 统一交互光标样式 */
+        .chat-title,
+        .sidebar-icon,
+        .menu-btn,
+        .send-btn,
+        .user-avatar,
+        .btn,
+        .close-drawer,
+        .modal-close {
+            user-select: none;
+        }
 
-    /* 可点击元素保留手型指针（如果希望） */
-    .sidebar-icon,
-    .menu-btn,
-    .send-btn,
-    .user-avatar,
-    .btn,
-    .close-drawer,
-    .modal-close {
-      cursor: pointer;
-    }
+        /* 可点击元素保留手型指针（如果希望） */
+        .sidebar-icon,
+        .menu-btn,
+        .send-btn,
+        .user-avatar,
+        .btn,
+        .close-drawer,
+        .modal-close {
+            cursor: pointer;
+        }
 
-    /* 如果希望标题栏文字显示默认箭头，单独设置 */
-    .chat-title {
-      cursor: default;
-    }
-  </style>
+        /* 如果希望标题栏文字显示默认箭头，单独设置 */
+        .chat-title {
+            cursor: default;
+        }
+
+        /* 人物管理视图 */
+        .character-view {
+            flex: 1;
+            background: var(--bg-chat-main);
+            padding: 24px 32px;
+            overflow-y: auto;
+            color: var(--text-primary);
+            display: none;
+        }
+        .character-view.active {
+            display: block;
+        }
+        .chat-main.character-hidden .chat-view,
+        .chat-main.character-hidden .settings-view,
+        .chat-main.character-hidden .profile-view {
+            display: none;
+        }
+        .chat-main.character-hidden .character-view {
+            display: block;
+        }
+    </style>
 </head>
 <body>
 <div class="app">
-  <!-- 左侧菜单 -->
-  <aside class="sidebar">
-    <div class="sidebar-icon active" title="当前对话"><i class="fas fa-comment-dots"></i></div>
-    <div class="sidebar-icon" title="联系人"><i class="fas fa-address-book"></i></div>
-    <div class="sidebar-divider"></div>
-    <div class="sidebar-icon" title="设置"><i class="fas fa-cog"></i></div>
-    <div class="sidebar-icon" title="更多"><i class="fas fa-plus"></i></div>
-
-    <div class="sidebar-footer">
-      <div class="user-avatar" id="userAvatarBtn" title="个人主页">
-        <i class="fas fa-user"></i>
-      </div>
-    </div>
-  </aside>
+    <!-- 左侧菜单 -->
+    <aside class="sidebar">
+        <div class="sidebar-icon active" title="当前对话"><i class="fas fa-comment-dots"></i></div>
+        <!-- 将原来的 address-book 改为 user-circle 或 user-tag，表示人物 -->
+        <div class="sidebar-icon" title="人物管理" id="characterIcon"><i class="fas fa-user-tag"></i></div>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-icon" title="设置"><i class="fas fa-cog"></i></div>
+        <div class="sidebar-icon" title="更多"><i class="fas fa-plus"></i></div>
+        <!-- 底部头像保持不变 -->
+        <div class="sidebar-footer">
+            <div class="user-avatar" id="userAvatarBtn" title="个人主页">
+                <i class="fas fa-user"></i>
+            </div>
+        </div>
+    </aside>
 
   <!-- 聊天主体 -->
   <main class="chat-main" id="chatMain">
@@ -810,7 +832,7 @@
         <div class="header-left"></div>
         <div class="chat-title" id="chatTitleDisplay">✨ 青绿角色</div>
         <div class="header-right">
-          <button class="menu-btn" id="configMenuBtn" title="API 设置 · 主题切换"><i class="fas fa-ellipsis-h"></i></button>
+            <button class="menu-btn" id="configMenuBtn" title="API 设置 · 主题切换"><i class="fas fa-ellipsis-h"></i></button>
         </div>
       </header>
       <div class="messages-area" id="messagesArea">
@@ -900,16 +922,6 @@
           <span class="status-badge" id="apiStatus">未设置</span>
         </div>
 
-        <div class="config-group">
-          <label>角色名称</label>
-          <input type="text" id="characterNameInput" value="青绿助手">
-        </div>
-
-        <div class="config-group">
-          <label>人设提示词</label>
-          <textarea id="systemPromptInput" rows="3">你是一个冷静又带点青涩的助手，说话简洁但偶尔流露出温柔。</textarea>
-        </div>
-
         <div style="display: flex; gap: 12px; margin-top: 16px;">
           <button class="btn btn-primary" id="saveConfigBtn"><i class="fas fa-save"></i> 保存配置</button>
           <button class="btn btn-secondary" id="testConnectionBtn"><i class="fas fa-vial"></i> 测试连接</button>
@@ -949,6 +961,100 @@
           <p>敬请期待</p>
         </div>
       </div>
+    </div>
+    <!-- 人物管理视图 -->
+    <div class="character-view" id="characterView">
+        <h2 style="margin-bottom: 20px; font-weight: 500;"><i class="fas fa-user-tag" style="margin-right: 12px;"></i>人物设定</h2>
+
+        <!-- 世界书卡片 -->
+        <div class="settings-card">
+            <h3><i class="fas fa-globe"></i> 世界书 · 世界观</h3>
+            <div class="config-group">
+                <label>背景设定（不变的世界规则）</label>
+                <textarea id="worldBookInput" rows="4" placeholder="例如：这是一个魔法与科技并存的近未来世界，人类与精灵共存，但龙族已灭绝千年……"></textarea>
+            </div>
+        </div>
+
+        <!-- 人物基本表单卡片 -->
+        <div class="settings-card">
+            <h3><i class="fas fa-id-card"></i> 人物表单</h3>
+            <!-- 新增：角色名称（聊天标题会显示这个） -->
+            <div class="config-group">
+                <label>角色名称（显示在标题栏）</label>
+                <input type="text" id="characterNameInput" placeholder="例如：青绿助手" value="青绿助手">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="config-group">
+                    <label>姓名</label>
+                    <input type="text" id="charNameInput" placeholder="例如：林清瑶">
+                </div>
+                <div class="config-group">
+                    <label>年龄</label>
+                    <input type="text" id="charAgeInput" placeholder="例如：24">
+                </div>
+                <div class="config-group">
+                    <label>性别</label>
+                    <input type="text" id="charGenderInput" placeholder="例如：女">
+                </div>
+            </div>
+            <div class="config-group">
+                <label>外貌描写</label>
+                <textarea id="charAppearanceInput" rows="2" placeholder="例如：黑色长发，常穿素色长裙，眼神清冷但偶有温柔"></textarea>
+            </div>
+            <!-- 新增：人设提示词（基础性格指令） -->
+            <div class="config-group">
+                <label>人设提示词（基础角色指令）</label>
+                <textarea id="systemPromptInput" rows="3" placeholder="例如：你是一个冷静又带点青涩的助手，说话简洁但偶尔流露出温柔。">你是一个冷静又带点青涩的助手，说话简洁但偶尔流露出温柔。</textarea>
+            </div>
+        </div>
+        <!-- 性格卡片 -->
+        <div class="settings-card">
+            <h3><i class="fas fa-smile"></i> 性格</h3>
+            <div class="config-group">
+                <label>性格描述</label>
+                <textarea id="charPersonalityInput" rows="3" placeholder="例如：外表冷淡，内心善良，对认可的人会不自觉地关心，说话带点傲娇"></textarea>
+            </div>
+        </div>
+
+        <!-- 过往经历卡片 -->
+        <div class="settings-card">
+            <h3><i class="fas fa-history"></i> 过往经历</h3>
+            <div class="config-group">
+                <label>背景故事</label>
+                <textarea id="charBackstoryInput" rows="4" placeholder="例如：曾是帝国骑士，因不愿服从腐败命令而离开军队，流浪中习得医术……"></textarea>
+            </div>
+        </div>
+
+        <!-- 核心记忆卡片 -->
+        <div class="settings-card">
+            <h3><i class="fas fa-brain"></i> 核心记忆</h3>
+            <div class="config-group">
+                <label>重要事件/人物关系</label>
+                <textarea id="charMemoriesInput" rows="3" placeholder="例如：- 师父在临终前将古剑托付给她\n- 曾经救过一个叫阿诺的少年\n- 对甜食没有抵抗力"></textarea>
+            </div>
+        </div>
+
+        <!-- 对话风格卡片 -->
+        <div class="settings-card">
+            <h3><i class="fas fa-comment-dots"></i> 对话风格</h3>
+            <div class="config-group">
+                <label>风格描述</label>
+                <textarea id="charStyleInput" rows="2" placeholder="例如：句子简短，偶尔使用「……」，生气时会说「哼」"></textarea>
+            </div>
+            <details style="margin-top: 12px;">
+                <summary style="cursor: pointer; color: var(--accent);">高级设置 · 对话示例</summary>
+                <div class="config-group" style="margin-top: 12px;">
+                    <label>示例对话（每行一条，格式：用户说 → 角色回复）</label>
+                    <textarea id="charExamplesInput" rows="4" placeholder="用户：你好呀\n角色：……你是谁？有什么事吗？\n用户：想和你聊聊\n角色：哼，我很忙的，不过既然你坚持……"></textarea>
+                </div>
+            </details>
+        </div>
+
+        <!-- 保存按钮 -->
+        <div style="display: flex; gap: 12px; margin-top: 8px; margin-bottom: 24px;">
+            <button class="btn btn-primary" id="saveCharacterBtn"><i class="fas fa-save"></i> 保存人物设定</button>
+            <button class="btn btn-secondary" id="resetCharacterBtn"><i class="fas fa-undo-alt"></i> 重置</button>
+        </div>
     </div>
   </main>
 
@@ -1036,37 +1142,57 @@
   </div>
 </div>
 
+
+
 <script>
   (function(){
     "use strict";
 
-    // DOM 元素
+    // ---------- DOM 元素 (提前声明，避免作用域问题) ----------
     const apiProviderSelect = document.getElementById('apiProviderSelect');
     const modelSelect = document.getElementById('modelSelect');
-
     const messagesArea = document.getElementById('messagesArea');
     const messageInput = document.getElementById('messageInput');
     const sendBtn = document.getElementById('sendBtn');
     const chatTitleDisplay = document.getElementById('chatTitleDisplay');
-
     const configBtn = document.getElementById('configMenuBtn');
     const drawer = document.getElementById('configDrawer');
     const overlay = document.getElementById('drawerOverlay');
     const closeDrawerBtn = document.getElementById('closeDrawerBtn');
-
     const modelInput = document.getElementById('modelInput');
     const characterNameInput = document.getElementById('characterNameInput');
     const systemPromptInput = document.getElementById('systemPromptInput');
-
     const testConnectionBtn = document.getElementById('testConnectionBtn');
     const clearChatBtn = document.getElementById('clearChatBtn');
     const saveConfigBtn = document.getElementById('saveConfigBtn');
-
     const apiKeyInput = document.getElementById('apiKeyInput');
     const apiUrlInput = document.getElementById('apiUrlInput');
     const apiStatus = document.getElementById('apiStatus');
+    const themeToggleSettings = document.getElementById('themeToggleSettings');
+    const themeLabelTextSettings = document.getElementById('themeLabelTextSettings');
+    const gearIcon = document.querySelector('.sidebar-icon[title="设置"]');
+    const chatIcon = document.querySelector('.sidebar-icon[title="当前对话"]');
+    const characterIcon = document.getElementById('characterIcon');
+    const userAvatarBtn = document.getElementById('userAvatarBtn');
+    const chatMain = document.getElementById('chatMain');
+    const profileDisplayName = document.getElementById('profileDisplayName');
+    const profileBioDisplay = document.getElementById('profileBioDisplay');
+    const editProfileNameInput = document.getElementById('editProfileNameInput');
+    const editProfileBioInput = document.getElementById('editProfileBioInput');
+    const worldBookInput = document.getElementById('worldBookInput');
+    const charNameInput = document.getElementById('charNameInput');
+    const charAgeInput = document.getElementById('charAgeInput');
+    const charGenderInput = document.getElementById('charGenderInput');
+    const charAppearanceInput = document.getElementById('charAppearanceInput');
+    const charPersonalityInput = document.getElementById('charPersonalityInput');
+    const charBackstoryInput = document.getElementById('charBackstoryInput');
+    const charMemoriesInput = document.getElementById('charMemoriesInput');
+    const charStyleInput = document.getElementById('charStyleInput');
+    const charExamplesInput = document.getElementById('charExamplesInput');
+    const saveCharacterBtn = document.getElementById('saveCharacterBtn');
+    const resetCharacterBtn = document.getElementById('resetCharacterBtn');
 
-    // 状态
+    // ---------- 状态 ----------
     let messages = [
       { role: 'assistant', content: '你好！我是青绿色调的角色。点击右上角「···」配置 API 或切换白天/黑夜模式。', timestamp: Date.now() }
     ];
@@ -1079,7 +1205,20 @@
     };
     let isGenerating = false;
     let currentTypingMessageId = null;
-    let currentTheme = 'dark'; // 'dark' 或 'light'
+    let currentTheme = 'dark';
+
+    let characterData = {
+      worldBook: '',
+      name: '',
+      age: '',
+      gender: '',
+      appearance: '',
+      personality: '',
+      backstory: '',
+      memories: '',
+      style: '',
+      examples: ''
+    };
 
     // ---------- 主题管理 ----------
     function applyTheme(theme) {
@@ -1090,23 +1229,14 @@
       }
       currentTheme = theme;
       localStorage.setItem('chat_theme', theme);
-
-      const themeToggleSettings = document.getElementById('themeToggleSettings');
-      if (themeToggleSettings) {
-        themeToggleSettings.classList.toggle('active', theme === 'light');
-      }
-      const themeLabelTextSettings = document.getElementById('themeLabelTextSettings');
-      if (themeLabelTextSettings) {
-        themeLabelTextSettings.textContent = theme === 'light' ? '浅色模式' : '深色模式';
-      }
+      if (themeToggleSettings) themeToggleSettings.classList.toggle('active', theme === 'light');
+      if (themeLabelTextSettings) themeLabelTextSettings.textContent = theme === 'light' ? '浅色模式' : '深色模式';
     }
 
     function toggleTheme() {
-      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      applyTheme(newTheme);
+      applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
     }
 
-    // 加载主题
     function loadTheme() {
       const saved = localStorage.getItem('chat_theme') || 'dark';
       applyTheme(saved);
@@ -1114,10 +1244,10 @@
 
     // ---------- 配置管理 ----------
     function loadConfigFromStorage() {
-      const saved = localStorage.getItem('chat_roleplay_config_v2');
-      if (saved) {
-        try { config = { ...config, ...JSON.parse(saved) }; } catch(e) {}
-      }
+      try {
+        const saved = localStorage.getItem('chat_roleplay_config_v2');
+        if (saved) config = { ...config, ...JSON.parse(saved) };
+      } catch(e) {}
       apiKeyInput.value = config.apiKey || '';
       apiUrlInput.value = config.apiUrl;
       modelInput.value = config.model;
@@ -1129,7 +1259,9 @@
     }
 
     function saveConfigToStorage() {
-      localStorage.setItem('chat_roleplay_config_v2', JSON.stringify(config));
+      try {
+        localStorage.setItem('chat_roleplay_config_v2', JSON.stringify(config));
+      } catch(e) {}
     }
 
     function updateChatTitle() {
@@ -1161,16 +1293,18 @@
       updateApiStatusBadge();
     }
 
-    // 渲染
+    // ---------- 消息渲染 ----------
     function formatTime(ts) {
       const d = new Date(ts);
       return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
     }
+
     function escapeHtml(text) {
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
     }
+
     function renderMessages() {
       let html = '';
       messages.forEach(msg => {
@@ -1183,10 +1317,12 @@
       messagesArea.innerHTML = html;
       messagesArea.scrollTop = messagesArea.scrollHeight;
     }
+
     function addMessage(role, content) {
       messages.push({ role, content, timestamp: Date.now() });
       renderMessages();
     }
+
     function removeTypingIndicator() {
       if (currentTypingMessageId) {
         const el = document.getElementById(currentTypingMessageId);
@@ -1194,22 +1330,66 @@
         currentTypingMessageId = null;
       }
     }
+
     function showTypingIndicator() {
       removeTypingIndicator();
       currentTypingMessageId = 'typing-' + Date.now();
       renderMessages();
     }
+
     function resetConversation() {
       messages = [{ role: 'assistant', content: '对话已重置。', timestamp: Date.now() }];
       removeTypingIndicator();
       renderMessages();
     }
 
-    // API调用
+    // ---------- 人物设定管理 ----------
+    function loadCharacterFromStorage() {
+      try {
+        const saved = localStorage.getItem('character_data');
+        if (saved) characterData = { ...characterData, ...JSON.parse(saved) };
+      } catch(e) {}
+      worldBookInput.value = characterData.worldBook || '';
+      charNameInput.value = characterData.name || '';
+      charAgeInput.value = characterData.age || '';
+      charGenderInput.value = characterData.gender || '';
+      charAppearanceInput.value = characterData.appearance || '';
+      charPersonalityInput.value = characterData.personality || '';
+      charBackstoryInput.value = characterData.backstory || '';
+      charMemoriesInput.value = characterData.memories || '';
+      charStyleInput.value = characterData.style || '';
+      charExamplesInput.value = characterData.examples || '';
+    }
+
+    function saveCharacterToStorage() {
+      characterData = {
+        worldBook: worldBookInput.value.trim(),
+        name: charNameInput.value.trim(),
+        age: charAgeInput.value.trim(),
+        gender: charGenderInput.value.trim(),
+        appearance: charAppearanceInput.value.trim(),
+        personality: charPersonalityInput.value.trim(),
+        backstory: charBackstoryInput.value.trim(),
+        memories: charMemoriesInput.value.trim(),
+        style: charStyleInput.value.trim(),
+        examples: charExamplesInput.value.trim()
+      };
+      try {
+        localStorage.setItem('character_data', JSON.stringify(characterData));
+        alert('人物设定已保存');
+      } catch(e) {
+        alert('保存失败，可能是存储空间已满');
+      }
+    }
+
+    // ---------- API调用 ----------
     async function callAI(userMessage) {
       if (!config.apiKey) throw new Error('请先配置 API Key');
-      const systemMsg = { role: 'system', content: config.systemPrompt };
-      const history = messages.filter(m => m.role==='user'||m.role==='assistant').slice(-20);
+      const systemMsg = {
+        role: 'system',
+        content: `[世界观]\n${characterData.worldBook}\n\n[人物信息]\n姓名：${characterData.name}\n年龄：${characterData.age}\n性别：${characterData.gender}\n外貌：${characterData.appearance}\n\n[性格]\n${characterData.personality}\n\n[过往经历]\n${characterData.backstory}\n\n[核心记忆]\n${characterData.memories}\n\n[对话风格]\n${characterData.style}\n\n[对话示例]\n${characterData.examples}\n\n[当前角色扮演指令]\n${config.systemPrompt}`
+      };
+      const history = messages.filter(m => m.role==='user'||m.role==='assistant').slice(-20).map(m => ({ role: m.role, content: m.content }));
       const payload = {
         model: config.model,
         messages: [systemMsg, ...history],
@@ -1265,17 +1445,11 @@
       } catch(e) { alert('网络错误: ' + e.message); }
     }
 
-    // 抽屉控制
-    function openDrawer() {
-      drawer.classList.add('open');
-      overlay.classList.add('show');
-    }
-    function closeDrawer() {
-      drawer.classList.remove('open');
-      overlay.classList.remove('show');
-    }
+    // ---------- 抽屉控制 ----------
+    function openDrawer() { drawer.classList.add('open'); overlay.classList.add('show'); }
+    function closeDrawer() { drawer.classList.remove('open'); overlay.classList.remove('show'); }
 
-    // 预设 API 地址映射
+    // ---------- 预设地址 ----------
     const apiUrlPresets = {
       deepseek: 'https://api.deepseek.com/v1/chat/completions',
       openai: 'https://api.openai.com/v1/chat/completions',
@@ -1283,85 +1457,49 @@
       groq: 'https://api.groq.com/openai/v1/chat/completions',
       custom: ''
     };
-
-    // 切换服务商时自动填充地址
     function updateApiUrlFromProvider() {
       const provider = apiProviderSelect.value;
-      if (provider !== 'custom') {
-        apiUrlInput.value = apiUrlPresets[provider];
-      } else {
-        apiUrlInput.value = config.apiUrl || '';  // 保留已保存的自定义地址
-      }
+      if (provider !== 'custom') apiUrlInput.value = apiUrlPresets[provider];
     }
-
-    // 模型下拉与输入框联动
     function updateModelInputFromSelect() {
-      const selectedModel = modelSelect.value;
-      if (selectedModel !== 'custom') {
-        modelInput.value = selectedModel;
-      }
+      const selected = modelSelect.value;
+      if (selected !== 'custom') modelInput.value = selected;
     }
-
-    // 初始化下拉菜单的值（从已保存配置中回显）
     function populateSelectsFromConfig() {
-      // 尝试匹配服务商
       const url = config.apiUrl;
       if (url.includes('deepseek.com')) apiProviderSelect.value = 'deepseek';
       else if (url.includes('openrouter.ai')) apiProviderSelect.value = 'openrouter';
       else if (url.includes('groq.com')) apiProviderSelect.value = 'groq';
       else if (url.includes('api.openai.com')) apiProviderSelect.value = 'openai';
       else apiProviderSelect.value = 'custom';
-
-      // 匹配模型（如果与预设完全一致则选中对应项，否则设为 custom）
       const model = config.model;
       let found = false;
       for (let opt of modelSelect.options) {
-        if (opt.value === model) {
-          modelSelect.value = model;
-          found = true;
-          break;
-        }
+        if (opt.value === model) { modelSelect.value = model; found = true; break; }
       }
       if (!found) modelSelect.value = 'custom';
-
-      // 同步输入框
       apiUrlInput.value = config.apiUrl;
       modelInput.value = config.model;
     }
 
-    // 绑定事件
-    apiProviderSelect.addEventListener('change', function() {
-      updateApiUrlFromProvider();
-      // 如果选了 Groq 或 OpenRouter，同时建议用户更新模型（不做自动改，但可提示）
-    });
-    modelSelect.addEventListener('change', updateModelInputFromSelect);
-
-    // 修改 syncConfigFromForm 函数，确保从下拉+输入框读取正确的值
-    // 找到原来的 syncConfigFromForm，将其中的：
-    //   config.apiUrl = apiUrlInput.value.trim();
-    //   config.model = modelInput.value.trim();
-    // 保持不变即可，因为输入框会随下拉变化。
-
-    // 裁剪相关变量
+    // ---------- 裁剪相关 ----------
     let cropper = null;
-    let currentCropType = 'avatar'; // 'avatar' 或 'cover'
+    let currentCropType = 'avatar';
     const cropModalOverlay = document.getElementById('cropModalOverlay');
     const cropImage = document.getElementById('cropImage');
     const closeCropModal = document.getElementById('closeCropModal');
     const cancelCropBtn = document.getElementById('cancelCropBtn');
     const saveCropBtn = document.getElementById('saveCropBtn');
 
-    // 打开裁剪模态框
     function openCropModal(file, type) {
       currentCropType = type;
       const reader = new FileReader();
       reader.onload = (e) => {
         cropImage.src = e.target.result;
         cropModalOverlay.style.display = 'flex';
-        // 初始化 Cropper
         if (cropper) cropper.destroy();
         cropper = new Cropper(cropImage, {
-          aspectRatio: type === 'avatar' ? 1 : 16 / 9, // 头像1:1，背景16:9
+          aspectRatio: type === 'avatar' ? 1 : 16 / 9,
           viewMode: 1,
           autoCropArea: 1,
           responsive: true,
@@ -1370,142 +1508,127 @@
       reader.readAsDataURL(file);
     }
 
-    // 关闭模态框
     function closeCropModalFunc() {
       cropModalOverlay.style.display = 'none';
-      if (cropper) {
-        cropper.destroy();
-        cropper = null;
-      }
+      if (cropper) { cropper.destroy(); cropper = null; }
     }
 
-    // 保存裁剪结果
     function saveCroppedImage() {
       if (!cropper) return;
       const canvas = cropper.getCroppedCanvas();
       const dataURL = canvas.toDataURL('image/jpeg', 0.9);
-
       if (currentCropType === 'avatar') {
-        // 更新头像显示
-        const avatarImg = document.querySelector('#userAvatarBtn i');
-        // 如果原来有 i 标签，替换为 img
         const avatarContainer = document.getElementById('userAvatarBtn');
-        avatarContainer.innerHTML = ''; // 清空
+        avatarContainer.innerHTML = '';
         const img = document.createElement('img');
         img.src = dataURL;
-        img.style.width = '100%';
-        img.style.height = '100%';
-        img.style.objectFit = 'cover';
+        img.style.width = '100%'; img.style.height = '100%'; img.style.objectFit = 'cover';
         avatarContainer.appendChild(img);
-
-        // 同时更新个人主页的大头像
         const largeAvatar = document.getElementById('profileAvatarLarge');
         largeAvatar.innerHTML = '';
         const largeImg = document.createElement('img');
         largeImg.src = dataURL;
-        largeImg.style.width = '100%';
-        largeImg.style.height = '100%';
-        largeImg.style.objectFit = 'cover';
+        largeImg.style.width = '100%'; largeImg.style.height = '100%'; largeImg.style.objectFit = 'cover';
         largeAvatar.appendChild(largeImg);
-
-        // 存储到 localStorage
-        localStorage.setItem('user_avatar', dataURL);
+        try { localStorage.setItem('user_avatar', dataURL); } catch(e) {}
       } else {
-        // 背景图：应用到个人主页
         document.documentElement.style.setProperty('--profile-bg-image', `url(${dataURL})`);
-        localStorage.setItem('user_cover', dataURL);
+        try { localStorage.setItem('user_cover', dataURL); } catch(e) {}
       }
-
       closeCropModalFunc();
     }
 
-    // 绑定上传按钮事件
     function initUploadButtons() {
       const fileInput = document.createElement('input');
       fileInput.type = 'file';
       fileInput.accept = 'image/*';
       fileInput.style.display = 'none';
       document.body.appendChild(fileInput);
-
-      // 编辑弹窗中的上传按钮
       const editUploadAvatarBtn = document.getElementById('editUploadAvatarBtn');
       const editUploadCoverBtn = document.getElementById('editUploadCoverBtn');
-
       if (editUploadAvatarBtn) {
-          editUploadAvatarBtn.addEventListener('click', () => {
-              fileInput.onchange = (e) => {
-                  const file = e.target.files[0];
-                  if (file) openCropModal(file, 'avatar');
-                  fileInput.value = '';
-              };
-              fileInput.click();
-          });
+        editUploadAvatarBtn.addEventListener('click', () => {
+          fileInput.onchange = (e) => { const f = e.target.files[0]; if (f) openCropModal(f, 'avatar'); fileInput.value = ''; };
+          fileInput.click();
+        });
       }
-
       if (editUploadCoverBtn) {
-          editUploadCoverBtn.addEventListener('click', () => {
-              fileInput.onchange = (e) => {
-                  const file = e.target.files[0];
-                  if (file) openCropModal(file, 'cover');
-                  fileInput.value = '';
-              };
-              fileInput.click();
-          });
+        editUploadCoverBtn.addEventListener('click', () => {
+          fileInput.onchange = (e) => { const f = e.target.files[0]; if (f) openCropModal(f, 'cover'); fileInput.value = ''; };
+          fileInput.click();
+        });
       }
+      closeCropModal.addEventListener('click', closeCropModalFunc);
+      cancelCropBtn.addEventListener('click', closeCropModalFunc);
+      saveCropBtn.addEventListener('click', saveCroppedImage);
+      cropModalOverlay.addEventListener('click', (e) => { if (e.target === cropModalOverlay) closeCropModalFunc(); });
+    }
 
-    // 裁剪模态框关闭事件
-    closeCropModal.addEventListener('click', closeCropModalFunc);
-    cancelCropBtn.addEventListener('click', closeCropModalFunc);
-    saveCropBtn.addEventListener('click', saveCroppedImage);
-    cropModalOverlay.addEventListener('click', (e) => {
-        if (e.target === cropModalOverlay) closeCropModalFunc();
-    });
-}
-
-    // 加载已保存的头像和背景
     function loadUserImages() {
-      const savedAvatar = localStorage.getItem('user_avatar');
-      if (savedAvatar) {
-        const avatarContainer = document.getElementById('userAvatarBtn');
-        avatarContainer.innerHTML = '';
-        const img = document.createElement('img');
-        img.src = savedAvatar;
-        img.style.width = '100%';
-        img.style.height = '100%';
-        img.style.objectFit = 'cover';
-        avatarContainer.appendChild(img);
+      try {
+        const savedAvatar = localStorage.getItem('user_avatar');
+        if (savedAvatar) {
+          const avatarContainer = document.getElementById('userAvatarBtn');
+          avatarContainer.innerHTML = '';
+          const img = document.createElement('img');
+          img.src = savedAvatar;
+          img.style.width = '100%'; img.style.height = '100%'; img.style.objectFit = 'cover';
+          avatarContainer.appendChild(img);
+          const largeAvatar = document.getElementById('profileAvatarLarge');
+          largeAvatar.innerHTML = '';
+          const largeImg = document.createElement('img');
+          largeImg.src = savedAvatar;
+          largeImg.style.width = '100%'; largeImg.style.height = '100%'; largeImg.style.objectFit = 'cover';
+          largeAvatar.appendChild(largeImg);
+        }
+        const savedCover = localStorage.getItem('user_cover');
+        if (savedCover) document.documentElement.style.setProperty('--profile-bg-image', `url(${savedCover})`);
+      } catch(e) {}
+    }
 
-        const largeAvatar = document.getElementById('profileAvatarLarge');
-        largeAvatar.innerHTML = '';
-        const largeImg = document.createElement('img');
-        largeImg.src = savedAvatar;
-        largeImg.style.width = '100%';
-        largeImg.style.height = '100%';
-        largeImg.style.objectFit = 'cover';
-        largeAvatar.appendChild(largeImg);
-      }
+    function loadProfile() {
+      try {
+        const savedName = localStorage.getItem('profile_name') || '用户';
+        const savedBio = localStorage.getItem('profile_bio') || '在一隅，遇见自己。';
+        profileDisplayName.textContent = savedName;
+        profileBioDisplay.innerHTML = `<i class="fas fa-quote-left" style="margin-right: 8px;"></i>${savedBio}`;
+        editProfileNameInput.value = savedName;
+        editProfileBioInput.value = savedBio;
+      } catch(e) {}
+    }
 
-      const savedCover = localStorage.getItem('user_cover');
-      if (savedCover) {
-        document.documentElement.style.setProperty('--profile-bg-image', `url(${savedCover})`);
+    // ---------- 视图切换逻辑 ----------
+    function setActiveView(view) {
+      chatMain.classList.remove('chat-hidden', 'profile-hidden', 'character-hidden');
+      document.querySelectorAll('.sidebar-icon').forEach(icon => icon.classList.remove('active'));
+      userAvatarBtn.classList.remove('active');
+      if (view === 'chat') {
+        chatIcon.classList.add('active');
+      } else if (view === 'settings') {
+        chatMain.classList.add('chat-hidden');
+        gearIcon.classList.add('active');
+      } else if (view === 'profile') {
+        chatMain.classList.add('profile-hidden');
+        userAvatarBtn.classList.add('active');
+      } else if (view === 'character') {
+        chatMain.classList.add('character-hidden');
+        characterIcon.classList.add('active');
       }
     }
 
-    // 初始化
+    // ---------- 初始化 ----------
     function init() {
       loadTheme();
       loadConfigFromStorage();
+      loadCharacterFromStorage();
+      loadProfile();
+      loadUserImages();
       renderMessages();
 
-      const themeToggleSettings = document.getElementById('themeToggleSettings');
-      if (themeToggleSettings) {
-        themeToggleSettings.addEventListener('click', toggleTheme);
-      }
-
+      // 事件绑定
+      if (themeToggleSettings) themeToggleSettings.addEventListener('click', toggleTheme);
       sendBtn.addEventListener('click', handleSendMessage);
-      messageInput.addEventListener('keydown', e => {
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); }
-      });
+      messageInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } });
       messageInput.addEventListener('input', function(){ this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 120) + 'px'; });
       configBtn.addEventListener('click', openDrawer);
       closeDrawerBtn.addEventListener('click', closeDrawer);
@@ -1513,94 +1636,50 @@
       saveConfigBtn.addEventListener('click', ()=>{ applyConfig(); closeDrawer(); });
       testConnectionBtn.addEventListener('click', testConnection);
       clearChatBtn.addEventListener('click', ()=>{ if(confirm('清空对话？')) resetConversation(); });
-      updateChatTitle();
+      apiProviderSelect.addEventListener('change', updateApiUrlFromProvider);
+      modelSelect.addEventListener('change', updateModelInputFromSelect);
 
-      // 视图元素
-      const gearIcon = document.querySelector('.sidebar-icon[title="设置"]');
-      const chatMain = document.getElementById('chatMain');
-      const userAvatarBtn = document.getElementById('userAvatarBtn');
-      const chatIcon = document.querySelector('.sidebar-icon[title="当前对话"]');
+      // 视图切换
+      chatIcon.addEventListener('click', () => setActiveView('chat'));
+      gearIcon.addEventListener('click', () => setActiveView('settings'));
+      userAvatarBtn.addEventListener('click', () => setActiveView('profile'));
+      characterIcon.addEventListener('click', () => setActiveView('character'));
 
-      // 齿轮点击：切换到设置视图
-      gearIcon.addEventListener('click', () => {
-        chatMain.classList.remove('profile-hidden');
-        chatMain.classList.add('chat-hidden');
-        document.querySelectorAll('.sidebar-icon').forEach(icon => icon.classList.remove('active'));
-        gearIcon.classList.add('active');
-        userAvatarBtn.classList.remove('active');
+      // 人物设定保存/重置
+      saveCharacterBtn.addEventListener('click', saveCharacterToStorage);
+      resetCharacterBtn.addEventListener('click', () => {
+        if (confirm('重置所有人物设定？')) {
+          try { localStorage.removeItem('character_data'); } catch(e) {}
+          characterData = { worldBook: '', name: '', age: '', gender: '', appearance: '', personality: '', backstory: '', memories: '', style: '', examples: '' };
+          loadCharacterFromStorage();
+        }
       });
 
-      // 对话图标点击：返回聊天视图
-      chatIcon.addEventListener('click', () => {
-        chatMain.classList.remove('profile-hidden', 'chat-hidden');
-        document.querySelectorAll('.sidebar-icon').forEach(icon => icon.classList.remove('active'));
-        chatIcon.classList.add('active');
-        userAvatarBtn.classList.remove('active');
-      });
-
-      // 头像点击：进入个人主页
-      userAvatarBtn.addEventListener('click', () => {
-        chatMain.classList.add('profile-hidden');
-        chatMain.classList.remove('chat-hidden');
-        document.querySelectorAll('.sidebar-icon').forEach(icon => icon.classList.remove('active'));
-        userAvatarBtn.classList.add('active');
-      });
-
-      // 个人资料相关
-      const profileDisplayName = document.getElementById('profileDisplayName');
-
-      // ⭐ 提前声明编辑弹窗中的输入框
-      const editProfileNameInput = document.getElementById('editProfileNameInput');
-      const editProfileBioInput = document.getElementById('editProfileBioInput');
-
-      function loadProfile() {
-        const savedName = localStorage.getItem('profile_name') || '用户';
-        const savedBio = localStorage.getItem('profile_bio') || '在一隅，遇见自己。';
-        // 更新顶部显示
-        profileDisplayName.textContent = savedName;
-        document.getElementById('profileBioDisplay').innerHTML = `<i class="fas fa-quote-left" style="margin-right: 8px;"></i>${savedBio}`;
-        // 同步到弹窗输入框
-        editProfileNameInput.value = savedName;
-        editProfileBioInput.value = savedBio;
-      }
-      loadProfile();
-
-      // 打开编辑弹窗相关
+      // 个人资料编辑
       const editProfileBtn = document.getElementById('editProfileBtn');
       const editProfileModalOverlay = document.getElementById('editProfileModalOverlay');
       const closeEditProfileModal = document.getElementById('closeEditProfileModal');
       const cancelEditProfileBtn = document.getElementById('cancelEditProfileBtn');
       const saveEditProfileBtn = document.getElementById('saveEditProfileBtn');
 
-      // 打开弹窗
-      editProfileBtn.addEventListener('click', () => {
-          editProfileModalOverlay.style.display = 'flex';
-      });
-
-      function closeEditModal() {
-        editProfileModalOverlay.style.display = 'none';
-      }
-
+      function closeEditModal() { editProfileModalOverlay.style.display = 'none'; }
+      editProfileBtn.addEventListener('click', () => { editProfileModalOverlay.style.display = 'flex'; });
       closeEditProfileModal.addEventListener('click', closeEditModal);
       cancelEditProfileBtn.addEventListener('click', closeEditModal);
-      editProfileModalOverlay.addEventListener('click', (e) => {
-        if (e.target === editProfileModalOverlay) closeEditModal();
-      });
-
-      // 保存编辑资料
+      editProfileModalOverlay.addEventListener('click', (e) => { if (e.target === editProfileModalOverlay) closeEditModal(); });
       saveEditProfileBtn.addEventListener('click', () => {
         const name = editProfileNameInput.value.trim() || '用户';
         const bio = editProfileBioInput.value.trim() || '在一隅，遇见自己。';
-        localStorage.setItem('profile_name', name);
-        localStorage.setItem('profile_bio', bio);
+        try {
+          localStorage.setItem('profile_name', name);
+          localStorage.setItem('profile_bio', bio);
+        } catch(e) {}
         profileDisplayName.textContent = name;
-        document.getElementById('profileBioDisplay').innerHTML = `<i class="fas fa-quote-left" style="margin-right: 8px;"></i>${bio}`;
+        profileBioDisplay.innerHTML = `<i class="fas fa-quote-left" style="margin-right: 8px;"></i>${bio}`;
         closeEditModal();
       });
 
-      // 初始化上传和加载图片
       initUploadButtons();
-      loadUserImages();
     }
 
     init();
