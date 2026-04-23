@@ -24,7 +24,7 @@
     <!-- 主题颜色（影响状态栏和工具栏） -->
     <meta name="theme-color" content="#0f9960">
     <meta name="msapplication-TileColor" content="#0f9960">
-    
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
@@ -814,6 +814,115 @@
             color: var(--text-primary);
             display: none;
         }
+        /* ===== 角色预览卡片 ===== */
+        .character-preview-card {
+            position: relative;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            overflow: hidden;
+            border: 1px solid var(--border-light);
+            background-color: var(--bg-header);
+            min-height: 140px;
+        }
+
+        .character-preview-bg {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: var(--bg-header);
+            z-index: 0;
+        }
+
+        .character-preview-bg::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1;
+        }
+
+        body.light-theme .character-preview-bg::after {
+            background: rgba(255, 255, 255, 0.6);
+        }
+
+        .character-preview-content {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px 24px;
+        }
+
+        .character-preview-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            color: white;
+            border: 3px solid rgba(255,255,255,0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .character-preview-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .character-preview-info {
+            flex: 1;
+        }
+
+        .character-preview-info h3 {
+            font-size: 24px;
+            font-weight: 600;
+            color: white;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            margin-bottom: 6px;
+        }
+
+        .character-preview-info p {
+            font-size: 14px;
+            color: rgba(255,255,255,0.9);
+            text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+        }
+
+        body.light-theme .character-preview-info h3,
+        body.light-theme .character-preview-info p {
+            color: #1e2b34;
+            text-shadow: 0 1px 4px rgba(255,255,255,0.7);
+        }
+
+        .character-preview-content .btn-secondary {
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .character-preview-content .btn-secondary:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        body.light-theme .character-preview-content .btn-secondary {
+            background: rgba(255,255,255,0.6);
+            color: #1e2b34;
+        }
+
+        body.light-theme .character-preview-content .btn-secondary:hover {
+            background: var(--accent);
+            color: white;
+        }
         .character-view.active {
             display: block;
         }
@@ -999,97 +1108,131 @@
     </div>
     <!-- 人物管理视图 -->
     <div class="character-view" id="characterView">
-        <h2 style="margin-bottom: 20px; font-weight: 500;"><i class="fas fa-user-tag" style="margin-right: 12px;"></i>人物设定</h2>
+      <h2 style="margin-bottom: 20px; font-weight: 500;"><i class="fas fa-user-tag" style="margin-right: 12px;"></i>人物设定</h2>
 
-        <!-- 世界书卡片 -->
-        <div class="settings-card">
-            <h3><i class="fas fa-globe"></i> 世界书 · 世界观</h3>
-            <div class="config-group">
-                <label>背景设定（不变的世界规则）</label>
-                <textarea id="worldBookInput" rows="4" placeholder="例如：这是一个魔法与科技并存的近未来世界，人类与精灵共存，但龙族已灭绝千年……"></textarea>
-            </div>
+      <!-- 🆕 角色预览卡片（类似个人主页横幅） -->
+      <div style="display: flex; align-items: baseline; margin-bottom: 6px;">
+        <span style="font-size: 16px; font-weight: 500; color: var(--text-primary);"><i class="fas fa-image" style="margin-right: 8px;"></i>角色卡片预览</span>
+      </div>
+      <div class="character-preview-card" id="characterPreviewCard">
+        <div class="character-preview-bg" id="characterPreviewBg"></div>
+        <div class="character-preview-content">
+          <div class="character-preview-avatar" id="characterPreviewAvatar">
+            <i class="fas fa-user-astronaut"></i>
+          </div>
+          <div class="character-preview-info">
+            <h3 id="characterPreviewName">角色名称</h3>
+            <p id="characterPreviewBio"><i class="fas fa-quote-left" style="margin-right: 6px;"></i>温柔而冷静的陪伴</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary" id="editCharacterAvatarBtn" style="padding: 8px 12px; white-space: nowrap;">
+              <i class="fas fa-camera"></i> 头像
+            </button>
+            <button class="btn btn-secondary" id="editCharacterCoverBtn" style="padding: 8px 12px; white-space: nowrap;">
+              <i class="fas fa-image"></i> 背景
+            </button>
+          </div>
         </div>
+      </div>
 
-        <!-- 人物基本表单卡片 -->
-        <div class="settings-card">
-            <h3><i class="fas fa-id-card"></i> 人物表单</h3>
-            <!-- 新增：角色名称（聊天标题会显示这个） -->
-            <div class="config-group">
-                <label>角色名称（显示在标题栏）</label>
-                <input type="text" id="characterNameInput" placeholder="例如：青绿助手" value="青绿助手">
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                <div class="config-group">
-                    <label>姓名</label>
-                    <input type="text" id="charNameInput" placeholder="例如：林清瑶">
-                </div>
-                <div class="config-group">
-                    <label>年龄</label>
-                    <input type="text" id="charAgeInput" placeholder="例如：24">
-                </div>
-                <div class="config-group">
-                    <label>性别</label>
-                    <input type="text" id="charGenderInput" placeholder="例如：女">
-                </div>
-            </div>
-            <div class="config-group">
-                <label>外貌描写</label>
-                <textarea id="charAppearanceInput" rows="2" placeholder="例如：黑色长发，常穿素色长裙，眼神清冷但偶有温柔"></textarea>
-            </div>
-            <!-- 新增：人设提示词（基础性格指令） -->
-            <div class="config-group">
-                <label>人设提示词（基础角色指令）</label>
-                <textarea id="systemPromptInput" rows="3" placeholder="例如：你是一个冷静又带点青涩的助手，说话简洁但偶尔流露出温柔。">你是一个冷静又带点青涩的助手，说话简洁但偶尔流露出温柔。</textarea>
-            </div>
+      <!-- 世界书卡片 -->
+      <div class="settings-card">
+        <h3><i class="fas fa-globe"></i> 世界书 · 世界观</h3>
+        <div class="config-group">
+          <label>背景设定（不变的世界规则）</label>
+          <textarea id="worldBookInput" rows="4" placeholder="例如：这是一个魔法与科技并存的近未来世界，人类与精灵共存，但龙族已灭绝千年……"></textarea>
         </div>
-        <!-- 性格卡片 -->
-        <div class="settings-card">
-            <h3><i class="fas fa-smile"></i> 性格</h3>
-            <div class="config-group">
-                <label>性格描述</label>
-                <textarea id="charPersonalityInput" rows="3" placeholder="例如：外表冷淡，内心善良，对认可的人会不自觉地关心，说话带点傲娇"></textarea>
-            </div>
-        </div>
+      </div>
 
-        <!-- 过往经历卡片 -->
-        <div class="settings-card">
-            <h3><i class="fas fa-history"></i> 过往经历</h3>
-            <div class="config-group">
-                <label>背景故事</label>
-                <textarea id="charBackstoryInput" rows="4" placeholder="例如：曾是帝国骑士，因不愿服从腐败命令而离开军队，流浪中习得医术……"></textarea>
-            </div>
+      <!-- 人物基本表单卡片（布局调整） -->
+      <div class="settings-card">
+        <h3><i class="fas fa-id-card"></i> 人物表单</h3>
+        <!-- 合并后的角色名称/昵称（仅保留一个，同时作为标题和预览名） -->
+        <div class="config-group">
+          <label>角色名称（显示在标题栏和预览）</label>
+          <input type="text" id="characterNameInput" value="角色名称">
         </div>
+        <!-- 个性签名 -->
+        <div class="config-group">
+          <label>个性签名</label>
+          <input type="text" id="characterBioInput" placeholder="例如：温柔而冷静的陪伴" value="温柔而冷静的陪伴">
+        </div>
+        <!-- 姓名（真实姓名） -->
+        <div class="config-group">
+          <label>姓名</label>
+          <input type="text" id="charNameInput" placeholder="例如：林清瑶">
+        </div>
+        <!-- 年龄和性别并排 -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="config-group">
+            <label>年龄</label>
+            <input type="text" id="charAgeInput" placeholder="例如：24">
+          </div>
+          <div class="config-group">
+            <label>性别</label>
+            <input type="text" id="charGenderInput" placeholder="例如：女">
+          </div>
+        </div>
+        <!-- 外貌描写 -->
+        <div class="config-group">
+          <label>外貌描写</label>
+          <textarea id="charAppearanceInput" rows="2" placeholder="例如：黑色长发，常穿素色长裙，眼神清冷但偶有温柔"></textarea>
+        </div>
+        <!-- 人设提示词 -->
+        <div class="config-group">
+          <label>人设提示词（基础角色指令）</label>
+          <textarea id="systemPromptInput" rows="3" placeholder="例如：你是一个冷静又带点青涩的助手，说话简洁但偶尔流露出温柔。">你是一个冷静又带点青涩的助手，说话简洁但偶尔流露出温柔。</textarea>
+        </div>
+      </div>
 
-        <!-- 核心记忆卡片 -->
-        <div class="settings-card">
-            <h3><i class="fas fa-brain"></i> 核心记忆</h3>
-            <div class="config-group">
-                <label>重要事件/人物关系</label>
-                <textarea id="charMemoriesInput" rows="3" placeholder="例如：- 师父在临终前将古剑托付给她\n- 曾经救过一个叫阿诺的少年\n- 对甜食没有抵抗力"></textarea>
-            </div>
+      <!-- 性格卡片 -->
+      <div class="settings-card">
+        <h3><i class="fas fa-smile"></i> 性格</h3>
+        <div class="config-group">
+          <label>性格描述</label>
+          <textarea id="charPersonalityInput" rows="3" placeholder="例如：外表冷淡，内心善良，对认可的人会不自觉地关心，说话带点傲娇"></textarea>
         </div>
+      </div>
 
-        <!-- 对话风格卡片 -->
-        <div class="settings-card">
-            <h3><i class="fas fa-comment-dots"></i> 对话风格</h3>
-            <div class="config-group">
-                <label>风格描述</label>
-                <textarea id="charStyleInput" rows="2" placeholder="例如：句子简短，偶尔使用「……」，生气时会说「哼」"></textarea>
-            </div>
-            <details style="margin-top: 12px;">
-                <summary style="cursor: pointer; color: var(--accent);">高级设置 · 对话示例</summary>
-                <div class="config-group" style="margin-top: 12px;">
-                    <label>示例对话（每行一条，格式：用户说 → 角色回复）</label>
-                    <textarea id="charExamplesInput" rows="4" placeholder="用户：你好呀\n角色：……你是谁？有什么事吗？\n用户：想和你聊聊\n角色：哼，我很忙的，不过既然你坚持……"></textarea>
-                </div>
-            </details>
+      <!-- 过往经历卡片 -->
+      <div class="settings-card">
+        <h3><i class="fas fa-history"></i> 过往经历</h3>
+        <div class="config-group">
+          <label>背景故事</label>
+          <textarea id="charBackstoryInput" rows="4" placeholder="例如：曾是帝国骑士，因不愿服从腐败命令而离开军队，流浪中习得医术……"></textarea>
         </div>
+      </div>
 
-        <!-- 保存按钮 -->
-        <div style="display: flex; gap: 12px; margin-top: 8px; margin-bottom: 24px;">
-            <button class="btn btn-primary" id="saveCharacterBtn"><i class="fas fa-save"></i> 保存人物设定</button>
-            <button class="btn btn-secondary" id="resetCharacterBtn"><i class="fas fa-undo-alt"></i> 重置</button>
+      <!-- 核心记忆卡片 -->
+      <div class="settings-card">
+        <h3><i class="fas fa-brain"></i> 核心记忆</h3>
+        <div class="config-group">
+          <label>重要事件/人物关系</label>
+          <textarea id="charMemoriesInput" rows="3" placeholder="例如：- 师父在临终前将古剑托付给她\n- 曾经救过一个叫阿诺的少年\n- 对甜食没有抵抗力"></textarea>
         </div>
+      </div>
+
+      <!-- 对话风格卡片 -->
+      <div class="settings-card">
+        <h3><i class="fas fa-comment-dots"></i> 对话风格</h3>
+        <div class="config-group">
+          <label>风格描述</label>
+          <textarea id="charStyleInput" rows="2" placeholder="例如：句子简短，偶尔使用「……」，生气时会说「哼」"></textarea>
+        </div>
+        <details style="margin-top: 12px;">
+          <summary style="cursor: pointer; color: var(--accent);">高级设置 · 对话示例</summary>
+          <div class="config-group" style="margin-top: 12px;">
+            <label>示例对话（每行一条，格式：用户说 → 角色回复）</label>
+            <textarea id="charExamplesInput" rows="4" placeholder="用户：你好呀\n角色：……你是谁？有什么事吗？\n用户：想和你聊聊\n角色：哼，我很忙的，不过既然你坚持……"></textarea>
+          </div>
+        </details>
+      </div>
+
+      <!-- 保存按钮 -->
+      <div style="display: flex; gap: 12px; margin-top: 8px; margin-bottom: 24px;">
+        <button class="btn btn-primary" id="saveCharacterBtn"><i class="fas fa-save"></i> 保存人物设定</button>
+        <button class="btn btn-secondary" id="resetCharacterBtn"><i class="fas fa-undo-alt"></i> 重置</button>
+      </div>
     </div>
     <!-- 数据管理视图 -->
     <div class="data-manager-view" id="dataManagerView" style="flex:1; background: var(--bg-chat-main); padding: 24px 32px; overflow-y: auto; color: var(--text-primary);">
@@ -1280,6 +1423,13 @@
     const charExamplesInput = document.getElementById('charExamplesInput');
     const saveCharacterBtn = document.getElementById('saveCharacterBtn');
     const resetCharacterBtn = document.getElementById('resetCharacterBtn');
+    const characterBioInput = document.getElementById('characterBioInput');
+    const characterPreviewBg = document.getElementById('characterPreviewBg');
+    const characterPreviewAvatar = document.getElementById('characterPreviewAvatar');
+    const characterPreviewName = document.getElementById('characterPreviewName');
+    const characterPreviewBio = document.getElementById('characterPreviewBio');
+    const editCharacterAvatarBtn = document.getElementById('editCharacterAvatarBtn');
+    const editCharacterCoverBtn = document.getElementById('editCharacterCoverBtn');
 
     // ---------- 状态 ----------
     let messages = [
@@ -1299,6 +1449,9 @@
     let characterData = {
       worldBook: '',
       name: '',
+      avatar: '',      // 角色头像 Base64
+      cover: '',       // 角色背景图 Base64
+      bio: '',   // 个性签名
       age: '',
       gender: '',
       appearance: '',
@@ -1306,7 +1459,7 @@
       backstory: '',
       memories: '',
       style: '',
-      examples: ''
+      examples: '',
     };
 
     // ---------- 主题管理 ----------
@@ -1448,6 +1601,10 @@
       charMemoriesInput.value = characterData.memories || '';
       charStyleInput.value = characterData.style || '';
       charExamplesInput.value = characterData.examples || '';
+      // 新增字段
+      characterBioInput.value = characterData.bio || '温柔而冷静的陪伴';
+      // 更新预览
+      updateCharacterPreview();
     }
 
     function saveCharacterToStorage() {
@@ -1461,14 +1618,42 @@
         backstory: charBackstoryInput.value.trim(),
         memories: charMemoriesInput.value.trim(),
         style: charStyleInput.value.trim(),
-        examples: charExamplesInput.value.trim()
+        examples: charExamplesInput.value.trim(),
+        avatar: characterData.avatar,
+        cover: characterData.cover,
+        bio: characterBioInput.value.trim()
       };
       try {
         localStorage.setItem('character_data', JSON.stringify(characterData));
+        updateCharacterPreview();
+        // 同步聊天标题
+        config.characterName = characterNameInput.value.trim() || '青绿助手';
+        updateChatTitle();
         alert('人物设定已保存');
       } catch(e) {
         alert('保存失败，可能是存储空间已满');
       }
+    }
+
+    // 更新角色预览卡片
+    function updateCharacterPreview() {
+      // 更新背景
+      if (characterData.cover) {
+        characterPreviewBg.style.backgroundImage = `url(${characterData.cover})`;
+      } else {
+        characterPreviewBg.style.backgroundImage = '';
+      }
+      // 更新头像
+      if (characterData.avatar) {
+        characterPreviewAvatar.innerHTML = `<img src="${characterData.avatar}" style="width:100%;height:100%;object-fit:cover;">`;
+      } else {
+        characterPreviewAvatar.innerHTML = '<i class="fas fa-user-astronaut"></i>';
+      }
+      // 更新名称和签名
+      const name = characterNameInput.value.trim() || '青绿助手';
+      const bio = characterBioInput.value.trim() || '温柔而冷静的陪伴';
+      characterPreviewName.textContent = name;
+      characterPreviewBio.innerHTML = `<i class="fas fa-quote-left" style="margin-right:6px;"></i>${bio}`;
     }
 
     // ---------- API调用 ----------
@@ -1597,6 +1782,25 @@
       reader.readAsDataURL(file);
     }
 
+    function openCropModalForCharacter(file, type) {
+      currentCropType = type; // 复用全局变量，但要区分是角色还是用户
+      // 临时标记是角色裁剪
+      window._cropTarget = 'character';
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        cropImage.src = e.target.result;
+        cropModalOverlay.style.display = 'flex';
+        if (cropper) cropper.destroy();
+        cropper = new Cropper(cropImage, {
+          aspectRatio: type === 'avatar' ? 1 : 16 / 9,
+          viewMode: 1,
+          autoCropArea: 1,
+          responsive: true,
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+
     function closeCropModalFunc() {
       cropModalOverlay.style.display = 'none';
       if (cropper) { cropper.destroy(); cropper = null; }
@@ -1606,25 +1810,40 @@
       if (!cropper) return;
       const canvas = cropper.getCroppedCanvas();
       const dataURL = canvas.toDataURL('image/jpeg', 0.9);
-      if (currentCropType === 'avatar') {
-        const avatarContainer = document.getElementById('userAvatarBtn');
-        avatarContainer.innerHTML = '';
-        const img = document.createElement('img');
-        img.src = dataURL;
-        img.style.width = '100%'; img.style.height = '100%'; img.style.objectFit = 'cover';
-        avatarContainer.appendChild(img);
-        const largeAvatar = document.getElementById('profileAvatarLarge');
-        largeAvatar.innerHTML = '';
-        const largeImg = document.createElement('img');
-        largeImg.src = dataURL;
-        largeImg.style.width = '100%'; largeImg.style.height = '100%'; largeImg.style.objectFit = 'cover';
-        largeAvatar.appendChild(largeImg);
-        try { localStorage.setItem('user_avatar', dataURL); } catch(e) {}
+
+      // 判断裁剪目标
+      if (window._cropTarget === 'character') {
+        // 保存到角色数据
+        if (currentCropType === 'avatar') {
+          characterData.avatar = dataURL;
+        } else {
+          characterData.cover = dataURL;
+        }
+        updateCharacterPreview();
+        // 不自动保存到存储，等用户点击保存人物设定时统一存
       } else {
-        document.documentElement.style.setProperty('--profile-bg-image', `url(${dataURL})`);
-        try { localStorage.setItem('user_cover', dataURL); } catch(e) {}
+        // 原有用户头像/背景逻辑
+        if (currentCropType === 'avatar') {
+          const avatarContainer = document.getElementById('userAvatarBtn');
+          avatarContainer.innerHTML = '';
+          const img = document.createElement('img');
+          img.src = dataURL;
+          img.style.width = '100%'; img.style.height = '100%'; img.style.objectFit = 'cover';
+          avatarContainer.appendChild(img);
+          const largeAvatar = document.getElementById('profileAvatarLarge');
+          largeAvatar.innerHTML = '';
+          const largeImg = document.createElement('img');
+          largeImg.src = dataURL;
+          largeImg.style.width = '100%'; largeImg.style.height = '100%'; largeImg.style.objectFit = 'cover';
+          largeAvatar.appendChild(largeImg);
+          try { localStorage.setItem('user_avatar', dataURL); } catch(e) {}
+        } else {
+          document.documentElement.style.setProperty('--profile-bg-image', `url(${dataURL})`);
+          try { localStorage.setItem('user_cover', dataURL); } catch(e) {}
+        }
       }
       closeCropModalFunc();
+      window._cropTarget = null;
     }
 
     function initUploadButtons() {
@@ -1842,10 +2061,42 @@
       resetCharacterBtn.addEventListener('click', () => {
         if (confirm('重置所有人物设定？')) {
           try { localStorage.removeItem('character_data'); } catch(e) {}
-          characterData = { worldBook: '', name: '', age: '', gender: '', appearance: '', personality: '', backstory: '', memories: '', style: '', examples: '' };
+          characterData = {
+            worldBook: '', name: '', avatar: '', cover: '', bio: '',
+            age: '', gender: '', appearance: '', personality: '',
+            backstory: '', memories: '', style: '', examples: ''
+          };
           loadCharacterFromStorage();
         }
       });
+
+      // 编辑角色外观：触发上传
+      // 编辑角色外观：头像
+      editCharacterAvatarBtn.addEventListener('click', () => {
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.onchange = (e) => {
+          const file = e.target.files[0];
+          if (file) openCropModalForCharacter(file, 'avatar');
+        };
+        fileInput.click();
+      });
+
+      // 编辑角色外观：背景
+      editCharacterCoverBtn.addEventListener('click', () => {
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.onchange = (e) => {
+          const file = e.target.files[0];
+          if (file) openCropModalForCharacter(file, 'cover');
+        };
+        fileInput.click();
+      });
+
+      characterNameInput.addEventListener('input', updateCharacterPreview);
+      characterBioInput.addEventListener('input', updateCharacterPreview);
 
       // 个人资料编辑
       const editProfileBtn = document.getElementById('editProfileBtn');
@@ -1891,6 +2142,8 @@
       }, 100);
 
       initUploadButtons();
+      // 初始化角色预览
+      updateCharacterPreview();
     }
 
     init();
