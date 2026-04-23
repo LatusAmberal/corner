@@ -1181,7 +1181,7 @@
         <!-- 人设提示词 -->
         <div class="config-group">
           <label>人设提示词（基础角色指令）</label>
-          <textarea id="systemPromptInput" rows="3" placeholder="例如：你是一个冷静又带点青涩的助手，说话简洁但偶尔流露出温柔。">你是一个冷静又带点青涩的助手，说话简洁但偶尔流露出温柔。</textarea>
+          <textarea id="systemPromptInput" rows="3" placeholder="例如：你是一个冷静又带点青涩的助手，说话简洁但偶尔流露出温柔。">你是一个冷静又带点青涩的助手，说话简洁但偶尔流露出温柔。请务必根据当前真实时间调整对话内容。</textarea>
         </div>
       </div>
 
@@ -1449,9 +1449,9 @@
     let characterData = {
       worldBook: '',
       name: '',
-      avatar: '',      // 角色头像 Base64
-      cover: '',       // 角色背景图 Base64
-      bio: '',   // 个性签名
+      avatar: '',
+      cover: '',
+      bio: '',
       age: '',
       gender: '',
       appearance: '',
@@ -1459,7 +1459,7 @@
       backstory: '',
       memories: '',
       style: '',
-      examples: '',
+      examples: ''
     };
 
     // ---------- 主题管理 ----------
@@ -1547,15 +1547,46 @@
       return div.innerHTML;
     }
 
+    function formatDateSeparator(ts) {
+      const d = new Date(ts);
+      const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+      return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 ${weekdays[d.getDay()]}`;
+    }
+
     function renderMessages() {
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+      const oneHour = 60 * 60 * 1000;
+
       let html = '';
-      messages.forEach(msg => {
+      let lastTimestamp = 0;
+      let lastDateKey = '';
+
+      messages.forEach((msg, index) => {
+        const msgTime = msg.timestamp;
+        const msgDateKey = new Date(msgTime).toDateString();
+
+        if (index === 0 || msgDateKey !== lastDateKey) {
+          const isToday = (msgTime >= todayStart && msgTime < todayStart + 86400000);
+          const label = isToday ? '今天' : formatDateSeparator(msgTime);
+          html += `<div class="message-separator"><span>${label}</span></div>`;
+        } else if (index > 0 && (msgTime - lastTimestamp > oneHour)) {
+          const d = new Date(msgTime);
+          const timeLabel = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+          html += `<div class="message-separator"><span>${timeLabel}</span></div>`;
+        }
+
         const safe = escapeHtml(msg.content).replace(/\n/g, '<br>');
-        html += `<div class="message-row ${msg.role}"><div class="message-bubble">${safe}<div class="message-time">${formatTime(msg.timestamp)}</div></div></div>`;
+        html += `<div class="message-row ${msg.role}"><div class="message-bubble">${safe}<div class="message-time">${formatTime(msgTime)}</div></div></div>`;
+
+        lastTimestamp = msgTime;
+        lastDateKey = msgDateKey;
       });
+
       if (currentTypingMessageId) {
         html += `<div class="message-row assistant" id="${currentTypingMessageId}"><div class="message-bubble typing-indicator"><span></span><span></span><span></span></div></div>`;
       }
+
       messagesArea.innerHTML = html;
       messagesArea.scrollTop = messagesArea.scrollHeight;
     }
@@ -1601,9 +1632,7 @@
       charMemoriesInput.value = characterData.memories || '';
       charStyleInput.value = characterData.style || '';
       charExamplesInput.value = characterData.examples || '';
-      // 新增字段
       characterBioInput.value = characterData.bio || '温柔而冷静的陪伴';
-      // 更新预览
       updateCharacterPreview();
     }
 
@@ -1626,7 +1655,6 @@
       try {
         localStorage.setItem('character_data', JSON.stringify(characterData));
         updateCharacterPreview();
-        // 同步聊天标题
         config.characterName = characterNameInput.value.trim() || '青绿助手';
         updateChatTitle();
         alert('人物设定已保存');
@@ -1635,21 +1663,17 @@
       }
     }
 
-    // 更新角色预览卡片
     function updateCharacterPreview() {
-      // 更新背景
       if (characterData.cover) {
         characterPreviewBg.style.backgroundImage = `url(${characterData.cover})`;
       } else {
         characterPreviewBg.style.backgroundImage = '';
       }
-      // 更新头像
       if (characterData.avatar) {
         characterPreviewAvatar.innerHTML = `<img src="${characterData.avatar}" style="width:100%;height:100%;object-fit:cover;">`;
       } else {
         characterPreviewAvatar.innerHTML = '<i class="fas fa-user-astronaut"></i>';
       }
-      // 更新名称和签名
       const name = characterNameInput.value.trim() || '青绿助手';
       const bio = characterBioInput.value.trim() || '温柔而冷静的陪伴';
       characterPreviewName.textContent = name;
@@ -1659,26 +1683,44 @@
     // ---------- API调用 ----------
     async function callAI(userMessage) {
       if (!config.apiKey) throw new Error('请先配置 API Key');
+
+      const now = new Date();
+      const currentTimeStr = now.toLocaleString('zh-CN', {
+        timeZone: 'Asia/Shanghai',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        weekday: 'long'
+      });
+
       const systemMsg = {
         role: 'system',
-        content: `[世界观]\n${characterData.worldBook}\n\n[人物信息]\n姓名：${characterData.name}\n年龄：${characterData.age}\n性别：${characterData.gender}\n外貌：${characterData.appearance}\n\n[性格]\n${characterData.personality}\n\n[过往经历]\n${characterData.backstory}\n\n[核心记忆]\n${characterData.memories}\n\n[对话风格]\n${characterData.style}\n\n[对话示例]\n${characterData.examples}\n\n[当前角色扮演指令]\n${config.systemPrompt}`
+        content: `[世界观]\n${characterData.worldBook}\n\n[人物信息]\n姓名：${characterData.name}\n年龄：${characterData.age}\n性别：${characterData.gender}\n外貌：${characterData.appearance}\n\n[性格]\n${characterData.personality}\n\n[过往经历]\n${characterData.backstory}\n\n[核心记忆]\n${characterData.memories}\n\n[对话风格]\n${characterData.style}\n\n[对话示例]\n${characterData.examples}\n\n[当前角色扮演指令]\n${config.systemPrompt}\n\n[重要：当前真实时间]\n现在是 ${currentTimeStr}。请根据这个时间调整你的对话，不要说错时间（如晚上不说早上好，过了午夜请用新的一天逻辑）。如果需要连续发送多条回复，请用三个换行符（即空两行）分隔不同的气泡。`
       };
-      const history = messages.filter(m => m.role==='user'||m.role==='assistant').slice(-20).map(m => ({ role: m.role, content: m.content }));
+
+      const history = messages.filter(m => m.role==='user'||m.role==='assistant').slice(-30).map(m => ({ role: m.role, content: m.content }));
+
       const payload = {
         model: config.model,
         messages: [systemMsg, ...history],
         temperature: 0.8,
       };
+
       const res = await fetch(config.apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.apiKey}` },
         body: JSON.stringify(payload)
       });
+
       if (!res.ok) {
         let err = `HTTP ${res.status}`;
         try { const d = await res.json(); err = d.error?.message || JSON.stringify(d); } catch(e) {}
         throw new Error(err);
       }
+
       const data = await res.json();
       return data.choices[0].message.content;
     }
@@ -1686,22 +1728,51 @@
     async function handleSendMessage() {
       const content = messageInput.value.trim();
       if (!content || isGenerating) return;
+
+      const segments = content.split(/\n\s*\n/).filter(s => s.trim() !== '');
+      if (segments.length === 0) return;
+
       messageInput.value = '';
       messageInput.style.height = 'auto';
-      addMessage('user', content);
-      isGenerating = true; sendBtn.disabled = true;
-      showTypingIndicator();
-      try {
-        const reply = await callAI(content);
-        removeTypingIndicator();
-        addMessage('assistant', reply);
-      } catch(e) {
-        removeTypingIndicator();
-        addMessage('assistant', `❌ 错误: ${e.message}`);
-      } finally {
-        isGenerating = false; sendBtn.disabled = false;
-        messageInput.focus();
+
+      isGenerating = true;
+      sendBtn.disabled = true;
+
+      for (let i = 0; i < segments.length; i++) {
+        const text = segments[i].trim();
+        if (!text) continue;
+
+        addMessage('user', text);
+        showTypingIndicator();
+
+        try {
+          const minDelay = 800;
+          const startTime = Date.now();
+
+          const reply = await callAI(text);
+
+          const elapsed = Date.now() - startTime;
+          if (elapsed < minDelay) {
+            await new Promise(resolve => setTimeout(resolve, minDelay - elapsed));
+          }
+
+          removeTypingIndicator();
+
+          const replySegments = reply.split(/\n\n\n/).filter(s => s.trim() !== '');
+          if (replySegments.length > 1) {
+            replySegments.forEach(seg => addMessage('assistant', seg.trim()));
+          } else {
+            addMessage('assistant', reply);
+          }
+        } catch(e) {
+          removeTypingIndicator();
+          addMessage('assistant', `❌ 错误: ${e.message}`);
+        }
       }
+
+      isGenerating = false;
+      sendBtn.disabled = false;
+      messageInput.focus();
     }
 
     async function testConnection() {
@@ -1783,8 +1854,7 @@
     }
 
     function openCropModalForCharacter(file, type) {
-      currentCropType = type; // 复用全局变量，但要区分是角色还是用户
-      // 临时标记是角色裁剪
+      currentCropType = type;
       window._cropTarget = 'character';
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -1811,18 +1881,14 @@
       const canvas = cropper.getCroppedCanvas();
       const dataURL = canvas.toDataURL('image/jpeg', 0.9);
 
-      // 判断裁剪目标
       if (window._cropTarget === 'character') {
-        // 保存到角色数据
         if (currentCropType === 'avatar') {
           characterData.avatar = dataURL;
         } else {
           characterData.cover = dataURL;
         }
         updateCharacterPreview();
-        // 不自动保存到存储，等用户点击保存人物设定时统一存
       } else {
-        // 原有用户头像/背景逻辑
         if (currentCropType === 'avatar') {
           const avatarContainer = document.getElementById('userAvatarBtn');
           avatarContainer.innerHTML = '';
@@ -1924,11 +1990,11 @@
       } else if (view === 'data') {
         chatMain.classList.add('data-hidden');
         dataManagerIcon.classList.add('active');
-        refreshStorageStats(); // 每次进入刷新
+        refreshStorageStats();
       }
     }
 
-    // ---------- 数据管理功能（完全修正） ----------
+    // ---------- 数据管理功能 ----------
     function getByteSize(str) {
       return new Blob([str]).size;
     }
@@ -2035,7 +2101,6 @@
       loadUserImages();
       renderMessages();
 
-      // 事件绑定
       if (themeToggleSettings) themeToggleSettings.addEventListener('click', toggleTheme);
       sendBtn.addEventListener('click', handleSendMessage);
       messageInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } });
@@ -2049,14 +2114,12 @@
       apiProviderSelect.addEventListener('change', updateApiUrlFromProvider);
       modelSelect.addEventListener('change', updateModelInputFromSelect);
 
-      // 视图切换
       chatIcon.addEventListener('click', () => setActiveView('chat'));
       gearIcon.addEventListener('click', () => setActiveView('settings'));
       userAvatarBtn.addEventListener('click', () => setActiveView('profile'));
       characterIcon.addEventListener('click', () => setActiveView('character'));
       dataManagerIcon.addEventListener('click', () => setActiveView('data'));
 
-      // 人物设定保存/重置
       saveCharacterBtn.addEventListener('click', saveCharacterToStorage);
       resetCharacterBtn.addEventListener('click', () => {
         if (confirm('重置所有人物设定？')) {
@@ -2070,8 +2133,6 @@
         }
       });
 
-      // 编辑角色外观：触发上传
-      // 编辑角色外观：头像
       editCharacterAvatarBtn.addEventListener('click', () => {
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
@@ -2083,7 +2144,6 @@
         fileInput.click();
       });
 
-      // 编辑角色外观：背景
       editCharacterCoverBtn.addEventListener('click', () => {
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
@@ -2098,7 +2158,6 @@
       characterNameInput.addEventListener('input', updateCharacterPreview);
       characterBioInput.addEventListener('input', updateCharacterPreview);
 
-      // 个人资料编辑
       const editProfileBtn = document.getElementById('editProfileBtn');
       const editProfileModalOverlay = document.getElementById('editProfileModalOverlay');
       const closeEditProfileModal = document.getElementById('closeEditProfileModal');
@@ -2122,7 +2181,6 @@
         closeEditModal();
       });
 
-      // 数据管理：导出/导入
       const exportDataBtn = document.getElementById('exportDataBtn');
       const importDataBtn = document.getElementById('importDataBtn');
       const importFileInput = document.getElementById('importFileInput');
@@ -2136,13 +2194,11 @@
         });
       }
 
-      // 初始加载数据统计（但不显示页面）
       setTimeout(() => {
         if (typeof refreshStorageStats === 'function') refreshStorageStats();
       }, 100);
 
       initUploadButtons();
-      // 初始化角色预览
       updateCharacterPreview();
     }
 
