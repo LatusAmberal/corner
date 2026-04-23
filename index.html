@@ -804,6 +804,19 @@
         .chat-main.character-hidden .character-view {
             display: block;
         }
+                /* 数据管理视图显示控制 */
+        .chat-main.data-hidden .chat-view,
+        .chat-main.data-hidden .settings-view,
+        .chat-main.data-hidden .profile-view,
+        .chat-main.data-hidden .character-view {
+            display: none;
+        }
+        .chat-main.data-hidden .data-manager-view {
+            display: block;
+        }
+        .data-manager-view {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -815,6 +828,7 @@
         <div class="sidebar-icon" title="人物管理" id="characterIcon"><i class="fas fa-user-tag"></i></div>
         <div class="sidebar-divider"></div>
         <div class="sidebar-icon" title="设置"><i class="fas fa-cog"></i></div>
+        <div class="sidebar-icon" title="数据管理" id="dataManagerIcon"><i class="fas fa-database"></i></div>
         <div class="sidebar-icon" title="更多"><i class="fas fa-plus"></i></div>
         <!-- 底部头像保持不变 -->
         <div class="sidebar-footer">
@@ -1056,6 +1070,59 @@
             <button class="btn btn-secondary" id="resetCharacterBtn"><i class="fas fa-undo-alt"></i> 重置</button>
         </div>
     </div>
+    <!-- 数据管理视图 -->
+    <div class="data-manager-view" id="dataManagerView" style="flex:1; background: var(--bg-chat-main); padding: 24px 32px; overflow-y: auto; color: var(--text-primary);">
+      <h2 style="margin-bottom: 20px; font-weight: 500;"><i class="fas fa-database" style="margin-right: 12px;"></i>数据管理</h2>
+
+      <!-- 存储概览卡片 -->
+      <div class="settings-card">
+        <h3><i class="fas fa-chart-pie"></i> 存储概览</h3>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+          <div style="background: var(--bg-header); border-radius: 12px; padding: 16px;">
+            <div style="font-size: 13px; color: var(--text-secondary);">总占用空间</div>
+            <div style="font-size: 32px; font-weight: 600; margin-top: 8px;" id="totalStorageSize">0 KB</div>
+          </div>
+          <div style="background: var(--bg-header); border-radius: 12px; padding: 16px;">
+            <div style="font-size: 13px; color: var(--text-secondary);">存储项数量</div>
+            <div style="font-size: 32px; font-weight: 600; margin-top: 8px;" id="totalStorageItems">0</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+          <table style="width:100%; border-collapse: collapse;">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--border-light);">
+                <th style="text-align: left; padding: 12px 0; color: var(--text-secondary); font-weight: 500;">存储项</th>
+                <th style="text-align: right; padding: 12px 0; color: var(--text-secondary); font-weight: 500;">大小</th>
+              </tr>
+            </thead>
+            <tbody id="storageDetailsTable">
+              <!-- 动态生成 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 导入/导出卡片 -->
+      <div class="settings-card">
+        <h3><i class="fas fa-exchange-alt"></i> 导入 / 导出</h3>
+        <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">
+          导出全部数据为 JSON 文件，或从之前导出的文件恢复所有设置。
+        </p>
+        <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+          <button class="btn btn-primary" id="exportDataBtn" style="flex:1;">
+            <i class="fas fa-download"></i> 导出全部数据
+          </button>
+          <button class="btn btn-secondary" id="importDataBtn" style="flex:1;">
+            <i class="fas fa-upload"></i> 导入数据文件
+          </button>
+          <input type="file" id="importFileInput" accept=".json,application/json" style="display:none;">
+        </div>
+        <div style="margin-top: 16px; font-size: 13px; color: var(--text-secondary);">
+          <i class="fas fa-info-circle"></i> 导入数据将覆盖当前所有设置，建议先导出备份。
+        </div>
+      </div>
+    </div>
   </main>
 
 <!-- 图片裁剪模态框 -->
@@ -1148,7 +1215,7 @@
   (function(){
     "use strict";
 
-    // ---------- DOM 元素 (提前声明，避免作用域问题) ----------
+    // ---------- DOM 元素 ----------
     const apiProviderSelect = document.getElementById('apiProviderSelect');
     const modelSelect = document.getElementById('modelSelect');
     const messagesArea = document.getElementById('messagesArea');
@@ -1173,6 +1240,7 @@
     const gearIcon = document.querySelector('.sidebar-icon[title="设置"]');
     const chatIcon = document.querySelector('.sidebar-icon[title="当前对话"]');
     const characterIcon = document.getElementById('characterIcon');
+    const dataManagerIcon = document.getElementById('dataManagerIcon');
     const userAvatarBtn = document.getElementById('userAvatarBtn');
     const chatMain = document.getElementById('chatMain');
     const profileDisplayName = document.getElementById('profileDisplayName');
@@ -1599,7 +1667,7 @@
 
     // ---------- 视图切换逻辑 ----------
     function setActiveView(view) {
-      chatMain.classList.remove('chat-hidden', 'profile-hidden', 'character-hidden');
+      chatMain.classList.remove('chat-hidden', 'profile-hidden', 'character-hidden', 'data-hidden');
       document.querySelectorAll('.sidebar-icon').forEach(icon => icon.classList.remove('active'));
       userAvatarBtn.classList.remove('active');
       if (view === 'chat') {
@@ -1613,7 +1681,109 @@
       } else if (view === 'character') {
         chatMain.classList.add('character-hidden');
         characterIcon.classList.add('active');
+      } else if (view === 'data') {
+        chatMain.classList.add('data-hidden');
+        dataManagerIcon.classList.add('active');
+        refreshStorageStats(); // 每次进入刷新
       }
+    }
+
+    // ---------- 数据管理功能（完全修正） ----------
+    function getByteSize(str) {
+      return new Blob([str]).size;
+    }
+
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    }
+
+    function refreshStorageStats() {
+      try {
+        const items = [];
+        let totalBytes = 0;
+
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          const value = localStorage.getItem(key);
+          const bytes = getByteSize(key) + getByteSize(value);
+          totalBytes += bytes;
+
+          let displayName = key;
+          if (key.startsWith('chat_roleplay_config')) displayName = 'API 配置';
+          else if (key === 'character_data') displayName = '人物设定';
+          else if (key === 'chat_theme') displayName = '主题设置';
+          else if (key === 'profile_name' || key === 'profile_bio') displayName = '个人资料';
+          else if (key === 'user_avatar' || key === 'user_cover') displayName = '图片数据';
+          else if (key === 'messages') displayName = '聊天记录';
+          else displayName = key;
+
+          items.push({ key, displayName, bytes });
+        }
+
+        const merged = {};
+        items.forEach(item => {
+          if (!merged[item.displayName]) {
+            merged[item.displayName] = { displayName: item.displayName, bytes: 0, count: 0 };
+          }
+          merged[item.displayName].bytes += item.bytes;
+          merged[item.displayName].count += 1;
+        });
+
+        const mergedList = Object.values(merged).sort((a, b) => b.bytes - a.bytes);
+
+        document.getElementById('totalStorageSize').textContent = formatSize(totalBytes);
+        document.getElementById('totalStorageItems').textContent = localStorage.length;
+
+        const tbody = document.getElementById('storageDetailsTable');
+        tbody.innerHTML = '';
+        mergedList.forEach(item => {
+          const tr = document.createElement('tr');
+          tr.style.borderBottom = '1px solid var(--border-light)';
+          tr.innerHTML = `
+            <td style="padding: 10px 0;">${item.displayName} ${item.count > 1 ? `(${item.count}项)` : ''}</td>
+            <td style="text-align: right; padding: 10px 0;">${formatSize(item.bytes)}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch(e) {
+        console.warn('刷新存储统计失败:', e);
+      }
+    }
+
+    function exportAllData() {
+      const exportObj = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        exportObj[key] = localStorage.getItem(key);
+      }
+      const jsonStr = JSON.stringify(exportObj, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `acorner_backup_${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importDataFromFile(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (typeof data !== 'object' || data === null) throw new Error('无效的数据格式');
+          if (!confirm('导入将覆盖当前所有数据，确定继续吗？')) return;
+          localStorage.clear();
+          Object.entries(data).forEach(([key, value]) => localStorage.setItem(key, value));
+          alert('导入成功！页面将刷新以应用新数据。');
+          location.reload();
+        } catch (err) {
+          alert('导入失败：' + err.message);
+        }
+      };
+      reader.readAsText(file);
     }
 
     // ---------- 初始化 ----------
@@ -1644,6 +1814,7 @@
       gearIcon.addEventListener('click', () => setActiveView('settings'));
       userAvatarBtn.addEventListener('click', () => setActiveView('profile'));
       characterIcon.addEventListener('click', () => setActiveView('character'));
+      dataManagerIcon.addEventListener('click', () => setActiveView('data'));
 
       // 人物设定保存/重置
       saveCharacterBtn.addEventListener('click', saveCharacterToStorage);
@@ -1678,6 +1849,25 @@
         profileBioDisplay.innerHTML = `<i class="fas fa-quote-left" style="margin-right: 8px;"></i>${bio}`;
         closeEditModal();
       });
+
+      // 数据管理：导出/导入
+      const exportDataBtn = document.getElementById('exportDataBtn');
+      const importDataBtn = document.getElementById('importDataBtn');
+      const importFileInput = document.getElementById('importFileInput');
+
+      if (exportDataBtn) exportDataBtn.addEventListener('click', exportAllData);
+      if (importDataBtn) importDataBtn.addEventListener('click', () => importFileInput.click());
+      if (importFileInput) {
+        importFileInput.addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          if (file) { importDataFromFile(file); importFileInput.value = ''; }
+        });
+      }
+
+      // 初始加载数据统计（但不显示页面）
+      setTimeout(() => {
+        if (typeof refreshStorageStats === 'function') refreshStorageStats();
+      }, 100);
 
       initUploadButtons();
     }
