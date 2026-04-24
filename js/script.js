@@ -2,7 +2,7 @@
 (function(){
   "use strict";
 
-  // ---------- 消息渲染增强：已读/未读标签样式（通过JS注入） ----------
+  // ---------- 注入额外样式（用于已读状态和滑动条） ----------
   const styleSheet = document.createElement("style");
   styleSheet.textContent = `
     .read-status {
@@ -113,7 +113,6 @@
     const saved = localStorage.getItem('chat_messages');
     if (saved) {
       const parsed = JSON.parse(saved);
-      // 迁移旧消息，添加 readStatus
       return parsed.map(m => m.role === 'user' ? { ...m, readStatus: m.readStatus || 'read' } : m);
     }
     return [{ role: 'assistant', content: '你好！我是青绿色调的角色。点击右上角「···」配置 API 或切换白天/黑夜模式。', timestamp: Date.now() }];
@@ -179,13 +178,12 @@
     applyTheme(saved);
   }
 
-  // ---------- 聊天偏好加载与保存 ----------
+  // ---------- 聊天偏好 ----------
   function loadChatPreferences() {
     try {
       const saved = localStorage.getItem('chat_preferences');
       if (saved) chatPreferences = { ...chatPreferences, ...JSON.parse(saved) };
     } catch(e) {}
-    // 更新 UI
     const readIgnoreToggle = document.getElementById('readIgnoreToggle');
     const longUnreadToggle = document.getElementById('longUnreadToggle');
     const readIgnoreProbSlider = document.getElementById('readIgnoreProbSlider');
@@ -201,9 +199,7 @@
   }
 
   function saveChatPreferences() {
-    try {
-      localStorage.setItem('chat_preferences', JSON.stringify(chatPreferences));
-    } catch(e) {}
+    try { localStorage.setItem('chat_preferences', JSON.stringify(chatPreferences)); } catch(e) {}
   }
 
   function buildChatPreferencesUI() {
@@ -242,7 +238,6 @@
         </div>
       </div>
     `;
-    // 插入到清空按钮之前（第一个子元素是清空按钮的父级？）
     const clearBtnContainer = document.querySelector('.drawer-content > div:first-child');
     if (clearBtnContainer) {
       clearBtnContainer.before(prefSection);
@@ -250,7 +245,6 @@
       drawerContent.prepend(prefSection);
     }
 
-    // 绑定事件
     const readIgnoreToggle = document.getElementById('readIgnoreToggle');
     const longUnreadToggle = document.getElementById('longUnreadToggle');
     const readIgnoreProbSlider = document.getElementById('readIgnoreProbSlider');
@@ -279,10 +273,10 @@
       saveChatPreferences();
     });
 
-    // 初始化开关状态
     loadChatPreferences();
   }
-  
+
+  // ---------- 配置管理 ----------
   function populateSelectsFromConfig() {
     const url = config.apiUrl;
     if (url.includes('deepseek.com')) apiProviderSelect.value = 'deepseek';
@@ -304,9 +298,8 @@
 
     apiUrlInput.value = config.apiUrl;
     modelInput.value = config.model;
-}
+  }
 
-  // ---------- 配置管理 ----------
   function loadConfigFromStorage() {
     try {
       const saved = localStorage.getItem('chat_roleplay_config_v2');
@@ -399,7 +392,6 @@
       const safe = escapeHtml(msg.content).replace(/\n/g, '<br>');
       let bubble = `<div class="message-bubble">${safe}<div class="message-time">${formatTime(msgTime)}</div>`;
 
-      // 用户消息添加已读状态标签
       if (msg.role === 'user' && msg.readStatus) {
         const readClass = msg.readStatus === 'read' ? 'read' : 'unread';
         bubble += `<div class="read-status ${readClass}">${msg.readStatus === 'read' ? '已读' : '未读'}</div>`;
@@ -429,7 +421,6 @@
     return msg;
   }
 
-  // 更新某条消息的已读状态
   function updateMessageReadStatus(msgIndex, status) {
     if (messages[msgIndex] && messages[msgIndex].role === 'user') {
       messages[msgIndex].readStatus = status;
@@ -440,6 +431,15 @@
 
   function saveMessagesToStorage() {
     try { localStorage.setItem('chat_messages', JSON.stringify(messages)); } catch(e) {}
+  }
+
+  function loadMessagesFromStorage() {
+    // 已经在一开始加载了，但为了兼容保留函数
+    const saved = localStorage.getItem('chat_messages');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      messages = parsed.map(m => m.role === 'user' ? { ...m, readStatus: m.readStatus || 'read' } : m);
+    }
   }
 
   function removeTypingIndicator() {
@@ -511,7 +511,24 @@
   }
 
   function updateCharacterPreview() {
-    // ... (保持不变，省略重复)
+    if (characterPreviewBg) {
+      if (characterData.cover) {
+        characterPreviewBg.style.backgroundImage = `url(${characterData.cover})`;
+      } else {
+        characterPreviewBg.style.backgroundImage = '';
+      }
+    }
+    if (characterPreviewAvatar) {
+      if (characterData.avatar) {
+        characterPreviewAvatar.innerHTML = `<img src="${characterData.avatar}" style="width:100%;height:100%;object-fit:cover;">`;
+      } else {
+        characterPreviewAvatar.innerHTML = '<i class="fas fa-user-astronaut"></i>';
+      }
+    }
+    const name = characterNameInput.value.trim() || '青绿助手';
+    const bio = characterBioInput.value.trim() || '温柔而冷静的陪伴';
+    if (characterPreviewName) characterPreviewName.textContent = name;
+    if (characterPreviewBio) characterPreviewBio.innerHTML = `<i class="fas fa-quote-left" style="margin-right:6px;"></i>${bio}`;
   }
 
   // ---------- AI 调用 ----------
@@ -528,9 +545,7 @@
 
     const systemMsg = {
       role: 'system',
-      content: `[世界观]...
-[重要：当前真实时间]
-现在是 ${currentTimeStr}。请根据这个时间调整你的对话，不要说错时间。请像真人聊天一样，避免使用括号描述动作，直接说话。`
+      content: `[世界观]...\n[重要：当前真实时间]\n现在是 ${currentTimeStr}。请根据这个时间调整你的对话，不要说错时间。请像真人聊天一样，避免使用括号描述动作，直接说话。`
     };
 
     const history = messages.filter(m => m.role === 'user' || m.role === 'assistant').slice(-30)
@@ -571,44 +586,38 @@
     return lastUser ? lastUser.content : '';
   }
 
-  // 判断是否应该触发“长时间未读”
   function shouldTriggerLongUnread() {
     if (!chatPreferences.enableLongUnread) return false;
     if (Math.random() * 100 > chatPreferences.longUnreadProbability) return false;
 
     const aiLastMsg = getLastAssistantContent();
-    // 简单关键词检查
     return /稍等|没空|晚点|等等|等一下|忙|暂时不|回头|待会/.test(aiLastMsg);
   }
 
-  // 判断是否应该“已读不回”
   function shouldTriggerReadIgnore() {
     if (!chatPreferences.enableReadIgnore) return false;
     const lastUser = getLastUserContent();
-    // 互道晚安场景提高概率
     const isGoodnight = /晚安/.test(lastUser);
     const baseProb = chatPreferences.readIgnoreProbability;
-    const adjustedProb = isGoodnight ? Math.min(100, baseProb * 3) : baseProb; // 晚安时概率翻三倍
+    const adjustedProb = isGoodnight ? Math.min(100, baseProb * 3) : baseProb;
     return Math.random() * 100 < adjustedProb;
   }
 
-  // 处理待未读消息（用户连续发送时，将上一条未读强制标记为已读）
   function resolvePendingUnreads() {
     for (let i = messages.length - 1; i >= 0; i--) {
       if (messages[i].role === 'user' && messages[i].readStatus === 'unread') {
         updateMessageReadStatus(i, 'read');
       } else {
-        break; // 只处理最后的连续未读用户消息
+        break;
       }
     }
   }
 
-  // 核心发送逻辑改写
+  // ---------- 发送消息 ----------
   async function handleSendMessage() {
     const content = messageInput.value.trim();
     if (!content || isGenerating) return;
 
-    // 拆分用户输入（按空行）
     const userSegments = content.split(/\n\s*\n/).filter(s => s.trim() !== '');
     if (userSegments.length === 0) return;
 
@@ -617,42 +626,27 @@
     isGenerating = true;
     sendBtn.disabled = true;
 
-    // 先解决之前的未读消息（长时间未读导致未处理的消息）
     resolvePendingUnreads();
 
     for (let segIdx = 0; segIdx < userSegments.length; segIdx++) {
       const text = userSegments[segIdx].trim();
       if (!text) continue;
 
-      // 添加用户消息（默认为未读）
       const userMsg = addMessage('user', text);
-      const msgIndex = messages.length - 1; // 刚添加的索引
+      const msgIndex = messages.length - 1;
 
-      // 未读到已读的延迟处理
-      let markReadTimer = null;
-      const clearReadTimer = () => {
-        if (markReadTimer) { clearTimeout(markReadTimer); markReadTimer = null; }
-      };
-
-      // 判断长时间未读
-      const longUnread = shouldTriggerLongUnread();
-      if (longUnread) {
-        // 长时间未读：不标记已读，显示输入状态但实际不回复
+      if (shouldTriggerLongUnread()) {
         showTypingIndicator();
-        // 模拟一个较长的“对方正在输入…”然后消失，但并不发送任何消息
         setTimeout(() => {
           removeTypingIndicator();
-          // 保持未读状态
         }, 3000 + Math.random() * 2000);
-        // 直接跳过后续处理
         continue;
       }
 
-      // 正常延迟后标记已读（默认2-3秒）
       const readDelay = 2000 + Math.random() * 1500;
-      markReadTimer = setTimeout(() => {
+      setTimeout(() => {
+        if (!messages[msgIndex]) return;
         updateMessageReadStatus(msgIndex, 'read');
-        // 标记已读后，进入回复判断逻辑
         handleAfterRead(msgIndex);
       }, readDelay);
     }
@@ -661,18 +655,10 @@
     sendBtn.disabled = false;
     messageInput.focus();
 
-    // 已读后处理（异步）
     async function handleAfterRead(userMsgIdx) {
-      // 如果界面中该消息已经不存在（被清空），取消
       if (!messages[userMsgIdx]) return;
+      if (shouldTriggerReadIgnore()) return;
 
-      // 已读不回判断
-      if (shouldTriggerReadIgnore()) {
-        // 直接放弃回复，无任何输入提示
-        return;
-      }
-
-      // 正常回复流程
       try {
         showTypingIndicator();
         const userContent = messages[userMsgIdx].content;
@@ -700,17 +686,247 @@
     }
   }
 
-  // 测试连接函数不变
+  // ---------- 测试连接 ----------
   async function testConnection() {
-    // ... (保持不变)
+    syncConfigFromForm();
+    if (!config.apiKey) { alert('请填写 API Key'); return; }
+    try {
+      const res = await fetch(config.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.apiKey}` },
+        body: JSON.stringify({ model: config.model, messages: [{role:'user',content:'ping'}], max_tokens:5 })
+      });
+      const data = await res.json();
+      if (res.ok) alert('✅ 连接成功！');
+      else alert('❌ 失败: ' + (data.error?.message || res.status));
+    } catch(e) { alert('网络错误: ' + e.message); }
   }
 
-  // ---------- 抽屉控制 ----------
+  // ---------- 抽屉 ----------
   function openDrawer() { drawer.classList.add('open'); overlay.classList.add('show'); }
   function closeDrawer() { drawer.classList.remove('open'); overlay.classList.remove('show'); }
 
-  // ---------- 预设地址（省略，保持原样） ----------
-  // ... (apiUrlPresets 等其余函数不变)
+  // ---------- 预设地址 ----------
+  const apiUrlPresets = {
+    deepseek: 'https://api.deepseek.com/v1/chat/completions',
+    openai: 'https://api.openai.com/v1/chat/completions',
+    openrouter: 'https://openrouter.ai/api/v1/chat/completions',
+    groq: 'https://api.groq.com/openai/v1/chat/completions',
+    custom: ''
+  };
+  function updateApiUrlFromProvider() {
+    const provider = apiProviderSelect.value;
+    if (provider !== 'custom') apiUrlInput.value = apiUrlPresets[provider];
+  }
+  function updateModelInputFromSelect() {
+    const selected = modelSelect.value;
+    if (selected !== 'custom') modelInput.value = selected;
+  }
+
+  // ---------- 裁剪 ----------
+  let cropper = null;
+  let currentCropType = 'avatar';
+  const cropModalOverlay = document.getElementById('cropModalOverlay');
+  const cropImage = document.getElementById('cropImage');
+  const closeCropModal = document.getElementById('closeCropModal');
+  const cancelCropBtn = document.getElementById('cancelCropBtn');
+  const saveCropBtn = document.getElementById('saveCropBtn');
+
+  function openCropModal(file, type) {
+    currentCropType = type;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      cropImage.src = e.target.result;
+      cropModalOverlay.style.display = 'flex';
+      if (cropper) cropper.destroy();
+      cropper = new Cropper(cropImage, {
+        aspectRatio: type === 'avatar' ? 1 : 16/9,
+        viewMode: 1,
+        autoCropArea: 1,
+        responsive: true,
+      });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function openCropModalForCharacter(file, type) {
+    currentCropType = type;
+    window._cropTarget = 'character';
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      cropImage.src = e.target.result;
+      cropModalOverlay.style.display = 'flex';
+      if (cropper) cropper.destroy();
+      cropper = new Cropper(cropImage, {
+        aspectRatio: type === 'avatar' ? 1 : 16/9,
+        viewMode: 1,
+        autoCropArea: 1,
+        responsive: true,
+      });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function closeCropModalFunc() {
+    cropModalOverlay.style.display = 'none';
+    if (cropper) { cropper.destroy(); cropper = null; }
+  }
+
+  function saveCroppedImage() {
+    if (!cropper) return;
+    const canvas = cropper.getCroppedCanvas();
+    const dataURL = canvas.toDataURL('image/jpeg', 0.9);
+
+    if (window._cropTarget === 'character') {
+      if (currentCropType === 'avatar') characterData.avatar = dataURL;
+      else characterData.cover = dataURL;
+      updateCharacterPreview();
+    } else {
+      if (currentCropType === 'avatar') {
+        document.getElementById('userAvatarBtn').innerHTML = `<img src="${dataURL}" style="width:100%;height:100%;object-fit:cover;">`;
+        document.getElementById('profileAvatarLarge').innerHTML = `<img src="${dataURL}" style="width:100%;height:100%;object-fit:cover;">`;
+        try { localStorage.setItem('user_avatar', dataURL); } catch(e) {}
+      } else {
+        document.documentElement.style.setProperty('--profile-bg-image', `url(${dataURL})`);
+        try { localStorage.setItem('user_cover', dataURL); } catch(e) {}
+      }
+    }
+    closeCropModalFunc();
+    window._cropTarget = null;
+  }
+
+  function initUploadButtons() {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.style.display = 'none';
+    document.body.appendChild(fileInput);
+    document.getElementById('editUploadAvatarBtn')?.addEventListener('click', () => {
+      fileInput.onchange = (e) => { const f = e.target.files[0]; if (f) openCropModal(f, 'avatar'); fileInput.value = ''; };
+      fileInput.click();
+    });
+    document.getElementById('editUploadCoverBtn')?.addEventListener('click', () => {
+      fileInput.onchange = (e) => { const f = e.target.files[0]; if (f) openCropModal(f, 'cover'); fileInput.value = ''; };
+      fileInput.click();
+    });
+    closeCropModal?.addEventListener('click', closeCropModalFunc);
+    cancelCropBtn?.addEventListener('click', closeCropModalFunc);
+    saveCropBtn?.addEventListener('click', saveCroppedImage);
+    cropModalOverlay?.addEventListener('click', (e) => { if (e.target === cropModalOverlay) closeCropModalFunc(); });
+  }
+
+  function loadUserImages() {
+    try {
+      const savedAvatar = localStorage.getItem('user_avatar');
+      if (savedAvatar) {
+        document.getElementById('userAvatarBtn').innerHTML = `<img src="${savedAvatar}" style="width:100%;height:100%;object-fit:cover;">`;
+        document.getElementById('profileAvatarLarge').innerHTML = `<img src="${savedAvatar}" style="width:100%;height:100%;object-fit:cover;">`;
+      }
+      const savedCover = localStorage.getItem('user_cover');
+      if (savedCover) document.documentElement.style.setProperty('--profile-bg-image', `url(${savedCover})`);
+    } catch(e) {}
+  }
+
+  function loadProfile() {
+    try {
+      const savedName = localStorage.getItem('profile_name') || '用户';
+      const savedBio = localStorage.getItem('profile_bio') || '在一隅，遇见自己。';
+      profileDisplayName.textContent = savedName;
+      profileBioDisplay.innerHTML = `<i class="fas fa-quote-left" style="margin-right: 8px;"></i>${savedBio}`;
+      editProfileNameInput.value = savedName;
+      editProfileBioInput.value = savedBio;
+    } catch(e) {}
+  }
+
+  // ---------- 视图切换 ----------
+  function setActiveView(view) {
+    chatMain.classList.remove('chat-hidden', 'profile-hidden', 'character-hidden', 'data-hidden');
+    document.querySelectorAll('.sidebar-icon').forEach(icon => icon.classList.remove('active'));
+    userAvatarBtn.classList.remove('active');
+    if (view === 'chat') chatIcon.classList.add('active');
+    else if (view === 'settings') { chatMain.classList.add('chat-hidden'); gearIcon.classList.add('active'); }
+    else if (view === 'profile') { chatMain.classList.add('profile-hidden'); userAvatarBtn.classList.add('active'); }
+    else if (view === 'character') { chatMain.classList.add('character-hidden'); characterIcon.classList.add('active'); }
+    else if (view === 'data') {
+      chatMain.classList.add('data-hidden');
+      dataManagerIcon.classList.add('active');
+      refreshStorageStats();
+    }
+  }
+
+  // ---------- 数据管理 ----------
+  function getByteSize(str) { return new Blob([str]).size; }
+  function formatSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024*1024) return (bytes/1024).toFixed(2) + ' KB';
+    return (bytes/(1024*1024)).toFixed(2) + ' MB';
+  }
+  function refreshStorageStats() {
+    try {
+      let totalBytes = 0;
+      const items = [];
+      for (let i=0; i<localStorage.length; i++) {
+        const key = localStorage.key(i);
+        const val = localStorage.getItem(key);
+        const bytes = getByteSize(key)+getByteSize(val);
+        totalBytes += bytes;
+        let displayName = key;
+        if (key.startsWith('chat_roleplay_config')) displayName='API配置';
+        else if (key==='character_data') displayName='人物设定';
+        else if (key==='chat_theme') displayName='主题设置';
+        else if (key==='profile_name'||key==='profile_bio') displayName='个人资料';
+        else if (key==='user_avatar'||key==='user_cover') displayName='图片数据';
+        else if (key==='chat_messages') displayName='聊天记录';
+        items.push({key,displayName,bytes});
+      }
+      const merged = {};
+      items.forEach(item => {
+        if (!merged[item.displayName]) merged[item.displayName] = {displayName:item.displayName, bytes:0, count:0};
+        merged[item.displayName].bytes += item.bytes;
+        merged[item.displayName].count++;
+      });
+      const list = Object.values(merged).sort((a,b)=>b.bytes-a.bytes);
+      const totalEl = document.getElementById('totalStorageSize');
+      const itemsEl = document.getElementById('totalStorageItems');
+      const tbody = document.getElementById('storageDetailsTable');
+      if (totalEl) totalEl.textContent = formatSize(totalBytes);
+      if (itemsEl) itemsEl.textContent = localStorage.length;
+      if (tbody) {
+        tbody.innerHTML = '';
+        list.forEach(item => {
+          const tr = document.createElement('tr');
+          tr.style.borderBottom='1px solid var(--border-light)';
+          tr.innerHTML = `<td style="padding:10px 0;">${item.displayName} ${item.count>1?'('+item.count+'项)':''}</td><td style="text-align:right;padding:10px 0;">${formatSize(item.bytes)}</td>`;
+          tbody.appendChild(tr);
+        });
+      }
+    } catch(e) {}
+  }
+
+  function exportAllData() {
+    const obj = {};
+    for (let i=0; i<localStorage.length; i++) obj[localStorage.key(i)] = localStorage.getItem(localStorage.key(i));
+    const blob = new Blob([JSON.stringify(obj,null,2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `acorner_backup_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+  }
+
+  function importDataFromFile(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (!confirm('导入将覆盖当前所有数据，确定继续吗？')) return;
+        localStorage.clear();
+        Object.entries(data).forEach(([k,v])=>localStorage.setItem(k,v));
+        alert('导入成功，页面将刷新。');
+        location.reload();
+      } catch(err) { alert('导入失败：'+err.message); }
+    };
+    reader.readAsText(file);
+  }
 
   // ---------- 初始化 ----------
   function init() {
@@ -719,17 +935,86 @@
     loadCharacterFromStorage();
     loadProfile();
     loadUserImages();
-    loadMessagesFromStorage();
     renderMessages();
-    buildChatPreferencesUI(); // 动态创建聊天偏好 UI
+    buildChatPreferencesUI();
 
-    // 事件绑定（省略，保持原样）
-    // 在原有绑定上确保新增的聊天偏好元素能被绑定（已通过 buildChatPreferencesUI 处理）
+    if (themeToggleSettings) themeToggleSettings.addEventListener('click', toggleTheme);
+    sendBtn.addEventListener('click', handleSendMessage);
+    messageInput.addEventListener('keydown', e => { if (e.key==='Enter'&&!e.shiftKey) { e.preventDefault(); handleSendMessage(); } });
+    messageInput.addEventListener('input', ()=>{ messageInput.style.height='auto'; messageInput.style.height=Math.min(messageInput.scrollHeight,120)+'px'; });
+    configBtn.addEventListener('click', openDrawer);
+    closeDrawerBtn.addEventListener('click', closeDrawer);
+    overlay.addEventListener('click', closeDrawer);
+    saveConfigBtn.addEventListener('click', ()=>{ applyConfig(); closeDrawer(); });
+    testConnectionBtn.addEventListener('click', testConnection);
+    clearChatBtn.addEventListener('click', ()=>{ if(confirm('清空对话？')) resetConversation(); });
+    apiProviderSelect.addEventListener('change', updateApiUrlFromProvider);
+    modelSelect.addEventListener('change', updateModelInputFromSelect);
 
-    // 其他初始化事件...
-    // (注意：需要保留原 init 中的事件绑定，这里省略重复)
+    chatIcon.addEventListener('click', ()=>setActiveView('chat'));
+    gearIcon.addEventListener('click', ()=>setActiveView('settings'));
+    userAvatarBtn.addEventListener('click', ()=>setActiveView('profile'));
+    characterIcon.addEventListener('click', ()=>setActiveView('character'));
+    dataManagerIcon.addEventListener('click', ()=>setActiveView('data'));
+
+    saveCharacterBtn.addEventListener('click', saveCharacterToStorage);
+    resetCharacterBtn.addEventListener('click', ()=>{
+      if(confirm('重置所有人物设定？')) {
+        localStorage.removeItem('character_data');
+        characterData = { worldBook:'',name:'',avatar:'',cover:'',bio:'',age:'',gender:'',appearance:'',personality:'',backstory:'',memories:'',style:'',examples:'' };
+        loadCharacterFromStorage();
+      }
+    });
+
+    editCharacterAvatarBtn.addEventListener('click', ()=>{
+      const inp = document.createElement('input');
+      inp.type='file'; inp.accept='image/*';
+      inp.onchange = e => { const f=e.target.files[0]; if(f) openCropModalForCharacter(f,'avatar'); };
+      inp.click();
+    });
+    editCharacterCoverBtn.addEventListener('click', ()=>{
+      const inp = document.createElement('input');
+      inp.type='file'; inp.accept='image/*';
+      inp.onchange = e => { const f=e.target.files[0]; if(f) openCropModalForCharacter(f,'cover'); };
+      inp.click();
+    });
+
+    characterNameInput.addEventListener('input', updateCharacterPreview);
+    characterBioInput.addEventListener('input', updateCharacterPreview);
+
+    const editProfileBtn = document.getElementById('editProfileBtn');
+    const editProfileModalOverlay = document.getElementById('editProfileModalOverlay');
+    const closeEditProfileModal = document.getElementById('closeEditProfileModal');
+    const cancelEditProfileBtn = document.getElementById('cancelEditProfileBtn');
+    const saveEditProfileBtn = document.getElementById('saveEditProfileBtn');
+
+    const closeEditModal = () => { editProfileModalOverlay.style.display='none'; };
+    editProfileBtn?.addEventListener('click', ()=> editProfileModalOverlay.style.display='flex');
+    closeEditProfileModal?.addEventListener('click', closeEditModal);
+    cancelEditProfileBtn?.addEventListener('click', closeEditModal);
+    editProfileModalOverlay?.addEventListener('click', e => { if(e.target===editProfileModalOverlay) closeEditModal(); });
+    saveEditProfileBtn?.addEventListener('click', ()=>{
+      const name = editProfileNameInput.value.trim()||'用户';
+      const bio = editProfileBioInput.value.trim()||'在一隅，遇见自己。';
+      localStorage.setItem('profile_name', name);
+      localStorage.setItem('profile_bio', bio);
+      profileDisplayName.textContent = name;
+      profileBioDisplay.innerHTML = `<i class="fas fa-quote-left" style="margin-right:8px;"></i>${bio}`;
+      closeEditModal();
+    });
+
+    document.getElementById('exportDataBtn')?.addEventListener('click', exportAllData);
+    const importFileInput = document.getElementById('importFileInput');
+    document.getElementById('importDataBtn')?.addEventListener('click', ()=> importFileInput.click());
+    importFileInput?.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (file) { importDataFromFile(file); importFileInput.value=''; }
+    });
+
+    setTimeout(refreshStorageStats, 100);
+    initUploadButtons();
+    updateCharacterPreview();
   }
 
-  // 执行 init
   init();
 })();
