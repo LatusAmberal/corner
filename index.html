@@ -3,964 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <!-- 网站标题 -->
     <title>一隅·aCorner</title>
 
-    <!-- Favicon（浏览器标签页图标） -->
+    <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="logos/favicon-32.ico">
     <link rel="apple-touch-icon" sizes="180x180" href="logos/logo-180.png">
     <link rel="icon" type="image/png" sizes="192x192" href="logos/logo-192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="logos/logo-512.png">
+    <link rel="apple-touch-icon" href="logos/logo-180.png">
 
-    <!-- iOS 主屏幕图标 -->
-    <link rel="apple-touch-icon" href="logo-180.png">
-
-    <!-- Android/Chrome 主屏幕配置（可选但推荐） -->
+    <!-- PWA 设置 -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="一隅">
-
-    <!-- 主题颜色（影响状态栏和工具栏） -->
     <meta name="theme-color" content="#0f9960">
     <meta name="msapplication-TileColor" content="#0f9960">
 
+    <!-- 外部样式 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-    <style>
-        /* ===== 默认深色 (黑+青绿) ===== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-        }
-
-        :root {
-            /* 深色主题 (默认) */
-            --bg-app: #0a0c0e;
-            --bg-sidebar: #0d1114;
-            --bg-chat-main: #12171a;
-            --bg-header: #0f1417;
-            --bg-input-area: #0f1417;
-            --bg-bubble-assistant: #1a252c;
-            --bg-bubble-user: #0f9960;      /* 青绿色 */
-            --text-primary: #e3e9ed;
-            --text-secondary: #9ab3c0;
-            --text-bubble-user: #ffffff;
-            --border-light: #1f2a30;
-            --border-strong: #2a3a42;
-            --accent: #0f9960;
-            --accent-hover: #0bb07a;
-            --menu-btn-hover: #1e2c34;
-            --shadow: rgba(0,0,0,0.5);
-            --drawer-bg: #12181c;
-            --drawer-border: #1e2a30;
-            --input-bg: #1a242a;
-            --toggle-bg: #2a3a42;
-            --toggle-active: #0f9960;
-            --profile-bg-image: none;
-        }
-
-        /* 浅色主题 (白天模式) */
-        body.light-theme {
-            --bg-app: #f5f7f9;
-            --bg-sidebar: #eef1f3;
-            --bg-chat-main: #ffffff;
-            --bg-header: #f8fafc;
-            --bg-input-area: #f8fafc;
-            --bg-bubble-assistant: #e6edf2;
-            --bg-bubble-user: #0f9960;
-            --text-primary: #1e2b34;
-            --text-secondary: #3f5562;
-            --text-bubble-user: #ffffff;
-            --border-light: #d0d9e0;
-            --border-strong: #b6c4ce;
-            --accent: #0f9960;
-            --accent-hover: #0bb07a;
-            --menu-btn-hover: #e0e8ef;
-            --shadow: rgba(0,0,0,0.08);
-            --drawer-bg: #ffffff;
-            --drawer-border: #d0d9e0;
-            --input-bg: #ffffff;
-            --toggle-bg: #cfdbe5;
-            --toggle-active: #0f9960;
-        }
-
-        body {
-            background: var(--bg-app);  /* 让背景色跟随主题，不再有外层深色背景 */
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 0;          /* 确保没有外边距 */
-            padding: 0;
-        }
-
-        /* 主应用卡片 */
-        .app {
-            display: flex;
-            width: 100%;         /* 宽度占满 */
-            height: 100vh;       /* 高度占满视口 */
-            max-width: none;     /* 移除最大宽度限制 */
-            max-height: none;    /* 移除最大高度限制 */
-            background: var(--bg-app);
-            border-radius: 0;    /* 去掉圆角 */
-            box-shadow: none;    /* 去掉阴影 */
-            overflow: hidden;
-            border: none;        /* 去掉边框 */
-        }
-
-        /* ========= 左侧菜单栏 ========= */
-        .sidebar {
-            width: 72px;
-            background: var(--bg-sidebar);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 16px 0;
-            gap: 12px;
-            transition: background 0.2s;
-        }
-
-        .sidebar-icon {
-            width: 48px;
-            height: 48px;
-            background: var(--bg-chat-main);
-            border-radius: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-secondary);
-            font-size: 24px;
-            transition: all 0.15s;
-            cursor: pointer;
-            border: 1px solid var(--border-light);
-        }
-
-        .sidebar-icon:hover {
-            background: var(--accent);
-            color: white;
-            border-radius: 16px;
-            border-color: var(--accent);
-        }
-
-        .sidebar-icon.active {
-            background: var(--accent);
-            color: white;
-            border-radius: 16px;
-            border-color: var(--accent);
-        }
-
-        .sidebar-divider {
-            width: 32px;
-            height: 2px;
-            background: var(--border-strong);
-            margin: 8px 0;
-        }
-
-        /* ========= 右侧聊天区 ========= */
-            .chat-main {
-              flex: 1;
-              display: flex;
-              flex-direction: column;
-              background: var(--bg-chat-main);
-              position: relative;
-              min-width: 0;
-        }
-
-        .chat-header {
-            height: 56px;
-            background: var(--bg-header);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 16px 0 20px;
-            flex-shrink: 0;
-            transition: background 0.2s;
-        }
-
-        .header-left { width: 40px; }
-        .chat-title {
-            font-weight: 600;
-            font-size: 16px;
-            color: var(--text-primary);
-            text-align: center;
-            flex: 1;
-        }
-
-        .menu-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 22px;
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: 0.15s;
-        }
-        .menu-btn:hover {
-            background: var(--menu-btn-hover);
-            color: var(--accent);
-        }
-
-        /* 消息区 */
-        .messages-area {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px 20px 8px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            scroll-behavior: smooth;
-        }
-
-        .message-row { display: flex; width: 100%; }
-        .message-row.assistant { justify-content: flex-start; }
-        .message-row.user { justify-content: flex-end; }
-
-        .message-bubble {
-            max-width: 70%;
-            padding: 12px 16px;
-            border-radius: 20px;
-            font-size: 15px;
-            line-height: 1.5;
-            word-break: break-word;
-            box-shadow: 0 2px 4px var(--shadow);
-        }
-
-        .assistant .message-bubble {
-            background: var(--bg-bubble-assistant);
-            color: var(--text-primary);
-            border-top-left-radius: 6px;
-        }
-
-        .user .message-bubble {
-            background: var(--bg-bubble-user);
-            color: var(--text-bubble-user);
-            border-top-right-radius: 6px;
-        }
-
-        .message-time {
-            font-size: 11px;
-            opacity: 0.7;
-            margin-top: 6px;
-            text-align: right;
-        }
-
-        /* 打字效果 */
-        .typing-indicator {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 12px 16px;
-        }
-        .typing-indicator span {
-            width: 8px;
-            height: 8px;
-            background: var(--text-secondary);
-            border-radius: 50%;
-            animation: typing 1.4s infinite ease-in-out;
-        }
-        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes typing {
-            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-            30% { transform: translateY(-8px); opacity: 1; }
-        }
-
-        /* 输入区域 */
-        .input-area {
-            background: var(--bg-input-area);
-            padding: 16px 20px;
-            flex-shrink: 0;
-        }
-
-        .input-container {
-            display: flex;
-            align-items: flex-end;
-            gap: 12px;
-            background: var(--input-bg);
-            border-radius: 24px;
-            padding: 6px 8px 6px 18px;
-            border: 1px solid var(--border-strong);
-        }
-
-        .input-container textarea {
-            flex: 1;
-            background: transparent;
-            border: none;
-            outline: none;
-            color: var(--text-primary);
-            font-size: 15px;
-            resize: none;
-            max-height: 120px;
-            min-height: 24px;
-            padding: 8px 0;
-            line-height: 1.4;
-        }
-        .input-container textarea::placeholder { color: var(--text-secondary); }
-
-        .send-btn {
-            background: var(--accent);
-            border: none;
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 18px;
-            transition: 0.15s;
-            flex-shrink: 0;
-        }
-        .send-btn:hover {
-            background: var(--accent-hover);
-            transform: scale(0.96);
-        }
-        .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        /* ========= 右侧配置抽屉 ========= */
-        .config-drawer {
-            position: fixed;
-            top: 0; right: -360px;
-            width: 340px; height: 100vh;
-            background: var(--drawer-bg);
-            box-shadow: -5px 0 20px var(--shadow);
-            transition: right 0.25s ease;
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            border-left: 1px solid var(--drawer-border);
-            color: var(--text-primary);
-        }
-        .config-drawer.open { right: 0; }
-
-        .drawer-header {
-            padding: 20px 20px 12px;
-            display: flex; align-items: center; justify-content: space-between;
-            border-bottom: 1px solid var(--border-light);
-        }
-        .drawer-header h3 { font-size: 18px; font-weight: 600; }
-        .close-drawer {
-            background: none; border: none; color: var(--text-secondary);
-            font-size: 22px; cursor: pointer; padding: 4px;
-        }
-
-        .drawer-content {
-            flex: 1; overflow-y: auto; padding: 18px 20px;
-            display: flex; flex-direction: column; gap: 18px;
-        }
-
-        .config-group {
-            display: flex; flex-direction: column; gap: 9px;
-        }
-        .config-group label {
-            font-size: 13px; font-weight: 500; color: var(--text-secondary);
-            text-transform: uppercase; letter-spacing: 0.5px;
-        }
-        .config-group input, .config-group textarea, .config-group select {
-            background: var(--input-bg);
-            border: 1px solid var(--border-strong);
-            border-radius: 8px; padding: 10px 12px;
-            color: var(--text-primary); font-size: 14px; outline: none;
-        }
-        .config-group input:focus, .config-group textarea:focus {
-            border-color: var(--accent);
-        }
-        .config-group textarea { min-height: 100px; resize: vertical; }
-
-        .drawer-footer {
-            padding: 16px 20px 24px; border-top: 1px solid var(--border-light);
-            display: flex; gap: 10px;
-        }
-        .btn {
-            padding: 10px 16px; border-radius: 8px; font-weight: 500;
-            border: none; cursor: pointer; font-size: 14px; transition: 0.15s;
-        }
-        .btn-primary {
-            background: var(--accent); color: white; flex: 2;
-        }
-        .btn-primary:hover { background: var(--accent-hover); }
-        .btn-secondary {
-            background: var(--menu-btn-hover); color: var(--text-primary); flex: 1;
-            border: 1px solid var(--border-light);
-        }
-        .btn-warning {
-            background: #b02e2e; color: white;
-        }
-        .btn-warning:hover { background: #c43c3c; }
-
-        .status-badge {
-            font-size: 12px; padding: 2px 8px; border-radius: 12px;
-            background: var(--border-strong); align-self: flex-start;
-        }
-
-        /* 遮罩 */
-        .drawer-overlay {
-            position: fixed; top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.3); z-index: 999;
-            opacity: 0; visibility: hidden; transition: 0.2s;
-        }
-        .drawer-overlay.show { opacity: 1; visibility: visible; }
-
-        /* 滚动条 */
-        .messages-area::-webkit-scrollbar { width: 6px; }
-        .messages-area::-webkit-scrollbar-track { background: transparent; }
-        .messages-area::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 6px; }
-
-        /* ===== 苹果风格切换开关 (toggle) ===== */
-        .theme-toggle-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-top: 8px;
-            padding-top: 8px;
-            border-top: 1px solid var(--border-light);
-        }
-        .theme-toggle-label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--text-primary);
-            font-weight: 500;
-        }
-        .apple-toggle {
-            position: relative;
-            width: 48px;
-            height: 26px;
-            background: var(--toggle-bg);
-            border-radius: 26px;
-            border: 1px solid var(--border-strong);
-            cursor: pointer;
-            transition: background 0.25s;
-            display: inline-block;
-        }
-        .apple-toggle::after {
-            content: "";
-            position: absolute;
-            width: 22px; height: 22px;
-            background: white;
-            border-radius: 22px;
-            top: 1px; left: 2px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-            transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.4, 1);
-        }
-        .apple-toggle.active {
-            background: var(--toggle-active);
-        }
-        .apple-toggle.active::after {
-            transform: translateX(22px);
-        }
-        .toggle-icon {
-            font-size: 16px;
-            color: var(--text-secondary);
-        }
-
-        /* 设置视图（替代聊天区） */
-        .settings-view {
-            flex: 1;
-            background: var(--bg-chat-main);
-            padding: 24px 32px;
-            overflow-y: auto;
-            color: var(--text-primary);
-        }
-        .settings-card {
-            background: var(--bg-header);
-            border-radius: 16px;
-            padding: 20px 24px;
-            margin-bottom: 24px;
-            border: 1px solid var(--border-light);
-        }
-        .settings-card h3 {
-            font-size: 18px;
-            margin-bottom: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .view-toggle {
-            display: none;
-        }
-        .view-active {
-            display: flex;
-            flex-direction: column;
-        }
-        .chat-main .chat-view {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-        .settings-view {
-            display: none;
-        }
-        .settings-view.active {
-            display: block;
-        }
-        .chat-main.chat-hidden .chat-view {
-            display: none;
-        }
-        .chat-main.chat-hidden .settings-view {
-            display: block;
-        }
-
-        /* 用户头像 - 左下角固定 */
-        .sidebar-footer {
-            margin-top: auto;
-            padding-bottom: 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .user-avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: var(--accent);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 22px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.15s;
-            border: 2px solid var(--border-light);
-            overflow: hidden;
-        }
-        .user-avatar:hover {
-            opacity: 0.9;
-            transform: scale(1.02);
-        }
-        .user-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        /* ========== 个人主页视图 ========== */
-        .profile-view {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: var(--bg-chat-main);
-            position: relative;
-            overflow-y: auto;
-            color: var(--text-primary);
-            display: none;
-        }
-
-        /* 背景图横幅 —— 铺满上方，无圆角，无卡片边框 */
-        .profile-banner {
-            position: relative;
-            width: 100%;
-            min-height: 110px;          /* 足够容纳头像和文字 */
-            background-color: var(--bg-header);
-            background-image: var(--profile-bg-image);
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            border-bottom: 1px solid var(--border-light);
-            flex-shrink: 0;
-        }
-
-        /* 半透明蒙版 —— 保证文字在任何背景图下都能阅读 */
-        .profile-banner::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.5); /*黑色模式个人主页背景蒙版透明度*/
-            pointer-events: none;
-            z-index: 1;
-        }
-        body.light-theme .profile-banner::before {
-            background: rgba(255, 255, 255, 0.75); /*白色模式个人主页蒙版透明度*/
-        }
-
-        /* 内容层置于蒙版之上 */
-        .profile-banner-content {
-            position: relative;
-            z-index: 2;
-            display: flex;
-            align-items: center;
-            gap: 24px;
-            padding: 24px 32px;
-            height: 100%;
-            min-height: 110px;
-        }
-
-        /* 大头像：圆形 + 描边 + 阴影，更醒目 */
-        .profile-avatar-large {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            background: var(--accent);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 40px;
-            color: white;
-            border: 4px solid var(--accent);
-            box-shadow: 0 0 0 3px var(--bg-chat-main), 0 4px 12px rgba(0,0,0,0.3);
-            overflow: hidden;
-            flex-shrink: 0;
-        }
-        .profile-avatar-large img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        /* 文字信息区域 */
-        .profile-info {
-            flex: 1;
-        }
-        .profile-info h2 {
-            font-size: 28px;
-            margin-bottom: 6px;
-            color: #ffffff;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.6);
-            font-weight: 600;
-        }
-        .profile-info p {
-            font-size: 15px;
-            color: rgba(255,255,255,0.9);
-            text-shadow: 0 1px 4px rgba(0,0,0,0.5);
-        }
-        body.light-theme .profile-info h2,
-        body.light-theme .profile-info p {
-            color: #1e2b34;
-            text-shadow: 0 1px 4px rgba(255,255,255,0.7);
-        }
-
-        /* 编辑按钮优化 —— 与主题协调 */
-        .profile-banner .btn-secondary {
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white;
-            font-weight: 500;
-            padding: 10px 18px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-        }
-        .profile-banner .btn-secondary:hover {
-            background: var(--accent);
-            border-color: var(--accent);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
-        }
-        body.light-theme .profile-banner .btn-secondary {
-            background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(0,0,0,0.1);
-            color: #1e2b34;
-        }
-        body.light-theme .profile-banner .btn-secondary:hover {
-            background: var(--accent);
-            color: white;
-        }
-
-        /* 左下角小头像也加描边（保持统一） */
-        .user-avatar {
-            border: 2px solid var(--accent) !important;
-            box-shadow: 0 0 0 2px var(--bg-sidebar);
-        }
-        .user-avatar.active {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 2px var(--accent);
-        }
-
-        /* 下方内容区域（待开发） */
-        .profile-content {
-            flex: 1;
-            background: var(--bg-chat-main);
-            padding: 24px 32px;
-        }
-
-        /* 清理旧的重复样式，确保没有冲突 */
-        .profile-header,
-        .profile-view .profile-header,
-        .profile-view::before {
-            display: none !important;
-        }
-
-        /* 保持视图切换逻辑不变 */
-        .chat-main.profile-hidden .chat-view,
-        .chat-main.profile-hidden .settings-view {
-            display: none;
-        }
-        .chat-main.profile-hidden .profile-view {
-            display: flex;
-        }
-
-        .chat-main.chat-hidden .chat-view,
-        .chat-main.chat-hidden .profile-view {
-          display: none;
-        }
-        .chat-main.chat-hidden .settings-view {
-          display: block;
-        }
-
-        .chat-main.profile-hidden .chat-view,
-        .chat-main.profile-hidden .settings-view {
-          display: none;
-        }
-        .chat-main.profile-hidden .profile-view {
-          display: block;
-        }
-
-        /* 模态框样式 */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7);
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .modal-container {
-            background: var(--drawer-bg);
-            border-radius: 16px;
-            width: 500px;
-            max-width: 90%;
-            max-height: 80vh;
-            display: flex;
-            flex-direction: column;
-            border: 1px solid var(--border-light);
-        }
-        .modal-header {
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border-light);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .modal-header h3 { margin: 0; }
-        .modal-close {
-            background: none; border: none;
-            font-size: 24px; color: var(--text-secondary);
-            cursor: pointer;
-        }
-        .config-group {
-            margin-top: 10px;   /* 调整这个值来控制距离上一个输入框的间距 */
-        }
-        .config-group:first-of-type {
-            margin-top: 0;     /* 第一个配置组不要上边距 */
-        }
-        .modal-body {
-            padding: 20px;
-            flex: 1;
-            overflow: auto;
-        }
-        .crop-container {
-            max-height: 300px;
-            display: flex;
-            justify-content: center;
-        }
-        .crop-container img {
-            max-width: 100%;
-            max-height: 300px;
-            display: block;
-        }
-        .modal-footer {
-            padding: 16px 20px;
-            border-top: 1px solid var(--border-light);
-            display: flex;
-            gap: 12px;
-            justify-content: flex-end;
-        }
-        /* 统一交互光标样式 */
-        .chat-title,
-        .sidebar-icon,
-        .menu-btn,
-        .send-btn,
-        .user-avatar,
-        .btn,
-        .close-drawer,
-        .modal-close {
-            user-select: none;
-        }
-
-        /* 可点击元素保留手型指针（如果希望） */
-        .sidebar-icon,
-        .menu-btn,
-        .send-btn,
-        .user-avatar,
-        .btn,
-        .close-drawer,
-        .modal-close {
-            cursor: pointer;
-        }
-
-        /* 如果希望标题栏文字显示默认箭头，单独设置 */
-        .chat-title {
-            cursor: default;
-        }
-
-        /* 人物管理视图 */
-        .character-view {
-            flex: 1;
-            background: var(--bg-chat-main);
-            padding: 24px 32px;
-            overflow-y: auto;
-            color: var(--text-primary);
-            display: none;
-        }
-        /* ===== 角色预览卡片 ===== */
-        .character-preview-card {
-            position: relative;
-            border-radius: 16px;
-            margin-bottom: 24px;
-            overflow: hidden;
-            border: 1px solid var(--border-light);
-            background-color: var(--bg-header);
-            min-height: 140px;
-        }
-
-        .character-preview-bg {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-color: var(--bg-header);
-            z-index: 0;
-        }
-
-        .character-preview-bg::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.4);
-            z-index: 1;
-        }
-
-        body.light-theme .character-preview-bg::after {
-            background: rgba(255, 255, 255, 0.6);
-        }
-
-        .character-preview-content {
-            position: relative;
-            z-index: 2;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            padding: 20px 24px;
-        }
-
-        .character-preview-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: var(--accent);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 36px;
-            color: white;
-            border: 3px solid rgba(255,255,255,0.3);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            overflow: hidden;
-            flex-shrink: 0;
-        }
-
-        .character-preview-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .character-preview-info {
-            flex: 1;
-        }
-
-        .character-preview-info h3 {
-            font-size: 24px;
-            font-weight: 600;
-            color: white;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.5);
-            margin-bottom: 6px;
-        }
-
-        .character-preview-info p {
-            font-size: 14px;
-            color: rgba(255,255,255,0.9);
-            text-shadow: 0 1px 4px rgba(0,0,0,0.5);
-        }
-
-        body.light-theme .character-preview-info h3,
-        body.light-theme .character-preview-info p {
-            color: #1e2b34;
-            text-shadow: 0 1px 4px rgba(255,255,255,0.7);
-        }
-
-        .character-preview-content .btn-secondary {
-            background: rgba(0,0,0,0.3);
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white;
-        }
-
-        .character-preview-content .btn-secondary:hover {
-            background: var(--accent);
-            border-color: var(--accent);
-        }
-
-        body.light-theme .character-preview-content .btn-secondary {
-            background: rgba(255,255,255,0.6);
-            color: #1e2b34;
-        }
-
-        body.light-theme .character-preview-content .btn-secondary:hover {
-            background: var(--accent);
-            color: white;
-        }
-        .character-view.active {
-            display: block;
-        }
-        .chat-main.character-hidden .chat-view,
-        .chat-main.character-hidden .settings-view,
-        .chat-main.character-hidden .profile-view {
-            display: none;
-        }
-        .chat-main.character-hidden .character-view {
-            display: block;
-        }
-                /* 数据管理视图显示控制 */
-        .chat-main.data-hidden .chat-view,
-        .chat-main.data-hidden .settings-view,
-        .chat-main.data-hidden .profile-view,
-        .chat-main.data-hidden .character-view {
-            display: none;
-        }
-        .chat-main.data-hidden .data-manager-view {
-            display: block;
-        }
-        .data-manager-view {
-            display: none;
-        }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <div class="app">
     <!-- 左侧菜单 -->
     <aside class="sidebar">
         <div class="sidebar-icon active" title="当前对话"><i class="fas fa-comment-dots"></i></div>
-        <!-- 将原来的 address-book 改为 user-circle 或 user-tag，表示人物 -->
         <div class="sidebar-icon" title="人物管理" id="characterIcon"><i class="fas fa-user-tag"></i></div>
         <div class="sidebar-divider"></div>
         <div class="sidebar-icon" title="设置"><i class="fas fa-cog"></i></div>
         <div class="sidebar-icon" title="数据管理" id="dataManagerIcon"><i class="fas fa-database"></i></div>
         <div class="sidebar-icon" title="更多"><i class="fas fa-plus"></i></div>
-        <!-- 底部头像保持不变 -->
         <div class="sidebar-footer">
             <div class="user-avatar" id="userAvatarBtn" title="个人主页">
                 <i class="fas fa-user"></i>
@@ -968,1262 +42,346 @@
         </div>
     </aside>
 
-  <!-- 聊天主体 -->
-  <main class="chat-main" id="chatMain">
-    <!-- 聊天视图 -->
-    <div class="chat-view" id="chatView">
-      <header class="chat-header">
-        <div class="header-left"></div>
-        <div class="chat-title" id="chatTitleDisplay">✨ 青绿角色</div>
-        <div class="header-right">
-            <button class="menu-btn" id="configMenuBtn" title="API 设置 · 主题切换"><i class="fas fa-ellipsis-h"></i></button>
+    <!-- 聊天主体 -->
+    <main class="chat-main" id="chatMain">
+        <!-- 聊天视图 -->
+        <div class="chat-view" id="chatView">
+            <header class="chat-header">
+                <div class="header-left"></div>
+                <div class="chat-title" id="chatTitleDisplay">✨ 青绿角色</div>
+                <div class="header-right">
+                    <button class="menu-btn" id="configMenuBtn" title="API 设置 · 主题切换"><i class="fas fa-ellipsis-h"></i></button>
+                </div>
+            </header>
+            <div class="messages-area" id="messagesArea">
+                <div class="message-row assistant">
+                    <div class="message-bubble">
+                        你好！我是青绿色调的角色。点击左侧齿轮设置 API。
+                        <div class="message-time">刚刚</div>
+                    </div>
+                </div>
+            </div>
+            <div class="input-area">
+                <div class="input-container">
+                    <textarea id="messageInput" placeholder="输入消息… (Enter发送)" rows="1"></textarea>
+                    <button class="send-btn" id="sendBtn" title="发送"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
         </div>
-      </header>
-      <div class="messages-area" id="messagesArea">
-        <div class="message-row assistant">
-          <div class="message-bubble">
-            你好！我是青绿色调的角色。点击左侧齿轮设置 API。
-            <div class="message-time">刚刚</div>
-          </div>
+
+        <!-- 设置视图 -->
+        <div class="settings-view" id="settingsView">
+            <h2 style="margin-bottom: 20px; font-weight: 500;"><i class="fas fa-cog" style="margin-right: 12px;"></i>设置</h2>
+            <div class="settings-card">
+                <h3><i class="fas fa-palette"></i> 外观</h3>
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <span class="theme-toggle-label"><i class="fas fa-moon"></i> 深色模式</span>
+                    <div class="apple-toggle" id="themeToggleSettings"></div>
+                </div>
+                <div style="margin-top: 8px; font-size: 13px; color: var(--text-secondary);">
+                    <span id="themeLabelTextSettings">深色模式</span>
+                </div>
+            </div>
+            <div class="settings-card">
+                <h3><i class="fas fa-cloud"></i> API 配置</h3>
+                <div class="config-group">
+                    <label>API 服务商</label>
+                    <select id="apiProviderSelect">
+                        <option value="deepseek">DeepSeek</option>
+                        <option value="openai">OpenAI</option>
+                        <option value="openrouter">OpenRouter</option>
+                        <option value="groq">Groq</option>
+                        <option value="custom">自定义</option>
+                    </select>
+                </div>
+                <div class="config-group">
+                    <label>API 地址</label>
+                    <input type="text" id="apiUrlInput" placeholder="https://..." value="https://api.deepseek.com/v1/chat/completions">
+                </div>
+                <div class="config-group">
+                    <label>模型</label>
+                    <select id="modelSelect">
+                        <optgroup label="DeepSeek">
+                            <option value="deepseek-chat">DeepSeek Chat</option>
+                            <option value="deepseek-reasoner">DeepSeek Reasoner</option>
+                        </optgroup>
+                        <optgroup label="OpenAI">
+                            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                            <option value="gpt-4o">GPT-4o</option>
+                        </optgroup>
+                        <optgroup label="OpenRouter (免费/收费)">
+                            <option value="google/gemini-2.0-flash-exp:free">Gemini 2.0 Flash (免费)</option>
+                            <option value="meta-llama/llama-3.2-3b-instruct:free">Llama 3.2 3B (免费)</option>
+                            <option value="openai/gpt-3.5-turbo">GPT-3.5 (OpenRouter)</option>
+                        </optgroup>
+                        <optgroup label="Groq">
+                            <option value="llama3-8b-8192">Llama 3 8B</option>
+                            <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
+                        </optgroup>
+                        <optgroup label="其他">
+                            <option value="custom">自定义</option>
+                        </optgroup>
+                    </select>
+                    <input type="text" id="modelInput" placeholder="自定义模型ID" value="deepseek-chat" style="margin-top: 8px;">
+                </div>
+                <div class="config-group">
+                    <label>API Key</label>
+                    <input type="password" id="apiKeyInput" placeholder="sk-..." autocomplete="off">
+                    <span class="status-badge" id="apiStatus">未设置</span>
+                </div>
+                <div style="display: flex; gap: 12px; margin-top: 16px;">
+                    <button class="btn btn-primary" id="saveConfigBtn"><i class="fas fa-save"></i> 保存配置</button>
+                    <button class="btn btn-secondary" id="testConnectionBtn"><i class="fas fa-vial"></i> 测试连接</button>
+                </div>
+                <div style="margin-top: 16px; font-size: 12px; color: var(--text-secondary); background: var(--input-bg); padding: 12px; border-radius: 8px; border-left: 3px solid var(--accent);">
+                    <i class="fas fa-info-circle"></i> <strong>免费 API 推荐</strong><br>
+                    • DeepSeek：注册送额度，地址 <code>https://api.deepseek.com/v1/chat/completions</code><br>
+                    • Groq：免费，地址 <code>https://api.groq.com/openai/v1/chat/completions</code><br>
+                    • OpenRouter：有免费模型，地址 <code>https://openrouter.ai/api/v1/chat/completions</code>
+                </div>
+            </div>
         </div>
-      </div>
-      <div class="input-area">
-        <div class="input-container">
-          <textarea id="messageInput" placeholder="输入消息… (Enter发送)" rows="1"></textarea>
-          <button class="send-btn" id="sendBtn" title="发送"><i class="fas fa-paper-plane"></i></button>
+
+        <!-- 个人主页视图 -->
+        <div class="profile-view" id="profileView">
+            <div class="profile-banner">
+                <div class="profile-banner-content">
+                    <div class="profile-avatar-large" id="profileAvatarLarge"><i class="fas fa-user"></i></div>
+                    <div class="profile-info">
+                        <h2 id="profileDisplayName">用户</h2>
+                        <p id="profileBioDisplay"><i class="fas fa-quote-left" style="margin-right: 8px;"></i>在一隅，遇见自己。</p>
+                    </div>
+                    <button class="btn btn-secondary" id="editProfileBtn"><i class="fas fa-pen"></i> 编辑个人资料</button>
+                </div>
+            </div>
+            <div class="profile-content">
+                <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+                    <i class="fas fa-tools" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
+                    <h3 style="font-weight: 400; margin-bottom: 8px;">更多功能开发中</h3>
+                    <p>敬请期待</p>
+                </div>
+            </div>
         </div>
-      </div>
+
+        <!-- 人物管理视图 -->
+        <div class="character-view" id="characterView">
+            <h2 style="margin-bottom: 20px; font-weight: 500;"><i class="fas fa-user-tag" style="margin-right: 12px;"></i>人物设定</h2>
+            <div style="display: flex; align-items: baseline; margin-bottom: 6px;">
+                <span style="font-size: 16px; font-weight: 500; color: var(--text-primary);"><i class="fas fa-image" style="margin-right: 8px;"></i>角色卡片预览</span>
+            </div>
+            <div class="character-preview-card" id="characterPreviewCard">
+                <div class="character-preview-bg" id="characterPreviewBg"></div>
+                <div class="character-preview-content">
+                    <div class="character-preview-avatar" id="characterPreviewAvatar"><i class="fas fa-user-astronaut"></i></div>
+                    <div class="character-preview-info">
+                        <h3 id="characterPreviewName">角色名称</h3>
+                        <p id="characterPreviewBio"><i class="fas fa-quote-left" style="margin-right: 6px;"></i>温柔而冷静的陪伴</p>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-secondary" id="editCharacterAvatarBtn" style="padding: 8px 12px; white-space: nowrap;"><i class="fas fa-camera"></i> 头像</button>
+                        <button class="btn btn-secondary" id="editCharacterCoverBtn" style="padding: 8px 12px; white-space: nowrap;"><i class="fas fa-image"></i> 背景</button>
+                    </div>
+                </div>
+            </div>
+            <div class="settings-card">
+                <h3><i class="fas fa-globe"></i> 世界书 · 世界观</h3>
+                <div class="config-group">
+                    <label>背景设定（不变的世界规则）</label>
+                    <textarea id="worldBookInput" rows="4" placeholder="例如：这是一个魔法与科技并存的近未来世界，人类与精灵共存，但龙族已灭绝千年……"></textarea>
+                </div>
+            </div>
+            <div class="settings-card">
+                <h3><i class="fas fa-id-card"></i> 人物表单</h3>
+                <div class="config-group">
+                    <label>角色名称（显示在标题栏和预览）</label>
+                    <input type="text" id="characterNameInput" value="角色名称">
+                </div>
+                <div class="config-group">
+                    <label>个性签名</label>
+                    <input type="text" id="characterBioInput" placeholder="例如：温柔而冷静的陪伴" value="温柔而冷静的陪伴">
+                </div>
+                <div class="config-group">
+                    <label>姓名</label>
+                    <input type="text" id="charNameInput" placeholder="例如：林清瑶">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="config-group">
+                        <label>年龄</label>
+                        <input type="text" id="charAgeInput" placeholder="例如：24">
+                    </div>
+                    <div class="config-group">
+                        <label>性别</label>
+                        <input type="text" id="charGenderInput" placeholder="例如：女">
+                    </div>
+                </div>
+                <div class="config-group">
+                    <label>外貌描写</label>
+                    <textarea id="charAppearanceInput" rows="2" placeholder="例如：黑色长发，常穿素色长裙，眼神清冷但偶有温柔"></textarea>
+                </div>
+                <div class="config-group">
+                    <label>人设提示词（基础角色指令）</label>
+                    <textarea id="systemPromptInput" rows="3" placeholder="例如：你是一个冷静又带点青涩的助手，说话简洁但偶尔流露出温柔。">你是一个冷静又带点青涩的助手，说话简洁但偶尔流露出温柔。请务必根据当前真实时间调整对话内容。</textarea>
+                </div>
+            </div>
+            <div class="settings-card">
+                <h3><i class="fas fa-smile"></i> 性格</h3>
+                <div class="config-group">
+                    <label>性格描述</label>
+                    <textarea id="charPersonalityInput" rows="3" placeholder="例如：外表冷淡，内心善良，对认可的人会不自觉地关心，说话带点傲娇"></textarea>
+                </div>
+            </div>
+            <div class="settings-card">
+                <h3><i class="fas fa-history"></i> 过往经历</h3>
+                <div class="config-group">
+                    <label>背景故事</label>
+                    <textarea id="charBackstoryInput" rows="4" placeholder="例如：曾是帝国骑士，因不愿服从腐败命令而离开军队，流浪中习得医术……"></textarea>
+                </div>
+            </div>
+            <div class="settings-card">
+                <h3><i class="fas fa-brain"></i> 核心记忆</h3>
+                <div class="config-group">
+                    <label>重要事件/人物关系</label>
+                    <textarea id="charMemoriesInput" rows="3" placeholder="例如：- 师父在临终前将古剑托付给她\n- 曾经救过一个叫阿诺的少年\n- 对甜食没有抵抗力"></textarea>
+                </div>
+            </div>
+            <div class="settings-card">
+                <h3><i class="fas fa-comment-dots"></i> 对话风格</h3>
+                <div class="config-group">
+                    <label>风格描述</label>
+                    <textarea id="charStyleInput" rows="2" placeholder="例如：句子简短，偶尔使用「……」，生气时会说「哼」"></textarea>
+                </div>
+                <details style="margin-top: 12px;">
+                    <summary style="cursor: pointer; color: var(--accent);">高级设置 · 对话示例</summary>
+                    <div class="config-group" style="margin-top: 12px;">
+                        <label>示例对话（每行一条，格式：用户说 → 角色回复）</label>
+                        <textarea id="charExamplesInput" rows="4" placeholder="用户：你好呀\n角色：……你是谁？有什么事吗？\n用户：想和你聊聊\n角色：哼，我很忙的，不过既然你坚持……"></textarea>
+                    </div>
+                </details>
+            </div>
+            <div style="display: flex; gap: 12px; margin-top: 8px; margin-bottom: 24px;">
+                <button class="btn btn-primary" id="saveCharacterBtn"><i class="fas fa-save"></i> 保存人物设定</button>
+                <button class="btn btn-secondary" id="resetCharacterBtn"><i class="fas fa-undo-alt"></i> 重置</button>
+            </div>
+        </div>
+
+        <!-- 数据管理视图 -->
+        <div class="data-manager-view" id="dataManagerView" style="flex:1; background: var(--bg-chat-main); padding: 24px 32px; overflow-y: auto; color: var(--text-primary);">
+            <h2 style="margin-bottom: 20px; font-weight: 500;"><i class="fas fa-database" style="margin-right: 12px;"></i>数据管理</h2>
+            <div class="settings-card">
+                <h3><i class="fas fa-chart-pie"></i> 存储概览</h3>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                    <div style="background: var(--bg-header); border-radius: 12px; padding: 16px;">
+                        <div style="font-size: 13px; color: var(--text-secondary);">总占用空间</div>
+                        <div style="font-size: 32px; font-weight: 600; margin-top: 8px;" id="totalStorageSize">0 KB</div>
+                    </div>
+                    <div style="background: var(--bg-header); border-radius: 12px; padding: 16px;">
+                        <div style="font-size: 13px; color: var(--text-secondary);">存储项数量</div>
+                        <div style="font-size: 32px; font-weight: 600; margin-top: 8px;" id="totalStorageItems">0</div>
+                    </div>
+                </div>
+                <div style="margin-top: 20px;">
+                    <table style="width:100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--border-light);">
+                                <th style="text-align: left; padding: 12px 0; color: var(--text-secondary); font-weight: 500;">存储项</th>
+                                <th style="text-align: right; padding: 12px 0; color: var(--text-secondary); font-weight: 500;">大小</th>
+                            </tr>
+                        </thead>
+                        <tbody id="storageDetailsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="settings-card">
+                <h3><i class="fas fa-exchange-alt"></i> 导入 / 导出</h3>
+                <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">导出全部数据为 JSON 文件，或从之前导出的文件恢复所有设置。</p>
+                <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" id="exportDataBtn" style="flex:1;"><i class="fas fa-download"></i> 导出全部数据</button>
+                    <button class="btn btn-secondary" id="importDataBtn" style="flex:1;"><i class="fas fa-upload"></i> 导入数据文件</button>
+                    <input type="file" id="importFileInput" accept=".json,application/json" style="display:none;">
+                </div>
+                <div style="margin-top: 16px; font-size: 13px; color: var(--text-secondary);">
+                    <i class="fas fa-info-circle"></i> 导入数据将覆盖当前所有设置，建议先导出备份。
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 图片裁剪模态框 -->
+    <div class="modal-overlay" id="cropModalOverlay" style="display: none;">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>调整图片</h3>
+                <button class="modal-close" id="closeCropModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="crop-container">
+                    <img id="cropImage" src="" alt="裁剪图片">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelCropBtn">取消</button>
+                <button class="btn btn-primary" id="saveCropBtn">保存</button>
+            </div>
+        </div>
     </div>
 
-    <!-- 设置视图（初始隐藏） -->
-    <div class="settings-view" id="settingsView">
-      <h2 style="margin-bottom: 20px; font-weight: 500;"><i class="fas fa-cog" style="margin-right: 12px;"></i>设置</h2>
-
-      <!-- 主题卡片 -->
-      <div class="settings-card">
-        <h3><i class="fas fa-palette"></i> 外观</h3>
-        <div style="display: flex; align-items: center; justify-content: space-between;">
-          <span class="theme-toggle-label">
-            <i class="fas fa-moon"></i> 深色模式
-          </span>
-          <div class="apple-toggle" id="themeToggleSettings"></div>
+    <!-- 编辑个人资料模态框 -->
+    <div class="modal-overlay" id="editProfileModalOverlay" style="display: none;">
+        <div class="modal-container" style="width: 450px;">
+            <div class="modal-header">
+                <h3>编辑个人资料</h3>
+                <button class="modal-close" id="closeEditProfileModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="config-group">
+                    <label>显示名称</label>
+                    <input type="text" id="editProfileNameInput" placeholder="你的名字" value="用户">
+                </div>
+                <div class="config-group">
+                    <label>个性签名</label>
+                    <input type="text" id="editProfileBioInput" placeholder="写点什么..." value="在一隅，遇见自己。">
+                </div>
+                <div class="config-group">
+                    <label>头像</label>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <button class="btn btn-secondary" id="editUploadAvatarBtn" style="flex: 1;"><i class="fas fa-camera"></i> 上传头像</button>
+                        <span style="font-size: 12px; color: var(--text-secondary);">1:1</span>
+                    </div>
+                </div>
+                <div class="config-group">
+                    <label>主页背景</label>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <button class="btn btn-secondary" id="editUploadCoverBtn" style="flex: 1;"><i class="fas fa-image"></i> 上传背景图</button>
+                        <span style="font-size: 12px; color: var(--text-secondary);">16:9</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelEditProfileBtn">取消</button>
+                <button class="btn btn-primary" id="saveEditProfileBtn">保存</button>
+            </div>
         </div>
-        <div style="margin-top: 8px; font-size: 13px; color: var(--text-secondary);">
-          <span id="themeLabelTextSettings">深色模式</span>
-        </div>
-      </div>
-
-      <!-- API 配置卡片 -->
-      <div class="settings-card">
-        <h3><i class="fas fa-cloud"></i> API 配置</h3>
-
-        <div class="config-group">
-          <label>API 服务商</label>
-          <select id="apiProviderSelect">
-            <option value="deepseek">DeepSeek</option>
-            <option value="openai">OpenAI</option>
-            <option value="openrouter">OpenRouter</option>
-            <option value="groq">Groq</option>
-            <option value="custom">自定义</option>
-          </select>
-        </div>
-
-        <div class="config-group">
-          <label>API 地址</label>
-          <input type="text" id="apiUrlInput" placeholder="https://..." value="https://api.deepseek.com/v1/chat/completions">
-        </div>
-
-        <div class="config-group">
-          <label>模型</label>
-          <select id="modelSelect">
-            <optgroup label="DeepSeek">
-              <option value="deepseek-chat">DeepSeek Chat</option>
-              <option value="deepseek-reasoner">DeepSeek Reasoner</option>
-            </optgroup>
-            <optgroup label="OpenAI">
-              <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-              <option value="gpt-4o">GPT-4o</option>
-            </optgroup>
-            <optgroup label="OpenRouter (免费/收费)">
-              <option value="google/gemini-2.0-flash-exp:free">Gemini 2.0 Flash (免费)</option>
-              <option value="meta-llama/llama-3.2-3b-instruct:free">Llama 3.2 3B (免费)</option>
-              <option value="openai/gpt-3.5-turbo">GPT-3.5 (OpenRouter)</option>
-            </optgroup>
-            <optgroup label="Groq">
-              <option value="llama3-8b-8192">Llama 3 8B</option>
-              <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
-            </optgroup>
-            <optgroup label="其他">
-              <option value="custom">自定义</option>
-            </optgroup>
-          </select>
-          <input type="text" id="modelInput" placeholder="自定义模型ID" value="deepseek-chat" style="margin-top: 8px;">
-        </div>
-
-        <div class="config-group">
-          <label>API Key</label>
-          <input type="password" id="apiKeyInput" placeholder="sk-..." autocomplete="off">
-          <span class="status-badge" id="apiStatus">未设置</span>
-        </div>
-
-        <div style="display: flex; gap: 12px; margin-top: 16px;">
-          <button class="btn btn-primary" id="saveConfigBtn"><i class="fas fa-save"></i> 保存配置</button>
-          <button class="btn btn-secondary" id="testConnectionBtn"><i class="fas fa-vial"></i> 测试连接</button>
-        </div>
-
-        <div style="margin-top: 16px; font-size: 12px; color: var(--text-secondary); background: var(--input-bg); padding: 12px; border-radius: 8px; border-left: 3px solid var(--accent);">
-          <i class="fas fa-info-circle"></i> <strong>免费 API 推荐</strong><br>
-          • DeepSeek：注册送额度，地址 <code>https://api.deepseek.com/v1/chat/completions</code><br>
-          • Groq：免费，地址 <code>https://api.groq.com/openai/v1/chat/completions</code><br>
-          • OpenRouter：有免费模型，地址 <code>https://openrouter.ai/api/v1/chat/completions</code>
-        </div>
-      </div>
-    </div>
-     <!-- 个人主页视图 -->
-    <div class="profile-view" id="profileView">
-      <!-- 背景图区域（覆盖上方） -->
-      <div class="profile-banner">
-        <div class="profile-banner-content">
-          <div class="profile-avatar-large" id="profileAvatarLarge">
-            <i class="fas fa-user"></i>
-          </div>
-          <div class="profile-info">
-            <h2 id="profileDisplayName">用户</h2>
-            <p id="profileBioDisplay"><i class="fas fa-quote-left" style="margin-right: 8px;"></i>在一隅，遇见自己。</p>
-          </div>
-          <button class="btn btn-secondary" id="editProfileBtn">
-            <i class="fas fa-pen"></i> 编辑个人资料
-          </button>
-        </div>
-      </div>
-
-      <!-- 下方待开发区域 -->
-      <div class="profile-content">
-        <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
-          <i class="fas fa-tools" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
-          <h3 style="font-weight: 400; margin-bottom: 8px;">更多功能开发中</h3>
-          <p>敬请期待</p>
-        </div>
-      </div>
-    </div>
-    <!-- 人物管理视图 -->
-    <div class="character-view" id="characterView">
-      <h2 style="margin-bottom: 20px; font-weight: 500;"><i class="fas fa-user-tag" style="margin-right: 12px;"></i>人物设定</h2>
-
-      <!-- 🆕 角色预览卡片（类似个人主页横幅） -->
-      <div style="display: flex; align-items: baseline; margin-bottom: 6px;">
-        <span style="font-size: 16px; font-weight: 500; color: var(--text-primary);"><i class="fas fa-image" style="margin-right: 8px;"></i>角色卡片预览</span>
-      </div>
-      <div class="character-preview-card" id="characterPreviewCard">
-        <div class="character-preview-bg" id="characterPreviewBg"></div>
-        <div class="character-preview-content">
-          <div class="character-preview-avatar" id="characterPreviewAvatar">
-            <i class="fas fa-user-astronaut"></i>
-          </div>
-          <div class="character-preview-info">
-            <h3 id="characterPreviewName">角色名称</h3>
-            <p id="characterPreviewBio"><i class="fas fa-quote-left" style="margin-right: 6px;"></i>温柔而冷静的陪伴</p>
-          </div>
-          <div style="display: flex; gap: 8px;">
-            <button class="btn btn-secondary" id="editCharacterAvatarBtn" style="padding: 8px 12px; white-space: nowrap;">
-              <i class="fas fa-camera"></i> 头像
-            </button>
-            <button class="btn btn-secondary" id="editCharacterCoverBtn" style="padding: 8px 12px; white-space: nowrap;">
-              <i class="fas fa-image"></i> 背景
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 世界书卡片 -->
-      <div class="settings-card">
-        <h3><i class="fas fa-globe"></i> 世界书 · 世界观</h3>
-        <div class="config-group">
-          <label>背景设定（不变的世界规则）</label>
-          <textarea id="worldBookInput" rows="4" placeholder="例如：这是一个魔法与科技并存的近未来世界，人类与精灵共存，但龙族已灭绝千年……"></textarea>
-        </div>
-      </div>
-
-      <!-- 人物基本表单卡片（布局调整） -->
-      <div class="settings-card">
-        <h3><i class="fas fa-id-card"></i> 人物表单</h3>
-        <!-- 合并后的角色名称/昵称（仅保留一个，同时作为标题和预览名） -->
-        <div class="config-group">
-          <label>角色名称（显示在标题栏和预览）</label>
-          <input type="text" id="characterNameInput" value="角色名称">
-        </div>
-        <!-- 个性签名 -->
-        <div class="config-group">
-          <label>个性签名</label>
-          <input type="text" id="characterBioInput" placeholder="例如：温柔而冷静的陪伴" value="温柔而冷静的陪伴">
-        </div>
-        <!-- 姓名（真实姓名） -->
-        <div class="config-group">
-          <label>姓名</label>
-          <input type="text" id="charNameInput" placeholder="例如：林清瑶">
-        </div>
-        <!-- 年龄和性别并排 -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-          <div class="config-group">
-            <label>年龄</label>
-            <input type="text" id="charAgeInput" placeholder="例如：24">
-          </div>
-          <div class="config-group">
-            <label>性别</label>
-            <input type="text" id="charGenderInput" placeholder="例如：女">
-          </div>
-        </div>
-        <!-- 外貌描写 -->
-        <div class="config-group">
-          <label>外貌描写</label>
-          <textarea id="charAppearanceInput" rows="2" placeholder="例如：黑色长发，常穿素色长裙，眼神清冷但偶有温柔"></textarea>
-        </div>
-        <!-- 人设提示词 -->
-        <div class="config-group">
-          <label>人设提示词（基础角色指令）</label>
-          <textarea id="systemPromptInput" rows="3" placeholder="例如：你是一个冷静又带点青涩的助手，说话简洁但偶尔流露出温柔。">你是一个冷静又带点青涩的助手，说话简洁但偶尔流露出温柔。请务必根据当前真实时间调整对话内容。</textarea>
-        </div>
-      </div>
-
-      <!-- 性格卡片 -->
-      <div class="settings-card">
-        <h3><i class="fas fa-smile"></i> 性格</h3>
-        <div class="config-group">
-          <label>性格描述</label>
-          <textarea id="charPersonalityInput" rows="3" placeholder="例如：外表冷淡，内心善良，对认可的人会不自觉地关心，说话带点傲娇"></textarea>
-        </div>
-      </div>
-
-      <!-- 过往经历卡片 -->
-      <div class="settings-card">
-        <h3><i class="fas fa-history"></i> 过往经历</h3>
-        <div class="config-group">
-          <label>背景故事</label>
-          <textarea id="charBackstoryInput" rows="4" placeholder="例如：曾是帝国骑士，因不愿服从腐败命令而离开军队，流浪中习得医术……"></textarea>
-        </div>
-      </div>
-
-      <!-- 核心记忆卡片 -->
-      <div class="settings-card">
-        <h3><i class="fas fa-brain"></i> 核心记忆</h3>
-        <div class="config-group">
-          <label>重要事件/人物关系</label>
-          <textarea id="charMemoriesInput" rows="3" placeholder="例如：- 师父在临终前将古剑托付给她\n- 曾经救过一个叫阿诺的少年\n- 对甜食没有抵抗力"></textarea>
-        </div>
-      </div>
-
-      <!-- 对话风格卡片 -->
-      <div class="settings-card">
-        <h3><i class="fas fa-comment-dots"></i> 对话风格</h3>
-        <div class="config-group">
-          <label>风格描述</label>
-          <textarea id="charStyleInput" rows="2" placeholder="例如：句子简短，偶尔使用「……」，生气时会说「哼」"></textarea>
-        </div>
-        <details style="margin-top: 12px;">
-          <summary style="cursor: pointer; color: var(--accent);">高级设置 · 对话示例</summary>
-          <div class="config-group" style="margin-top: 12px;">
-            <label>示例对话（每行一条，格式：用户说 → 角色回复）</label>
-            <textarea id="charExamplesInput" rows="4" placeholder="用户：你好呀\n角色：……你是谁？有什么事吗？\n用户：想和你聊聊\n角色：哼，我很忙的，不过既然你坚持……"></textarea>
-          </div>
-        </details>
-      </div>
-
-      <!-- 保存按钮 -->
-      <div style="display: flex; gap: 12px; margin-top: 8px; margin-bottom: 24px;">
-        <button class="btn btn-primary" id="saveCharacterBtn"><i class="fas fa-save"></i> 保存人物设定</button>
-        <button class="btn btn-secondary" id="resetCharacterBtn"><i class="fas fa-undo-alt"></i> 重置</button>
-      </div>
-    </div>
-    <!-- 数据管理视图 -->
-    <div class="data-manager-view" id="dataManagerView" style="flex:1; background: var(--bg-chat-main); padding: 24px 32px; overflow-y: auto; color: var(--text-primary);">
-      <h2 style="margin-bottom: 20px; font-weight: 500;"><i class="fas fa-database" style="margin-right: 12px;"></i>数据管理</h2>
-
-      <!-- 存储概览卡片 -->
-      <div class="settings-card">
-        <h3><i class="fas fa-chart-pie"></i> 存储概览</h3>
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
-          <div style="background: var(--bg-header); border-radius: 12px; padding: 16px;">
-            <div style="font-size: 13px; color: var(--text-secondary);">总占用空间</div>
-            <div style="font-size: 32px; font-weight: 600; margin-top: 8px;" id="totalStorageSize">0 KB</div>
-          </div>
-          <div style="background: var(--bg-header); border-radius: 12px; padding: 16px;">
-            <div style="font-size: 13px; color: var(--text-secondary);">存储项数量</div>
-            <div style="font-size: 32px; font-weight: 600; margin-top: 8px;" id="totalStorageItems">0</div>
-          </div>
-        </div>
-
-        <div style="margin-top: 20px;">
-          <table style="width:100%; border-collapse: collapse;">
-            <thead>
-              <tr style="border-bottom: 1px solid var(--border-light);">
-                <th style="text-align: left; padding: 12px 0; color: var(--text-secondary); font-weight: 500;">存储项</th>
-                <th style="text-align: right; padding: 12px 0; color: var(--text-secondary); font-weight: 500;">大小</th>
-              </tr>
-            </thead>
-            <tbody id="storageDetailsTable">
-              <!-- 动态生成 -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- 导入/导出卡片 -->
-      <div class="settings-card">
-        <h3><i class="fas fa-exchange-alt"></i> 导入 / 导出</h3>
-        <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">
-          导出全部数据为 JSON 文件，或从之前导出的文件恢复所有设置。
-        </p>
-        <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-          <button class="btn btn-primary" id="exportDataBtn" style="flex:1;">
-            <i class="fas fa-download"></i> 导出全部数据
-          </button>
-          <button class="btn btn-secondary" id="importDataBtn" style="flex:1;">
-            <i class="fas fa-upload"></i> 导入数据文件
-          </button>
-          <input type="file" id="importFileInput" accept=".json,application/json" style="display:none;">
-        </div>
-        <div style="margin-top: 16px; font-size: 13px; color: var(--text-secondary);">
-          <i class="fas fa-info-circle"></i> 导入数据将覆盖当前所有设置，建议先导出备份。
-        </div>
-      </div>
-    </div>
-  </main>
-
-<!-- 图片裁剪模态框 -->
-<div class="modal-overlay" id="cropModalOverlay" style="display: none;">
-  <div class="modal-container">
-    <div class="modal-header">
-      <h3>调整图片</h3>
-      <button class="modal-close" id="closeCropModal">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="crop-container">
-        <img id="cropImage" src="" alt="裁剪图片">
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" id="cancelCropBtn">取消</button>
-      <button class="btn btn-primary" id="saveCropBtn">保存</button>
-    </div>
-  </div>
-</div>
-
-<!-- 编辑个人资料模态框 -->
-<div class="modal-overlay" id="editProfileModalOverlay" style="display: none;">
-  <div class="modal-container" style="width: 450px;">
-    <div class="modal-header">
-      <h3>编辑个人资料</h3>
-      <button class="modal-close" id="closeEditProfileModal">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="config-group">
-        <label>显示名称</label>
-        <input type="text" id="editProfileNameInput" placeholder="你的名字" value="用户">
-      </div>
-      <div class="config-group">
-        <label>个性签名</label>
-        <input type="text" id="editProfileBioInput" placeholder="写点什么..." value="在一隅，遇见自己。">
-      </div>
-      <div class="config-group">
-        <label>头像</label>
-        <div style="display: flex; gap: 12px; align-items: center;">
-          <button class="btn btn-secondary" id="editUploadAvatarBtn" style="flex: 1;">
-            <i class="fas fa-camera"></i> 上传头像
-          </button>
-          <span style="font-size: 12px; color: var(--text-secondary);">1:1</span>
-        </div>
-      </div>
-      <div class="config-group">
-        <label>主页背景</label>
-        <div style="display: flex; gap: 12px; align-items: center;">
-          <button class="btn btn-secondary" id="editUploadCoverBtn" style="flex: 1;">
-            <i class="fas fa-image"></i> 上传背景图
-          </button>
-          <span style="font-size: 12px; color: var(--text-secondary);">16:9</span>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" id="cancelEditProfileBtn">取消</button>
-      <button class="btn btn-primary" id="saveEditProfileBtn">保存</button>
-    </div>
-  </div>
-</div>
-
-<!-- 遮罩 + 抽屉 -->
-<div class="drawer-overlay" id="drawerOverlay"></div>
-<div class="config-drawer" id="configDrawer">
-  <div class="drawer-header">
-    <h3><i class="fas fa-sliders-h" style="margin-right: 8px;"></i> 控制中心</h3>
-    <button class="close-drawer" id="closeDrawerBtn"><i class="fas fa-times"></i></button>
-  </div>
-
-  <div class="drawer-content">
-    <!-- 快捷操作 -->
-    <div style="margin-top: 20px;">
-      <button class="btn btn-warning" id="clearChatBtn" style="width: 100%;">
-        <i class="fas fa-trash-alt"></i> 清空对话记录
-      </button>
     </div>
 
-    <!-- 提示信息 -->
-    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-light);">
-      <i class="fas fa-info-circle"></i> 完整 API 设置请点击左侧齿轮图标。
+    <!-- 遮罩 + 抽屉 -->
+    <div class="drawer-overlay" id="drawerOverlay"></div>
+    <div class="config-drawer" id="configDrawer">
+        <div class="drawer-header">
+            <h3><i class="fas fa-sliders-h" style="margin-right: 8px;"></i> 控制中心</h3>
+            <button class="close-drawer" id="closeDrawerBtn"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="drawer-content">
+            <div style="margin-top: 20px;">
+                <button class="btn btn-warning" id="clearChatBtn" style="width: 100%;"><i class="fas fa-trash-alt"></i> 清空对话记录</button>
+            </div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-light);">
+                <i class="fas fa-info-circle"></i> 完整 API 设置请点击左侧齿轮图标。
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 
-
-
-<script>
-  (function(){
-    "use strict";
-
-    // ---------- DOM 元素 ----------
-    const apiProviderSelect = document.getElementById('apiProviderSelect');
-    const modelSelect = document.getElementById('modelSelect');
-    const messagesArea = document.getElementById('messagesArea');
-    const messageInput = document.getElementById('messageInput');
-    const sendBtn = document.getElementById('sendBtn');
-    const chatTitleDisplay = document.getElementById('chatTitleDisplay');
-    const configBtn = document.getElementById('configMenuBtn');
-    const drawer = document.getElementById('configDrawer');
-    const overlay = document.getElementById('drawerOverlay');
-    const closeDrawerBtn = document.getElementById('closeDrawerBtn');
-    const modelInput = document.getElementById('modelInput');
-    const characterNameInput = document.getElementById('characterNameInput');
-    const systemPromptInput = document.getElementById('systemPromptInput');
-    const testConnectionBtn = document.getElementById('testConnectionBtn');
-    const clearChatBtn = document.getElementById('clearChatBtn');
-    const saveConfigBtn = document.getElementById('saveConfigBtn');
-    const apiKeyInput = document.getElementById('apiKeyInput');
-    const apiUrlInput = document.getElementById('apiUrlInput');
-    const apiStatus = document.getElementById('apiStatus');
-    const themeToggleSettings = document.getElementById('themeToggleSettings');
-    const themeLabelTextSettings = document.getElementById('themeLabelTextSettings');
-    const gearIcon = document.querySelector('.sidebar-icon[title="设置"]');
-    const chatIcon = document.querySelector('.sidebar-icon[title="当前对话"]');
-    const characterIcon = document.getElementById('characterIcon');
-    const dataManagerIcon = document.getElementById('dataManagerIcon');
-    const userAvatarBtn = document.getElementById('userAvatarBtn');
-    const chatMain = document.getElementById('chatMain');
-    const profileDisplayName = document.getElementById('profileDisplayName');
-    const profileBioDisplay = document.getElementById('profileBioDisplay');
-    const editProfileNameInput = document.getElementById('editProfileNameInput');
-    const editProfileBioInput = document.getElementById('editProfileBioInput');
-    const worldBookInput = document.getElementById('worldBookInput');
-    const charNameInput = document.getElementById('charNameInput');
-    const charAgeInput = document.getElementById('charAgeInput');
-    const charGenderInput = document.getElementById('charGenderInput');
-    const charAppearanceInput = document.getElementById('charAppearanceInput');
-    const charPersonalityInput = document.getElementById('charPersonalityInput');
-    const charBackstoryInput = document.getElementById('charBackstoryInput');
-    const charMemoriesInput = document.getElementById('charMemoriesInput');
-    const charStyleInput = document.getElementById('charStyleInput');
-    const charExamplesInput = document.getElementById('charExamplesInput');
-    const saveCharacterBtn = document.getElementById('saveCharacterBtn');
-    const resetCharacterBtn = document.getElementById('resetCharacterBtn');
-    const characterBioInput = document.getElementById('characterBioInput');
-    const characterPreviewBg = document.getElementById('characterPreviewBg');
-    const characterPreviewAvatar = document.getElementById('characterPreviewAvatar');
-    const characterPreviewName = document.getElementById('characterPreviewName');
-    const characterPreviewBio = document.getElementById('characterPreviewBio');
-    const editCharacterAvatarBtn = document.getElementById('editCharacterAvatarBtn');
-    const editCharacterCoverBtn = document.getElementById('editCharacterCoverBtn');
-
-    // ---------- 状态 ----------
-    let messages = [
-      { role: 'assistant', content: '你好！我是青绿色调的角色。点击右上角「···」配置 API 或切换白天/黑夜模式。', timestamp: Date.now() }
-    ];
-    let config = {
-      apiKey: '',
-      apiUrl: 'https://api.deepseek.com/v1/chat/completions',
-      model: 'deepseek-chat',
-      characterName: '青绿助手',
-      systemPrompt: '你是一个冷静又带点青涩的助手，说话简洁但偶尔流露出温柔。请用中文交流，保持角色。'
-    };
-    let isGenerating = false;
-    let currentTypingMessageId = null;
-    let currentTheme = 'dark';
-
-    let characterData = {
-      worldBook: '',
-      name: '',
-      avatar: '',
-      cover: '',
-      bio: '',
-      age: '',
-      gender: '',
-      appearance: '',
-      personality: '',
-      backstory: '',
-      memories: '',
-      style: '',
-      examples: ''
-    };
-
-    // ---------- 主题管理 ----------
-    function applyTheme(theme) {
-      if (theme === 'light') {
-        document.body.classList.add('light-theme');
-      } else {
-        document.body.classList.remove('light-theme');
-      }
-      currentTheme = theme;
-      localStorage.setItem('chat_theme', theme);
-      if (themeToggleSettings) themeToggleSettings.classList.toggle('active', theme === 'light');
-      if (themeLabelTextSettings) themeLabelTextSettings.textContent = theme === 'light' ? '浅色模式' : '深色模式';
-    }
-
-    function toggleTheme() {
-      applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
-    }
-
-    function loadTheme() {
-      const saved = localStorage.getItem('chat_theme') || 'dark';
-      applyTheme(saved);
-    }
-
-    // ---------- 配置管理 ----------
-    function loadConfigFromStorage() {
-      try {
-        const saved = localStorage.getItem('chat_roleplay_config_v2');
-        if (saved) config = { ...config, ...JSON.parse(saved) };
-      } catch(e) {}
-      apiKeyInput.value = config.apiKey || '';
-      apiUrlInput.value = config.apiUrl;
-      modelInput.value = config.model;
-      characterNameInput.value = config.characterName;
-      systemPromptInput.value = config.systemPrompt;
-      updateChatTitle();
-      updateApiStatusBadge();
-      populateSelectsFromConfig();
-    }
-
-    function saveConfigToStorage() {
-      try {
-        localStorage.setItem('chat_roleplay_config_v2', JSON.stringify(config));
-      } catch(e) {}
-    }
-
-    function updateChatTitle() {
-      chatTitleDisplay.textContent = config.characterName || '青绿角色';
-    }
-
-    function updateApiStatusBadge() {
-      if (config.apiKey && config.apiKey.trim().length > 5) {
-        apiStatus.textContent = '已设置密钥';
-        apiStatus.style.background = '#0f9960';
-      } else {
-        apiStatus.textContent = '未设置密钥';
-        apiStatus.style.background = 'var(--border-strong)';
-      }
-    }
-
-    function syncConfigFromForm() {
-      config.apiKey = apiKeyInput.value.trim();
-      config.apiUrl = apiUrlInput.value.trim();
-      config.model = modelInput.value.trim();
-      config.characterName = characterNameInput.value.trim() || '青绿';
-      config.systemPrompt = systemPromptInput.value.trim();
-    }
-
-    function applyConfig() {
-      syncConfigFromForm();
-      saveConfigToStorage();
-      updateChatTitle();
-      updateApiStatusBadge();
-    }
-
-    // ---------- 消息渲染 ----------
-    function formatTime(ts) {
-      const d = new Date(ts);
-      return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-    }
-
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
-    function formatDateSeparator(ts) {
-      const d = new Date(ts);
-      const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-      return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 ${weekdays[d.getDay()]}`;
-    }
-
-    function renderMessages() {
-      const now = new Date();
-      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-      const oneHour = 60 * 60 * 1000;
-
-      let html = '';
-      let lastTimestamp = 0;
-      let lastDateKey = '';
-
-      messages.forEach((msg, index) => {
-        const msgTime = msg.timestamp;
-        const msgDateKey = new Date(msgTime).toDateString();
-
-        if (index === 0 || msgDateKey !== lastDateKey) {
-          const isToday = (msgTime >= todayStart && msgTime < todayStart + 86400000);
-          const label = isToday ? '今天' : formatDateSeparator(msgTime);
-          html += `<div class="message-separator"><span>${label}</span></div>`;
-        } else if (index > 0 && (msgTime - lastTimestamp > oneHour)) {
-          const d = new Date(msgTime);
-          const timeLabel = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-          html += `<div class="message-separator"><span>${timeLabel}</span></div>`;
-        }
-
-        const safe = escapeHtml(msg.content).replace(/\n/g, '<br>');
-        html += `<div class="message-row ${msg.role}"><div class="message-bubble">${safe}<div class="message-time">${formatTime(msgTime)}</div></div></div>`;
-
-        lastTimestamp = msgTime;
-        lastDateKey = msgDateKey;
-      });
-
-      if (currentTypingMessageId) {
-        html += `<div class="message-row assistant" id="${currentTypingMessageId}"><div class="message-bubble typing-indicator"><span></span><span></span><span></span></div></div>`;
-      }
-
-      messagesArea.innerHTML = html;
-      messagesArea.scrollTop = messagesArea.scrollHeight;
-    }
-
-    function addMessage(role, content) {
-      messages.push({ role, content, timestamp: Date.now() });
-      saveMessagesToStorage();
-      renderMessages();
-    }
-
-    function saveMessagesToStorage() {
-      try { localStorage.setItem('chat_messages', JSON.stringify(messages)); } catch(e) {}
-    }
-    function loadMessagesFromStorage() {
-      try {
-        const saved = localStorage.getItem('chat_messages');
-        if (saved) messages = JSON.parse(saved);
-      } catch(e) {}
-      if (!messages.length) {
-        messages = [{ role: 'assistant', content: '你好！我是青绿色调的角色……', timestamp: Date.now() }];
-      }
-    }
-
-    function removeTypingIndicator() {
-      if (currentTypingMessageId) {
-        const el = document.getElementById(currentTypingMessageId);
-        if (el) el.remove();
-        currentTypingMessageId = null;
-      }
-    }
-
-    function showTypingIndicator() {
-      removeTypingIndicator();
-      currentTypingMessageId = 'typing-' + Date.now();
-      renderMessages();
-    }
-
-    function resetConversation() {
-      messages = [{ role: 'assistant', content: '对话已重置。', timestamp: Date.now() }];
-      removeTypingIndicator();
-      saveMessagesToStorage();
-      renderMessages();
-    }
-
-    // ---------- 人物设定管理 ----------
-    function loadCharacterFromStorage() {
-      try {
-        const saved = localStorage.getItem('character_data');
-        if (saved) characterData = { ...characterData, ...JSON.parse(saved) };
-      } catch(e) {}
-      worldBookInput.value = characterData.worldBook || '';
-      charNameInput.value = characterData.name || '';
-      charAgeInput.value = characterData.age || '';
-      charGenderInput.value = characterData.gender || '';
-      charAppearanceInput.value = characterData.appearance || '';
-      charPersonalityInput.value = characterData.personality || '';
-      charBackstoryInput.value = characterData.backstory || '';
-      charMemoriesInput.value = characterData.memories || '';
-      charStyleInput.value = characterData.style || '';
-      charExamplesInput.value = characterData.examples || '';
-      characterBioInput.value = characterData.bio || '温柔而冷静的陪伴';
-      updateCharacterPreview();
-    }
-
-    function saveCharacterToStorage() {
-      characterData = {
-        worldBook: worldBookInput.value.trim(),
-        name: charNameInput.value.trim(),
-        age: charAgeInput.value.trim(),
-        gender: charGenderInput.value.trim(),
-        appearance: charAppearanceInput.value.trim(),
-        personality: charPersonalityInput.value.trim(),
-        backstory: charBackstoryInput.value.trim(),
-        memories: charMemoriesInput.value.trim(),
-        style: charStyleInput.value.trim(),
-        examples: charExamplesInput.value.trim(),
-        avatar: characterData.avatar,
-        cover: characterData.cover,
-        bio: characterBioInput.value.trim()
-      };
-      try {
-        localStorage.setItem('character_data', JSON.stringify(characterData));
-        updateCharacterPreview();
-        config.characterName = characterNameInput.value.trim() || '青绿助手';
-        updateChatTitle();
-        alert('人物设定已保存');
-      } catch(e) {
-        alert('保存失败，可能是存储空间已满');
-      }
-    }
-
-    function updateCharacterPreview() {
-      if (characterData.cover) {
-        characterPreviewBg.style.backgroundImage = `url(${characterData.cover})`;
-      } else {
-        characterPreviewBg.style.backgroundImage = '';
-      }
-      if (characterData.avatar) {
-        characterPreviewAvatar.innerHTML = `<img src="${characterData.avatar}" style="width:100%;height:100%;object-fit:cover;">`;
-      } else {
-        characterPreviewAvatar.innerHTML = '<i class="fas fa-user-astronaut"></i>';
-      }
-      const name = characterNameInput.value.trim() || '青绿助手';
-      const bio = characterBioInput.value.trim() || '温柔而冷静的陪伴';
-      characterPreviewName.textContent = name;
-      characterPreviewBio.innerHTML = `<i class="fas fa-quote-left" style="margin-right:6px;"></i>${bio}`;
-    }
-
-    // ---------- API调用 ----------
-    async function callAI(userMessage) {
-      if (!config.apiKey) throw new Error('请先配置 API Key');
-
-      const now = new Date();
-      const currentTimeStr = now.toLocaleString('zh-CN', {
-        timeZone: 'Asia/Shanghai',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        weekday: 'long'
-      });
-
-      const systemMsg = {
-        role: 'system',
-        content: `[世界观]...\n[重要：当前真实时间]\n现在是 ${currentTimeStr}。请根据这个时间调整你的对话，不要说错时间（如晚上不说早上好，过了午夜请用新的一天逻辑）。如果需要发送多个独立段落，请用两个换行（即一个空行）分隔不同的段落。`
-      };
-
-      const history = messages.filter(m => m.role==='user'||m.role==='assistant').slice(-30).map(m => ({ role: m.role, content: m.content }));
-
-      const payload = {
-        model: config.model,
-        messages: [systemMsg, ...history],
-        temperature: 0.8,
-      };
-
-      const res = await fetch(config.apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.apiKey}` },
-        body: JSON.stringify(payload)
-      });
-
-      if (!res.ok) {
-        let err = `HTTP ${res.status}`;
-        try { const d = await res.json(); err = d.error?.message || JSON.stringify(d); } catch(e) {}
-        throw new Error(err);
-      }
-
-      const data = await res.json();
-      return data.choices[0].message.content;
-    }
-
-    async function handleSendMessage() {
-      const content = messageInput.value.trim();
-      if (!content || isGenerating) return;
-
-      // 用户消息按空行拆分
-      const userSegments = content.split(/\n\s*\n/).filter(s => s.trim() !== '');
-      if (userSegments.length === 0) return;
-
-      messageInput.value = '';
-      messageInput.style.height = 'auto';
-
-      isGenerating = true;
-      sendBtn.disabled = true;
-
-      for (let i = 0; i < userSegments.length; i++) {
-        const text = userSegments[i].trim();
-        if (!text) continue;
-
-        addMessage('user', text);
-        showTypingIndicator();
-
-        try {
-          const startTime = Date.now();
-          const reply = await callAI(text);
-
-          // 动态延迟：每字 60ms，最少 2000ms，最多 5 秒
-          const charCount = reply.length;
-          let dynamicDelay = Math.min(5000, Math.max(2000, charCount * 60));
-          const elapsed = Date.now() - startTime;
-          const waitTime = Math.max(0, dynamicDelay - elapsed);
-          if (waitTime > 0) {
-            await new Promise(resolve => setTimeout(resolve, waitTime));
-          }
-
-          removeTypingIndicator();
-
-          // AI回复按两个换行拆分（\n\n 视为分条）
-          const replySegments = reply.split(/\n\n/).filter(s => s.trim() !== '');
-          if (replySegments.length > 1) {
-            replySegments.forEach(seg => addMessage('assistant', seg.trim()));
-          } else {
-            addMessage('assistant', reply);
-          }
-        } catch(e) {
-          removeTypingIndicator();
-          addMessage('assistant', `❌ 错误: ${e.message}`);
-        }
-      }
-
-      isGenerating = false;
-      sendBtn.disabled = false;
-      messageInput.focus();
-    }
-
-    async function testConnection() {
-      syncConfigFromForm();
-      if (!config.apiKey) { alert('请填写 API Key'); return; }
-      try {
-        const res = await fetch(config.apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.apiKey}` },
-          body: JSON.stringify({ model: config.model, messages: [{role:'user',content:'ping'}], max_tokens:5 })
-        });
-        const data = await res.json();
-        if (res.ok) alert('✅ 连接成功！');
-        else alert('❌ 失败: ' + (data.error?.message || res.status));
-      } catch(e) { alert('网络错误: ' + e.message); }
-    }
-
-    // ---------- 抽屉控制 ----------
-    function openDrawer() { drawer.classList.add('open'); overlay.classList.add('show'); }
-    function closeDrawer() { drawer.classList.remove('open'); overlay.classList.remove('show'); }
-
-    // ---------- 预设地址 ----------
-    const apiUrlPresets = {
-      deepseek: 'https://api.deepseek.com/v1/chat/completions',
-      openai: 'https://api.openai.com/v1/chat/completions',
-      openrouter: 'https://openrouter.ai/api/v1/chat/completions',
-      groq: 'https://api.groq.com/openai/v1/chat/completions',
-      custom: ''
-    };
-    function updateApiUrlFromProvider() {
-      const provider = apiProviderSelect.value;
-      if (provider !== 'custom') apiUrlInput.value = apiUrlPresets[provider];
-    }
-    function updateModelInputFromSelect() {
-      const selected = modelSelect.value;
-      if (selected !== 'custom') modelInput.value = selected;
-    }
-    function populateSelectsFromConfig() {
-      const url = config.apiUrl;
-      if (url.includes('deepseek.com')) apiProviderSelect.value = 'deepseek';
-      else if (url.includes('openrouter.ai')) apiProviderSelect.value = 'openrouter';
-      else if (url.includes('groq.com')) apiProviderSelect.value = 'groq';
-      else if (url.includes('api.openai.com')) apiProviderSelect.value = 'openai';
-      else apiProviderSelect.value = 'custom';
-      const model = config.model;
-      let found = false;
-      for (let opt of modelSelect.options) {
-        if (opt.value === model) { modelSelect.value = model; found = true; break; }
-      }
-      if (!found) modelSelect.value = 'custom';
-      apiUrlInput.value = config.apiUrl;
-      modelInput.value = config.model;
-    }
-
-    // ---------- 裁剪相关 ----------
-    let cropper = null;
-    let currentCropType = 'avatar';
-    const cropModalOverlay = document.getElementById('cropModalOverlay');
-    const cropImage = document.getElementById('cropImage');
-    const closeCropModal = document.getElementById('closeCropModal');
-    const cancelCropBtn = document.getElementById('cancelCropBtn');
-    const saveCropBtn = document.getElementById('saveCropBtn');
-
-    function openCropModal(file, type) {
-      currentCropType = type;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        cropImage.src = e.target.result;
-        cropModalOverlay.style.display = 'flex';
-        if (cropper) cropper.destroy();
-        cropper = new Cropper(cropImage, {
-          aspectRatio: type === 'avatar' ? 1 : 16 / 9,
-          viewMode: 1,
-          autoCropArea: 1,
-          responsive: true,
-        });
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function openCropModalForCharacter(file, type) {
-      currentCropType = type;
-      window._cropTarget = 'character';
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        cropImage.src = e.target.result;
-        cropModalOverlay.style.display = 'flex';
-        if (cropper) cropper.destroy();
-        cropper = new Cropper(cropImage, {
-          aspectRatio: type === 'avatar' ? 1 : 16 / 9,
-          viewMode: 1,
-          autoCropArea: 1,
-          responsive: true,
-        });
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function closeCropModalFunc() {
-      cropModalOverlay.style.display = 'none';
-      if (cropper) { cropper.destroy(); cropper = null; }
-    }
-
-    function saveCroppedImage() {
-      if (!cropper) return;
-      const canvas = cropper.getCroppedCanvas();
-      const dataURL = canvas.toDataURL('image/jpeg', 0.9);
-
-      if (window._cropTarget === 'character') {
-        if (currentCropType === 'avatar') {
-          characterData.avatar = dataURL;
-        } else {
-          characterData.cover = dataURL;
-        }
-        updateCharacterPreview();
-      } else {
-        if (currentCropType === 'avatar') {
-          const avatarContainer = document.getElementById('userAvatarBtn');
-          avatarContainer.innerHTML = '';
-          const img = document.createElement('img');
-          img.src = dataURL;
-          img.style.width = '100%'; img.style.height = '100%'; img.style.objectFit = 'cover';
-          avatarContainer.appendChild(img);
-          const largeAvatar = document.getElementById('profileAvatarLarge');
-          largeAvatar.innerHTML = '';
-          const largeImg = document.createElement('img');
-          largeImg.src = dataURL;
-          largeImg.style.width = '100%'; largeImg.style.height = '100%'; largeImg.style.objectFit = 'cover';
-          largeAvatar.appendChild(largeImg);
-          try { localStorage.setItem('user_avatar', dataURL); } catch(e) {}
-        } else {
-          document.documentElement.style.setProperty('--profile-bg-image', `url(${dataURL})`);
-          try { localStorage.setItem('user_cover', dataURL); } catch(e) {}
-        }
-      }
-      closeCropModalFunc();
-      window._cropTarget = null;
-    }
-
-    function initUploadButtons() {
-      const fileInput = document.createElement('input');
-      fileInput.type = 'file';
-      fileInput.accept = 'image/*';
-      fileInput.style.display = 'none';
-      document.body.appendChild(fileInput);
-      const editUploadAvatarBtn = document.getElementById('editUploadAvatarBtn');
-      const editUploadCoverBtn = document.getElementById('editUploadCoverBtn');
-      if (editUploadAvatarBtn) {
-        editUploadAvatarBtn.addEventListener('click', () => {
-          fileInput.onchange = (e) => { const f = e.target.files[0]; if (f) openCropModal(f, 'avatar'); fileInput.value = ''; };
-          fileInput.click();
-        });
-      }
-      if (editUploadCoverBtn) {
-        editUploadCoverBtn.addEventListener('click', () => {
-          fileInput.onchange = (e) => { const f = e.target.files[0]; if (f) openCropModal(f, 'cover'); fileInput.value = ''; };
-          fileInput.click();
-        });
-      }
-      closeCropModal.addEventListener('click', closeCropModalFunc);
-      cancelCropBtn.addEventListener('click', closeCropModalFunc);
-      saveCropBtn.addEventListener('click', saveCroppedImage);
-      cropModalOverlay.addEventListener('click', (e) => { if (e.target === cropModalOverlay) closeCropModalFunc(); });
-    }
-
-    function loadUserImages() {
-      try {
-        const savedAvatar = localStorage.getItem('user_avatar');
-        if (savedAvatar) {
-          const avatarContainer = document.getElementById('userAvatarBtn');
-          avatarContainer.innerHTML = '';
-          const img = document.createElement('img');
-          img.src = savedAvatar;
-          img.style.width = '100%'; img.style.height = '100%'; img.style.objectFit = 'cover';
-          avatarContainer.appendChild(img);
-          const largeAvatar = document.getElementById('profileAvatarLarge');
-          largeAvatar.innerHTML = '';
-          const largeImg = document.createElement('img');
-          largeImg.src = savedAvatar;
-          largeImg.style.width = '100%'; largeImg.style.height = '100%'; largeImg.style.objectFit = 'cover';
-          largeAvatar.appendChild(largeImg);
-        }
-        const savedCover = localStorage.getItem('user_cover');
-        if (savedCover) document.documentElement.style.setProperty('--profile-bg-image', `url(${savedCover})`);
-      } catch(e) {}
-    }
-
-    function loadProfile() {
-      try {
-        const savedName = localStorage.getItem('profile_name') || '用户';
-        const savedBio = localStorage.getItem('profile_bio') || '在一隅，遇见自己。';
-        profileDisplayName.textContent = savedName;
-        profileBioDisplay.innerHTML = `<i class="fas fa-quote-left" style="margin-right: 8px;"></i>${savedBio}`;
-        editProfileNameInput.value = savedName;
-        editProfileBioInput.value = savedBio;
-      } catch(e) {}
-    }
-
-    // ---------- 视图切换逻辑 ----------
-    function setActiveView(view) {
-      chatMain.classList.remove('chat-hidden', 'profile-hidden', 'character-hidden', 'data-hidden');
-      document.querySelectorAll('.sidebar-icon').forEach(icon => icon.classList.remove('active'));
-      userAvatarBtn.classList.remove('active');
-      if (view === 'chat') {
-        chatIcon.classList.add('active');
-      } else if (view === 'settings') {
-        chatMain.classList.add('chat-hidden');
-        gearIcon.classList.add('active');
-      } else if (view === 'profile') {
-        chatMain.classList.add('profile-hidden');
-        userAvatarBtn.classList.add('active');
-      } else if (view === 'character') {
-        chatMain.classList.add('character-hidden');
-        characterIcon.classList.add('active');
-      } else if (view === 'data') {
-        chatMain.classList.add('data-hidden');
-        dataManagerIcon.classList.add('active');
-        refreshStorageStats();
-      }
-    }
-
-    // ---------- 数据管理功能 ----------
-    function getByteSize(str) {
-      return new Blob([str]).size;
-    }
-
-    function formatSize(bytes) {
-      if (bytes < 1024) return bytes + ' B';
-      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
-      return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
-    }
-
-    function refreshStorageStats() {
-      try {
-        const items = [];
-        let totalBytes = 0;
-
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          const value = localStorage.getItem(key);
-          const bytes = getByteSize(key) + getByteSize(value);
-          totalBytes += bytes;
-
-          let displayName = key;
-          if (key.startsWith('chat_roleplay_config')) displayName = 'API 配置';
-          else if (key === 'character_data') displayName = '人物设定';
-          else if (key === 'chat_theme') displayName = '主题设置';
-          else if (key === 'profile_name' || key === 'profile_bio') displayName = '个人资料';
-          else if (key === 'user_avatar' || key === 'user_cover') displayName = '图片数据';
-          else if (key === 'messages') displayName = '聊天记录';
-          else displayName = key;
-
-          items.push({ key, displayName, bytes });
-        }
-
-        const merged = {};
-        items.forEach(item => {
-          if (!merged[item.displayName]) {
-            merged[item.displayName] = { displayName: item.displayName, bytes: 0, count: 0 };
-          }
-          merged[item.displayName].bytes += item.bytes;
-          merged[item.displayName].count += 1;
-        });
-
-        const mergedList = Object.values(merged).sort((a, b) => b.bytes - a.bytes);
-
-        document.getElementById('totalStorageSize').textContent = formatSize(totalBytes);
-        document.getElementById('totalStorageItems').textContent = localStorage.length;
-
-        const tbody = document.getElementById('storageDetailsTable');
-        tbody.innerHTML = '';
-        mergedList.forEach(item => {
-          const tr = document.createElement('tr');
-          tr.style.borderBottom = '1px solid var(--border-light)';
-          tr.innerHTML = `
-            <td style="padding: 10px 0;">${item.displayName} ${item.count > 1 ? `(${item.count}项)` : ''}</td>
-            <td style="text-align: right; padding: 10px 0;">${formatSize(item.bytes)}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-      } catch(e) {
-        console.warn('刷新存储统计失败:', e);
-      }
-    }
-
-    function exportAllData() {
-      const exportObj = {};
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        exportObj[key] = localStorage.getItem(key);
-      }
-      const jsonStr = JSON.stringify(exportObj, null, 2);
-      const blob = new Blob([jsonStr], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `acorner_backup_${new Date().toISOString().slice(0,10)}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    function importDataFromFile(file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const data = JSON.parse(e.target.result);
-          if (typeof data !== 'object' || data === null) throw new Error('无效的数据格式');
-          if (!confirm('导入将覆盖当前所有数据，确定继续吗？')) return;
-          localStorage.clear();
-          Object.entries(data).forEach(([key, value]) => localStorage.setItem(key, value));
-          alert('导入成功！页面将刷新以应用新数据。');
-          location.reload();
-        } catch (err) {
-          alert('导入失败：' + err.message);
-        }
-      };
-      reader.readAsText(file);
-    }
-
-    // ---------- 初始化 ----------
-    function init() {
-      loadTheme();
-      loadConfigFromStorage();
-      loadCharacterFromStorage();
-      loadProfile();
-      loadUserImages();
-      loadMessagesFromStorage();
-      renderMessages();
-
-      if (themeToggleSettings) themeToggleSettings.addEventListener('click', toggleTheme);
-      sendBtn.addEventListener('click', handleSendMessage);
-      messageInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } });
-      messageInput.addEventListener('input', function(){ this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 120) + 'px'; });
-      configBtn.addEventListener('click', openDrawer);
-      closeDrawerBtn.addEventListener('click', closeDrawer);
-      overlay.addEventListener('click', closeDrawer);
-      saveConfigBtn.addEventListener('click', ()=>{ applyConfig(); closeDrawer(); });
-      testConnectionBtn.addEventListener('click', testConnection);
-      clearChatBtn.addEventListener('click', ()=>{ if(confirm('清空对话？')) resetConversation(); });
-      apiProviderSelect.addEventListener('change', updateApiUrlFromProvider);
-      modelSelect.addEventListener('change', updateModelInputFromSelect);
-
-      chatIcon.addEventListener('click', () => setActiveView('chat'));
-      gearIcon.addEventListener('click', () => setActiveView('settings'));
-      userAvatarBtn.addEventListener('click', () => setActiveView('profile'));
-      characterIcon.addEventListener('click', () => setActiveView('character'));
-      dataManagerIcon.addEventListener('click', () => setActiveView('data'));
-
-      saveCharacterBtn.addEventListener('click', saveCharacterToStorage);
-      resetCharacterBtn.addEventListener('click', () => {
-        if (confirm('重置所有人物设定？')) {
-          try { localStorage.removeItem('character_data'); } catch(e) {}
-          characterData = {
-            worldBook: '', name: '', avatar: '', cover: '', bio: '',
-            age: '', gender: '', appearance: '', personality: '',
-            backstory: '', memories: '', style: '', examples: ''
-          };
-          loadCharacterFromStorage();
-        }
-      });
-
-      editCharacterAvatarBtn.addEventListener('click', () => {
-        const fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.accept = 'image/*';
-        fileInput.onchange = (e) => {
-          const file = e.target.files[0];
-          if (file) openCropModalForCharacter(file, 'avatar');
-        };
-        fileInput.click();
-      });
-
-      editCharacterCoverBtn.addEventListener('click', () => {
-        const fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.accept = 'image/*';
-        fileInput.onchange = (e) => {
-          const file = e.target.files[0];
-          if (file) openCropModalForCharacter(file, 'cover');
-        };
-        fileInput.click();
-      });
-
-      characterNameInput.addEventListener('input', updateCharacterPreview);
-      characterBioInput.addEventListener('input', updateCharacterPreview);
-
-      const editProfileBtn = document.getElementById('editProfileBtn');
-      const editProfileModalOverlay = document.getElementById('editProfileModalOverlay');
-      const closeEditProfileModal = document.getElementById('closeEditProfileModal');
-      const cancelEditProfileBtn = document.getElementById('cancelEditProfileBtn');
-      const saveEditProfileBtn = document.getElementById('saveEditProfileBtn');
-
-      function closeEditModal() { editProfileModalOverlay.style.display = 'none'; }
-      editProfileBtn.addEventListener('click', () => { editProfileModalOverlay.style.display = 'flex'; });
-      closeEditProfileModal.addEventListener('click', closeEditModal);
-      cancelEditProfileBtn.addEventListener('click', closeEditModal);
-      editProfileModalOverlay.addEventListener('click', (e) => { if (e.target === editProfileModalOverlay) closeEditModal(); });
-      saveEditProfileBtn.addEventListener('click', () => {
-        const name = editProfileNameInput.value.trim() || '用户';
-        const bio = editProfileBioInput.value.trim() || '在一隅，遇见自己。';
-        try {
-          localStorage.setItem('profile_name', name);
-          localStorage.setItem('profile_bio', bio);
-        } catch(e) {}
-        profileDisplayName.textContent = name;
-        profileBioDisplay.innerHTML = `<i class="fas fa-quote-left" style="margin-right: 8px;"></i>${bio}`;
-        closeEditModal();
-      });
-
-      const exportDataBtn = document.getElementById('exportDataBtn');
-      const importDataBtn = document.getElementById('importDataBtn');
-      const importFileInput = document.getElementById('importFileInput');
-
-      if (exportDataBtn) exportDataBtn.addEventListener('click', exportAllData);
-      if (importDataBtn) importDataBtn.addEventListener('click', () => importFileInput.click());
-      if (importFileInput) {
-        importFileInput.addEventListener('change', (e) => {
-          const file = e.target.files[0];
-          if (file) { importDataFromFile(file); importFileInput.value = ''; }
-        });
-      }
-
-      setTimeout(() => {
-        if (typeof refreshStorageStats === 'function') refreshStorageStats();
-      }, 100);
-
-      initUploadButtons();
-      updateCharacterPreview();
-    }
-
-    init();
-  })();
-</script>
+    <!-- 外部脚本 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <script src="js/script.js"></script>
 </body>
 </html>
