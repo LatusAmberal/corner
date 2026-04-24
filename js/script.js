@@ -282,6 +282,29 @@
     // 初始化开关状态
     loadChatPreferences();
   }
+  
+  function populateSelectsFromConfig() {
+    const url = config.apiUrl;
+    if (url.includes('deepseek.com')) apiProviderSelect.value = 'deepseek';
+    else if (url.includes('openrouter.ai')) apiProviderSelect.value = 'openrouter';
+    else if (url.includes('groq.com')) apiProviderSelect.value = 'groq';
+    else if (url.includes('api.openai.com')) apiProviderSelect.value = 'openai';
+    else apiProviderSelect.value = 'custom';
+
+    const model = config.model;
+    let found = false;
+    for (let opt of modelSelect.options) {
+      if (opt.value === model) {
+        modelSelect.value = model;
+        found = true;
+        break;
+      }
+    }
+    if (!found) modelSelect.value = 'custom';
+
+    apiUrlInput.value = config.apiUrl;
+    modelInput.value = config.model;
+}
 
   // ---------- 配置管理 ----------
   function loadConfigFromStorage() {
