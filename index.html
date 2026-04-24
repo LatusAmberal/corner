@@ -1593,7 +1593,21 @@
 
     function addMessage(role, content) {
       messages.push({ role, content, timestamp: Date.now() });
+      saveMessagesToStorage();
       renderMessages();
+    }
+
+    function saveMessagesToStorage() {
+      try { localStorage.setItem('chat_messages', JSON.stringify(messages)); } catch(e) {}
+    }
+    function loadMessagesFromStorage() {
+      try {
+        const saved = localStorage.getItem('chat_messages');
+        if (saved) messages = JSON.parse(saved);
+      } catch(e) {}
+      if (!messages.length) {
+        messages = [{ role: 'assistant', content: '你好！我是青绿色调的角色……', timestamp: Date.now() }];
+      }
     }
 
     function removeTypingIndicator() {
@@ -1613,6 +1627,7 @@
     function resetConversation() {
       messages = [{ role: 'assistant', content: '对话已重置。', timestamp: Date.now() }];
       removeTypingIndicator();
+      saveMessagesToStorage();
       renderMessages();
     }
 
@@ -1698,7 +1713,7 @@
 
       const systemMsg = {
         role: 'system',
-        content: `[世界观]\n${characterData.worldBook}\n\n[人物信息]\n姓名：${characterData.name}\n年龄：${characterData.age}\n性别：${characterData.gender}\n外貌：${characterData.appearance}\n\n[性格]\n${characterData.personality}\n\n[过往经历]\n${characterData.backstory}\n\n[核心记忆]\n${characterData.memories}\n\n[对话风格]\n${characterData.style}\n\n[对话示例]\n${characterData.examples}\n\n[当前角色扮演指令]\n${config.systemPrompt}\n\n[重要：当前真实时间]\n现在是 ${currentTimeStr}。请根据这个时间调整你的对话，不要说错时间（如晚上不说早上好，过了午夜请用新的一天逻辑）。如果需要连续发送多条回复，请用三个换行符（即空两行）分隔不同的气泡。`
+        content: `[世界观]...\n[重要：当前真实时间]\n现在是 ${currentTimeStr}。请根据这个时间调整你的对话，不要说错时间（如晚上不说早上好，过了午夜请用新的一天逻辑）。如果需要发送多个独立段落，请用两个换行（即一个空行）分隔不同的段落。`
       };
 
       const history = messages.filter(m => m.role==='user'||m.role==='assistant').slice(-30).map(m => ({ role: m.role, content: m.content }));
@@ -1729,8 +1744,9 @@
       const content = messageInput.value.trim();
       if (!content || isGenerating) return;
 
-      const segments = content.split(/\n\s*\n/).filter(s => s.trim() !== '');
-      if (segments.length === 0) return;
+      // 用户消息按空行拆分
+      const userSegments = content.split(/\n\s*\n/).filter(s => s.trim() !== '');
+      if (userSegments.length === 0) return;
 
       messageInput.value = '';
       messageInput.style.height = 'auto';
@@ -1738,27 +1754,30 @@
       isGenerating = true;
       sendBtn.disabled = true;
 
-      for (let i = 0; i < segments.length; i++) {
-        const text = segments[i].trim();
+      for (let i = 0; i < userSegments.length; i++) {
+        const text = userSegments[i].trim();
         if (!text) continue;
 
         addMessage('user', text);
         showTypingIndicator();
 
         try {
-          const minDelay = 800;
           const startTime = Date.now();
-
           const reply = await callAI(text);
 
+          // 动态延迟：每字 60ms，最少 2000ms，最多 5 秒
+          const charCount = reply.length;
+          let dynamicDelay = Math.min(5000, Math.max(2000, charCount * 60));
           const elapsed = Date.now() - startTime;
-          if (elapsed < minDelay) {
-            await new Promise(resolve => setTimeout(resolve, minDelay - elapsed));
+          const waitTime = Math.max(0, dynamicDelay - elapsed);
+          if (waitTime > 0) {
+            await new Promise(resolve => setTimeout(resolve, waitTime));
           }
 
           removeTypingIndicator();
 
-          const replySegments = reply.split(/\n\n\n/).filter(s => s.trim() !== '');
+          // AI回复按两个换行拆分（\n\n 视为分条）
+          const replySegments = reply.split(/\n\n/).filter(s => s.trim() !== '');
           if (replySegments.length > 1) {
             replySegments.forEach(seg => addMessage('assistant', seg.trim()));
           } else {
@@ -2099,6 +2118,7 @@
       loadCharacterFromStorage();
       loadProfile();
       loadUserImages();
+      loadMessagesFromStorage();
       renderMessages();
 
       if (themeToggleSettings) themeToggleSettings.addEventListener('click', toggleTheme);
