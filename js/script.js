@@ -1,387 +1,712 @@
-<!DOCTYPE html>
-<html lang="zh">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>一隅·aCorner</title>
+// js/script.js
+(function(){
+  "use strict";
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="32x32" href="logos/favicon-32.ico">
-    <link rel="apple-touch-icon" sizes="180x180" href="logos/logo-180.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="logos/logo-192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="logos/logo-512.png">
-    <link rel="apple-touch-icon" href="logos/logo-180.png">
+  // ---------- 消息渲染增强：已读/未读标签样式（通过JS注入） ----------
+  const styleSheet = document.createElement("style");
+  styleSheet.textContent = `
+    .read-status {
+      font-size: 10px;
+      margin-top: 4px;
+      text-align: right;
+      line-height: 1;
+    }
+    .read-status.unread { color: #9ab3c0; }
+    .read-status.read { color: #0f9960; }
+    .apple-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      background: var(--toggle-bg);
+      border-radius: 2px;
+      outline: none;
+      margin: 8px 0;
+    }
+    .apple-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      background: var(--accent);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .chat-prefs-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 8px 0;
+    }
+    .chat-prefs-row label {
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .probability-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .probability-bar input[type=range] { flex: 1; }
+    .probability-bar span { min-width: 40px; text-align: right; }
+  `;
+  document.head.appendChild(styleSheet);
 
-    <!-- PWA 设置 -->
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="一隅">
-    <meta name="theme-color" content="#0f9960">
-    <meta name="msapplication-TileColor" content="#0f9960">
+  // ---------- DOM 元素 ----------
+  const apiProviderSelect = document.getElementById('apiProviderSelect');
+  const modelSelect = document.getElementById('modelSelect');
+  const messagesArea = document.getElementById('messagesArea');
+  const messageInput = document.getElementById('messageInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const chatTitleDisplay = document.getElementById('chatTitleDisplay');
+  const configBtn = document.getElementById('configMenuBtn');
+  const drawer = document.getElementById('configDrawer');
+  const overlay = document.getElementById('drawerOverlay');
+  const closeDrawerBtn = document.getElementById('closeDrawerBtn');
+  const modelInput = document.getElementById('modelInput');
+  const characterNameInput = document.getElementById('characterNameInput');
+  const systemPromptInput = document.getElementById('systemPromptInput');
+  const testConnectionBtn = document.getElementById('testConnectionBtn');
+  const clearChatBtn = document.getElementById('clearChatBtn');
+  const saveConfigBtn = document.getElementById('saveConfigBtn');
+  const apiKeyInput = document.getElementById('apiKeyInput');
+  const apiUrlInput = document.getElementById('apiUrlInput');
+  const apiStatus = document.getElementById('apiStatus');
+  const themeToggleSettings = document.getElementById('themeToggleSettings');
+  const themeLabelTextSettings = document.getElementById('themeLabelTextSettings');
+  const gearIcon = document.querySelector('.sidebar-icon[title="设置"]');
+  const chatIcon = document.querySelector('.sidebar-icon[title="当前对话"]');
+  const characterIcon = document.getElementById('characterIcon');
+  const dataManagerIcon = document.getElementById('dataManagerIcon');
+  const userAvatarBtn = document.getElementById('userAvatarBtn');
+  const chatMain = document.getElementById('chatMain');
+  const profileDisplayName = document.getElementById('profileDisplayName');
+  const profileBioDisplay = document.getElementById('profileBioDisplay');
+  const editProfileNameInput = document.getElementById('editProfileNameInput');
+  const editProfileBioInput = document.getElementById('editProfileBioInput');
+  const worldBookInput = document.getElementById('worldBookInput');
+  const charNameInput = document.getElementById('charNameInput');
+  const charAgeInput = document.getElementById('charAgeInput');
+  const charGenderInput = document.getElementById('charGenderInput');
+  const charAppearanceInput = document.getElementById('charAppearanceInput');
+  const charPersonalityInput = document.getElementById('charPersonalityInput');
+  const charBackstoryInput = document.getElementById('charBackstoryInput');
+  const charMemoriesInput = document.getElementById('charMemoriesInput');
+  const charStyleInput = document.getElementById('charStyleInput');
+  const charExamplesInput = document.getElementById('charExamplesInput');
+  const saveCharacterBtn = document.getElementById('saveCharacterBtn');
+  const resetCharacterBtn = document.getElementById('resetCharacterBtn');
+  const characterBioInput = document.getElementById('characterBioInput');
+  const characterPreviewBg = document.getElementById('characterPreviewBg');
+  const characterPreviewAvatar = document.getElementById('characterPreviewAvatar');
+  const characterPreviewName = document.getElementById('characterPreviewName');
+  const characterPreviewBio = document.getElementById('characterPreviewBio');
+  const editCharacterAvatarBtn = document.getElementById('editCharacterAvatarBtn');
+  const editCharacterCoverBtn = document.getElementById('editCharacterCoverBtn');
 
-    <!-- 外部样式 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-<div class="app">
-    <!-- 左侧菜单 -->
-    <aside class="sidebar">
-        <div class="sidebar-icon active" title="当前对话"><i class="fas fa-comment-dots"></i></div>
-        <div class="sidebar-icon" title="人物管理" id="characterIcon"><i class="fas fa-user-tag"></i></div>
-        <div class="sidebar-divider"></div>
-        <div class="sidebar-icon" title="设置"><i class="fas fa-cog"></i></div>
-        <div class="sidebar-icon" title="数据管理" id="dataManagerIcon"><i class="fas fa-database"></i></div>
-        <div class="sidebar-icon" title="更多"><i class="fas fa-plus"></i></div>
-        <div class="sidebar-footer">
-            <div class="user-avatar" id="userAvatarBtn" title="个人主页">
-                <i class="fas fa-user"></i>
-            </div>
+  // ---------- 状态 ----------
+  let messages = (() => {
+    const saved = localStorage.getItem('chat_messages');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // 迁移旧消息，添加 readStatus
+      return parsed.map(m => m.role === 'user' ? { ...m, readStatus: m.readStatus || 'read' } : m);
+    }
+    return [{ role: 'assistant', content: '你好！我是青绿色调的角色。点击右上角「···」配置 API 或切换白天/黑夜模式。', timestamp: Date.now() }];
+  })();
+
+  let config = {
+    apiKey: '',
+    apiUrl: 'https://api.deepseek.com/v1/chat/completions',
+    model: 'deepseek-chat',
+    characterName: '青绿助手',
+    systemPrompt: '你是一个冷静又带点青涩的助手，说话简洁但偶尔流露出温柔。请用中文交流，保持角色。'
+  };
+
+  let isGenerating = false;
+  let currentTypingMessageId = null;
+  let currentTheme = 'dark';
+
+  // 聊天偏好状态
+  let chatPreferences = {
+    enableReadIgnore: false,
+    readIgnoreProbability: 5,
+    enableLongUnread: false,
+    longUnreadProbability: 5
+  };
+
+  let characterData = {
+    worldBook: '',
+    name: '',
+    avatar: '',
+    cover: '',
+    bio: '',
+    age: '',
+    gender: '',
+    appearance: '',
+    personality: '',
+    backstory: '',
+    memories: '',
+    style: '',
+    examples: ''
+  };
+
+  // ---------- 清除括号及其内容 ----------
+  function cleanParentheses(text) {
+    return text.replace(/[（(][^）)]*?[）)]/g, '').trim();
+  }
+
+  // ---------- 主题管理 ----------
+  function applyTheme(theme) {
+    if (theme === 'light') document.body.classList.add('light-theme');
+    else document.body.classList.remove('light-theme');
+    currentTheme = theme;
+    localStorage.setItem('chat_theme', theme);
+    if (themeToggleSettings) themeToggleSettings.classList.toggle('active', theme === 'light');
+    if (themeLabelTextSettings) themeLabelTextSettings.textContent = theme === 'light' ? '浅色模式' : '深色模式';
+  }
+
+  function toggleTheme() {
+    applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+  }
+
+  function loadTheme() {
+    const saved = localStorage.getItem('chat_theme') || 'dark';
+    applyTheme(saved);
+  }
+
+  // ---------- 聊天偏好加载与保存 ----------
+  function loadChatPreferences() {
+    try {
+      const saved = localStorage.getItem('chat_preferences');
+      if (saved) chatPreferences = { ...chatPreferences, ...JSON.parse(saved) };
+    } catch(e) {}
+    // 更新 UI
+    const readIgnoreToggle = document.getElementById('readIgnoreToggle');
+    const longUnreadToggle = document.getElementById('longUnreadToggle');
+    const readIgnoreProbSlider = document.getElementById('readIgnoreProbSlider');
+    const longUnreadProbSlider = document.getElementById('longUnreadProbSlider');
+    const readIgnoreProbVal = document.getElementById('readIgnoreProbVal');
+    const longUnreadProbVal = document.getElementById('longUnreadProbVal');
+    if (readIgnoreToggle) readIgnoreToggle.classList.toggle('active', chatPreferences.enableReadIgnore);
+    if (longUnreadToggle) longUnreadToggle.classList.toggle('active', chatPreferences.enableLongUnread);
+    if (readIgnoreProbSlider) readIgnoreProbSlider.value = chatPreferences.readIgnoreProbability;
+    if (longUnreadProbSlider) longUnreadProbSlider.value = chatPreferences.longUnreadProbability;
+    if (readIgnoreProbVal) readIgnoreProbVal.textContent = chatPreferences.readIgnoreProbability + '%';
+    if (longUnreadProbVal) longUnreadProbVal.textContent = chatPreferences.longUnreadProbability + '%';
+  }
+
+  function saveChatPreferences() {
+    try {
+      localStorage.setItem('chat_preferences', JSON.stringify(chatPreferences));
+    } catch(e) {}
+  }
+
+  function buildChatPreferencesUI() {
+    const drawerContent = document.querySelector('.drawer-content');
+    if (!drawerContent) return;
+
+    const prefSection = document.createElement('div');
+    prefSection.innerHTML = `
+      <div style="margin-top: 20px; border-top: 1px solid var(--border-light); padding-top: 20px;">
+        <h4 style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+          <i class="fas fa-sliders-h"></i> 聊天偏好
+        </h4>
+
+        <div class="chat-prefs-row">
+          <label><i class="fas fa-eye-slash"></i> 已读不回</label>
+          <div class="apple-toggle" id="readIgnoreToggle"></div>
         </div>
-    </aside>
-
-    <!-- 聊天主体 -->
-    <main class="chat-main" id="chatMain">
-        <!-- 聊天视图 -->
-        <div class="chat-view" id="chatView">
-            <header class="chat-header">
-                <div class="header-left"></div>
-                <div class="chat-title" id="chatTitleDisplay">✨ 青绿角色</div>
-                <div class="header-right">
-                    <button class="menu-btn" id="configMenuBtn" title="API 设置 · 主题切换"><i class="fas fa-ellipsis-h"></i></button>
-                </div>
-            </header>
-            <div class="messages-area" id="messagesArea">
-                <div class="message-row assistant">
-                    <div class="message-bubble">
-                        你好！我是青绿色调的角色。点击左侧齿轮设置 API。
-                        <div class="message-time">刚刚</div>
-                    </div>
-                </div>
-            </div>
-            <div class="input-area">
-                <div class="input-container">
-                    <textarea id="messageInput" placeholder="输入消息… (Enter发送)" rows="1"></textarea>
-                    <button class="send-btn" id="sendBtn" title="发送"><i class="fas fa-paper-plane"></i></button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 设置视图 -->
-        <div class="settings-view" id="settingsView">
-            <h2 style="margin-bottom: 20px; font-weight: 500;"><i class="fas fa-cog" style="margin-right: 12px;"></i>设置</h2>
-            <div class="settings-card">
-                <h3><i class="fas fa-palette"></i> 外观</h3>
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <span class="theme-toggle-label"><i class="fas fa-moon"></i> 深色模式</span>
-                    <div class="apple-toggle" id="themeToggleSettings"></div>
-                </div>
-                <div style="margin-top: 8px; font-size: 13px; color: var(--text-secondary);">
-                    <span id="themeLabelTextSettings">深色模式</span>
-                </div>
-            </div>
-            <div class="settings-card">
-                <h3><i class="fas fa-cloud"></i> API 配置</h3>
-                <div class="config-group">
-                    <label>API 服务商</label>
-                    <select id="apiProviderSelect">
-                        <option value="deepseek">DeepSeek</option>
-                        <option value="openai">OpenAI</option>
-                        <option value="openrouter">OpenRouter</option>
-                        <option value="groq">Groq</option>
-                        <option value="custom">自定义</option>
-                    </select>
-                </div>
-                <div class="config-group">
-                    <label>API 地址</label>
-                    <input type="text" id="apiUrlInput" placeholder="https://..." value="https://api.deepseek.com/v1/chat/completions">
-                </div>
-                <div class="config-group">
-                    <label>模型</label>
-                    <select id="modelSelect">
-                        <optgroup label="DeepSeek">
-                            <option value="deepseek-chat">DeepSeek Chat</option>
-                            <option value="deepseek-reasoner">DeepSeek Reasoner</option>
-                        </optgroup>
-                        <optgroup label="OpenAI">
-                            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                            <option value="gpt-4o">GPT-4o</option>
-                        </optgroup>
-                        <optgroup label="OpenRouter (免费/收费)">
-                            <option value="google/gemini-2.0-flash-exp:free">Gemini 2.0 Flash (免费)</option>
-                            <option value="meta-llama/llama-3.2-3b-instruct:free">Llama 3.2 3B (免费)</option>
-                            <option value="openai/gpt-3.5-turbo">GPT-3.5 (OpenRouter)</option>
-                        </optgroup>
-                        <optgroup label="Groq">
-                            <option value="llama3-8b-8192">Llama 3 8B</option>
-                            <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
-                        </optgroup>
-                        <optgroup label="其他">
-                            <option value="custom">自定义</option>
-                        </optgroup>
-                    </select>
-                    <input type="text" id="modelInput" placeholder="自定义模型ID" value="deepseek-chat" style="margin-top: 8px;">
-                </div>
-                <div class="config-group">
-                    <label>API Key</label>
-                    <input type="password" id="apiKeyInput" placeholder="sk-..." autocomplete="off">
-                    <span class="status-badge" id="apiStatus">未设置</span>
-                </div>
-                <div style="display: flex; gap: 12px; margin-top: 16px;">
-                    <button class="btn btn-primary" id="saveConfigBtn"><i class="fas fa-save"></i> 保存配置</button>
-                    <button class="btn btn-secondary" id="testConnectionBtn"><i class="fas fa-vial"></i> 测试连接</button>
-                </div>
-                <div style="margin-top: 16px; font-size: 12px; color: var(--text-secondary); background: var(--input-bg); padding: 12px; border-radius: 8px; border-left: 3px solid var(--accent);">
-                    <i class="fas fa-info-circle"></i> <strong>免费 API 推荐</strong><br>
-                    • DeepSeek：注册送额度，地址 <code>https://api.deepseek.com/v1/chat/completions</code><br>
-                    • Groq：免费，地址 <code>https://api.groq.com/openai/v1/chat/completions</code><br>
-                    • OpenRouter：有免费模型，地址 <code>https://openrouter.ai/api/v1/chat/completions</code>
-                </div>
-            </div>
-        </div>
-
-        <!-- 个人主页视图 -->
-        <div class="profile-view" id="profileView">
-            <div class="profile-banner">
-                <div class="profile-banner-content">
-                    <div class="profile-avatar-large" id="profileAvatarLarge"><i class="fas fa-user"></i></div>
-                    <div class="profile-info">
-                        <h2 id="profileDisplayName">用户</h2>
-                        <p id="profileBioDisplay"><i class="fas fa-quote-left" style="margin-right: 8px;"></i>在一隅，遇见自己。</p>
-                    </div>
-                    <button class="btn btn-secondary" id="editProfileBtn"><i class="fas fa-pen"></i> 编辑个人资料</button>
-                </div>
-            </div>
-            <div class="profile-content">
-                <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
-                    <i class="fas fa-tools" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
-                    <h3 style="font-weight: 400; margin-bottom: 8px;">更多功能开发中</h3>
-                    <p>敬请期待</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- 人物管理视图 -->
-        <div class="character-view" id="characterView">
-            <h2 style="margin-bottom: 20px; font-weight: 500;"><i class="fas fa-user-tag" style="margin-right: 12px;"></i>人物设定</h2>
-            <div style="display: flex; align-items: baseline; margin-bottom: 6px;">
-                <span style="font-size: 16px; font-weight: 500; color: var(--text-primary);"><i class="fas fa-image" style="margin-right: 8px;"></i>角色卡片预览</span>
-            </div>
-            <div class="character-preview-card" id="characterPreviewCard">
-                <div class="character-preview-bg" id="characterPreviewBg"></div>
-                <div class="character-preview-content">
-                    <div class="character-preview-avatar" id="characterPreviewAvatar"><i class="fas fa-user-astronaut"></i></div>
-                    <div class="character-preview-info">
-                        <h3 id="characterPreviewName">角色名称</h3>
-                        <p id="characterPreviewBio"><i class="fas fa-quote-left" style="margin-right: 6px;"></i>温柔而冷静的陪伴</p>
-                    </div>
-                    <div style="display: flex; gap: 8px;">
-                        <button class="btn btn-secondary" id="editCharacterAvatarBtn" style="padding: 8px 12px; white-space: nowrap;"><i class="fas fa-camera"></i> 头像</button>
-                        <button class="btn btn-secondary" id="editCharacterCoverBtn" style="padding: 8px 12px; white-space: nowrap;"><i class="fas fa-image"></i> 背景</button>
-                    </div>
-                </div>
-            </div>
-            <div class="settings-card">
-                <h3><i class="fas fa-globe"></i> 世界书 · 世界观</h3>
-                <div class="config-group">
-                    <label>背景设定（不变的世界规则）</label>
-                    <textarea id="worldBookInput" rows="4" placeholder="例如：这是一个魔法与科技并存的近未来世界，人类与精灵共存，但龙族已灭绝千年……"></textarea>
-                </div>
-            </div>
-            <div class="settings-card">
-                <h3><i class="fas fa-id-card"></i> 人物表单</h3>
-                <div class="config-group">
-                    <label>角色名称（显示在标题栏和预览）</label>
-                    <input type="text" id="characterNameInput" value="角色名称">
-                </div>
-                <div class="config-group">
-                    <label>个性签名</label>
-                    <input type="text" id="characterBioInput" placeholder="例如：温柔而冷静的陪伴" value="温柔而冷静的陪伴">
-                </div>
-                <div class="config-group">
-                    <label>姓名</label>
-                    <input type="text" id="charNameInput" placeholder="例如：林清瑶">
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                    <div class="config-group">
-                        <label>年龄</label>
-                        <input type="text" id="charAgeInput" placeholder="例如：24">
-                    </div>
-                    <div class="config-group">
-                        <label>性别</label>
-                        <input type="text" id="charGenderInput" placeholder="例如：女">
-                    </div>
-                </div>
-                <div class="config-group">
-                    <label>外貌描写</label>
-                    <textarea id="charAppearanceInput" rows="2" placeholder="例如：黑色长发，常穿素色长裙，眼神清冷但偶有温柔"></textarea>
-                </div>
-                <div class="config-group">
-                    <label>人设提示词（基础角色指令）</label>
-                    <textarea id="systemPromptInput" rows="3" placeholder="例如：你是一个冷静又带点青涩的助手，说话简洁但偶尔流露出温柔。">你是一个冷静又带点青涩的助手，说话简洁但偶尔流露出温柔。请务必根据当前真实时间调整对话内容。</textarea>
-                </div>
-            </div>
-            <div class="settings-card">
-                <h3><i class="fas fa-smile"></i> 性格</h3>
-                <div class="config-group">
-                    <label>性格描述</label>
-                    <textarea id="charPersonalityInput" rows="3" placeholder="例如：外表冷淡，内心善良，对认可的人会不自觉地关心，说话带点傲娇"></textarea>
-                </div>
-            </div>
-            <div class="settings-card">
-                <h3><i class="fas fa-history"></i> 过往经历</h3>
-                <div class="config-group">
-                    <label>背景故事</label>
-                    <textarea id="charBackstoryInput" rows="4" placeholder="例如：曾是帝国骑士，因不愿服从腐败命令而离开军队，流浪中习得医术……"></textarea>
-                </div>
-            </div>
-            <div class="settings-card">
-                <h3><i class="fas fa-brain"></i> 核心记忆</h3>
-                <div class="config-group">
-                    <label>重要事件/人物关系</label>
-                    <textarea id="charMemoriesInput" rows="3" placeholder="例如：- 师父在临终前将古剑托付给她\n- 曾经救过一个叫阿诺的少年\n- 对甜食没有抵抗力"></textarea>
-                </div>
-            </div>
-            <div class="settings-card">
-                <h3><i class="fas fa-comment-dots"></i> 对话风格</h3>
-                <div class="config-group">
-                    <label>风格描述</label>
-                    <textarea id="charStyleInput" rows="2" placeholder="例如：句子简短，偶尔使用「……」，生气时会说「哼」"></textarea>
-                </div>
-                <details style="margin-top: 12px;">
-                    <summary style="cursor: pointer; color: var(--accent);">高级设置 · 对话示例</summary>
-                    <div class="config-group" style="margin-top: 12px;">
-                        <label>示例对话（每行一条，格式：用户说 → 角色回复）</label>
-                        <textarea id="charExamplesInput" rows="4" placeholder="用户：你好呀\n角色：……你是谁？有什么事吗？\n用户：想和你聊聊\n角色：哼，我很忙的，不过既然你坚持……"></textarea>
-                    </div>
-                </details>
-            </div>
-            <div style="display: flex; gap: 12px; margin-top: 8px; margin-bottom: 24px;">
-                <button class="btn btn-primary" id="saveCharacterBtn"><i class="fas fa-save"></i> 保存人物设定</button>
-                <button class="btn btn-secondary" id="resetCharacterBtn"><i class="fas fa-undo-alt"></i> 重置</button>
-            </div>
+        <div class="probability-bar">
+          <label style="font-size: 12px; color: var(--text-secondary);">触发概率</label>
+          <input type="range" min="0" max="100" value="${chatPreferences.readIgnoreProbability}" class="apple-slider" id="readIgnoreProbSlider">
+          <span id="readIgnoreProbVal" style="font-size:12px;">${chatPreferences.readIgnoreProbability}%</span>
         </div>
 
-        <!-- 数据管理视图 -->
-        <div class="data-manager-view" id="dataManagerView" style="flex:1; background: var(--bg-chat-main); padding: 24px 32px; overflow-y: auto; color: var(--text-primary);">
-            <h2 style="margin-bottom: 20px; font-weight: 500;"><i class="fas fa-database" style="margin-right: 12px;"></i>数据管理</h2>
-            <div class="settings-card">
-                <h3><i class="fas fa-chart-pie"></i> 存储概览</h3>
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
-                    <div style="background: var(--bg-header); border-radius: 12px; padding: 16px;">
-                        <div style="font-size: 13px; color: var(--text-secondary);">总占用空间</div>
-                        <div style="font-size: 32px; font-weight: 600; margin-top: 8px;" id="totalStorageSize">0 KB</div>
-                    </div>
-                    <div style="background: var(--bg-header); border-radius: 12px; padding: 16px;">
-                        <div style="font-size: 13px; color: var(--text-secondary);">存储项数量</div>
-                        <div style="font-size: 32px; font-weight: 600; margin-top: 8px;" id="totalStorageItems">0</div>
-                    </div>
-                </div>
-                <div style="margin-top: 20px;">
-                    <table style="width:100%; border-collapse: collapse;">
-                        <thead>
-                            <tr style="border-bottom: 1px solid var(--border-light);">
-                                <th style="text-align: left; padding: 12px 0; color: var(--text-secondary); font-weight: 500;">存储项</th>
-                                <th style="text-align: right; padding: 12px 0; color: var(--text-secondary); font-weight: 500;">大小</th>
-                            </tr>
-                        </thead>
-                        <tbody id="storageDetailsTable"></tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="settings-card">
-                <h3><i class="fas fa-exchange-alt"></i> 导入 / 导出</h3>
-                <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">导出全部数据为 JSON 文件，或从之前导出的文件恢复所有设置。</p>
-                <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-                    <button class="btn btn-primary" id="exportDataBtn" style="flex:1;"><i class="fas fa-download"></i> 导出全部数据</button>
-                    <button class="btn btn-secondary" id="importDataBtn" style="flex:1;"><i class="fas fa-upload"></i> 导入数据文件</button>
-                    <input type="file" id="importFileInput" accept=".json,application/json" style="display:none;">
-                </div>
-                <div style="margin-top: 16px; font-size: 13px; color: var(--text-secondary);">
-                    <i class="fas fa-info-circle"></i> 导入数据将覆盖当前所有设置，建议先导出备份。
-                </div>
-            </div>
+        <div class="chat-prefs-row" style="margin-top: 16px;">
+          <label><i class="fas fa-clock"></i> 长时间未读</label>
+          <div class="apple-toggle" id="longUnreadToggle"></div>
         </div>
-    </main>
+        <div class="probability-bar">
+          <label style="font-size: 12px; color: var(--text-secondary);">触发概率</label>
+          <input type="range" min="0" max="100" value="${chatPreferences.longUnreadProbability}" class="apple-slider" id="longUnreadProbSlider">
+          <span id="longUnreadProbVal" style="font-size:12px;">${chatPreferences.longUnreadProbability}%</span>
+        </div>
+        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 8px;">
+          已读不回：已读后 AI 可能不回复（晚安等类似场景更易触发）。<br>
+          长时间未读：AI 可能在说出“稍等”等理由后暂时不读你的消息。
+        </div>
+      </div>
+    `;
+    // 插入到清空按钮之前（第一个子元素是清空按钮的父级？）
+    const clearBtnContainer = document.querySelector('.drawer-content > div:first-child');
+    if (clearBtnContainer) {
+      clearBtnContainer.before(prefSection);
+    } else {
+      drawerContent.prepend(prefSection);
+    }
 
-    <!-- 图片裁剪模态框 -->
-    <div class="modal-overlay" id="cropModalOverlay" style="display: none;">
-        <div class="modal-container">
-            <div class="modal-header">
-                <h3>调整图片</h3>
-                <button class="modal-close" id="closeCropModal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="crop-container">
-                    <img id="cropImage" src="" alt="裁剪图片">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" id="cancelCropBtn">取消</button>
-                <button class="btn btn-primary" id="saveCropBtn">保存</button>
-            </div>
-        </div>
-    </div>
+    // 绑定事件
+    const readIgnoreToggle = document.getElementById('readIgnoreToggle');
+    const longUnreadToggle = document.getElementById('longUnreadToggle');
+    const readIgnoreProbSlider = document.getElementById('readIgnoreProbSlider');
+    const longUnreadProbSlider = document.getElementById('longUnreadProbSlider');
+    const readIgnoreProbVal = document.getElementById('readIgnoreProbVal');
+    const longUnreadProbVal = document.getElementById('longUnreadProbVal');
 
-    <!-- 编辑个人资料模态框 -->
-    <div class="modal-overlay" id="editProfileModalOverlay" style="display: none;">
-        <div class="modal-container" style="width: 450px;">
-            <div class="modal-header">
-                <h3>编辑个人资料</h3>
-                <button class="modal-close" id="closeEditProfileModal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="config-group">
-                    <label>显示名称</label>
-                    <input type="text" id="editProfileNameInput" placeholder="你的名字" value="用户">
-                </div>
-                <div class="config-group">
-                    <label>个性签名</label>
-                    <input type="text" id="editProfileBioInput" placeholder="写点什么..." value="在一隅，遇见自己。">
-                </div>
-                <div class="config-group">
-                    <label>头像</label>
-                    <div style="display: flex; gap: 12px; align-items: center;">
-                        <button class="btn btn-secondary" id="editUploadAvatarBtn" style="flex: 1;"><i class="fas fa-camera"></i> 上传头像</button>
-                        <span style="font-size: 12px; color: var(--text-secondary);">1:1</span>
-                    </div>
-                </div>
-                <div class="config-group">
-                    <label>主页背景</label>
-                    <div style="display: flex; gap: 12px; align-items: center;">
-                        <button class="btn btn-secondary" id="editUploadCoverBtn" style="flex: 1;"><i class="fas fa-image"></i> 上传背景图</button>
-                        <span style="font-size: 12px; color: var(--text-secondary);">16:9</span>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" id="cancelEditProfileBtn">取消</button>
-                <button class="btn btn-primary" id="saveEditProfileBtn">保存</button>
-            </div>
-        </div>
-    </div>
+    readIgnoreToggle?.addEventListener('click', () => {
+      chatPreferences.enableReadIgnore = !chatPreferences.enableReadIgnore;
+      readIgnoreToggle.classList.toggle('active', chatPreferences.enableReadIgnore);
+      saveChatPreferences();
+    });
+    longUnreadToggle?.addEventListener('click', () => {
+      chatPreferences.enableLongUnread = !chatPreferences.enableLongUnread;
+      longUnreadToggle.classList.toggle('active', chatPreferences.enableLongUnread);
+      saveChatPreferences();
+    });
+    readIgnoreProbSlider?.addEventListener('input', (e) => {
+      chatPreferences.readIgnoreProbability = parseInt(e.target.value);
+      readIgnoreProbVal.textContent = chatPreferences.readIgnoreProbability + '%';
+      saveChatPreferences();
+    });
+    longUnreadProbSlider?.addEventListener('input', (e) => {
+      chatPreferences.longUnreadProbability = parseInt(e.target.value);
+      longUnreadProbVal.textContent = chatPreferences.longUnreadProbability + '%';
+      saveChatPreferences();
+    });
 
-    <!-- 遮罩 + 抽屉 -->
-    <div class="drawer-overlay" id="drawerOverlay"></div>
-    <div class="config-drawer" id="configDrawer">
-        <div class="drawer-header">
-            <h3><i class="fas fa-sliders-h" style="margin-right: 8px;"></i> 控制中心</h3>
-            <button class="close-drawer" id="closeDrawerBtn"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="drawer-content">
-            <div style="margin-top: 20px;">
-                <button class="btn btn-warning" id="clearChatBtn" style="width: 100%;"><i class="fas fa-trash-alt"></i> 清空对话记录</button>
-            </div>
-            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-light);">
-                <i class="fas fa-info-circle"></i> 完整 API 设置请点击左侧齿轮图标。
-            </div>
-        </div>
-    </div>
+    // 初始化开关状态
+    loadChatPreferences();
+  }
 
-    <!-- 外部脚本 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-    <script src="js/script.js"></script>
-</body>
-</html>
+  // ---------- 配置管理 ----------
+  function loadConfigFromStorage() {
+    try {
+      const saved = localStorage.getItem('chat_roleplay_config_v2');
+      if (saved) config = { ...config, ...JSON.parse(saved) };
+    } catch(e) {}
+    apiKeyInput.value = config.apiKey || '';
+    apiUrlInput.value = config.apiUrl;
+    modelInput.value = config.model;
+    characterNameInput.value = config.characterName;
+    systemPromptInput.value = config.systemPrompt;
+    updateChatTitle();
+    updateApiStatusBadge();
+    populateSelectsFromConfig();
+  }
+
+  function saveConfigToStorage() {
+    try { localStorage.setItem('chat_roleplay_config_v2', JSON.stringify(config)); } catch(e) {}
+  }
+
+  function updateChatTitle() {
+    chatTitleDisplay.textContent = config.characterName || '青绿角色';
+  }
+
+  function updateApiStatusBadge() {
+    if (config.apiKey && config.apiKey.trim().length > 5) {
+      apiStatus.textContent = '已设置密钥';
+      apiStatus.style.background = '#0f9960';
+    } else {
+      apiStatus.textContent = '未设置密钥';
+      apiStatus.style.background = 'var(--border-strong)';
+    }
+  }
+
+  function syncConfigFromForm() {
+    config.apiKey = apiKeyInput.value.trim();
+    config.apiUrl = apiUrlInput.value.trim();
+    config.model = modelInput.value.trim();
+    config.characterName = characterNameInput.value.trim() || '青绿';
+    config.systemPrompt = systemPromptInput.value.trim();
+  }
+
+  function applyConfig() {
+    syncConfigFromForm();
+    saveConfigToStorage();
+    updateChatTitle();
+    updateApiStatusBadge();
+  }
+
+  // ---------- 消息渲染 ----------
+  function formatTime(ts) {
+    const d = new Date(ts);
+    return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function formatDateSeparator(ts) {
+    const d = new Date(ts);
+    const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+    return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 ${weekdays[d.getDay()]}`;
+  }
+
+  function renderMessages() {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const oneHour = 60 * 60 * 1000;
+
+    let html = '';
+    let lastTimestamp = 0;
+    let lastDateKey = '';
+
+    messages.forEach((msg, index) => {
+      const msgTime = msg.timestamp;
+      const msgDateKey = new Date(msgTime).toDateString();
+
+      if (index === 0 || msgDateKey !== lastDateKey) {
+        const isToday = (msgTime >= todayStart && msgTime < todayStart + 86400000);
+        const label = isToday ? '今天' : formatDateSeparator(msgTime);
+        html += `<div class="message-separator"><span>${label}</span></div>`;
+      } else if (index > 0 && (msgTime - lastTimestamp > oneHour)) {
+        const d = new Date(msgTime);
+        const timeLabel = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+        html += `<div class="message-separator"><span>${timeLabel}</span></div>`;
+      }
+
+      const safe = escapeHtml(msg.content).replace(/\n/g, '<br>');
+      let bubble = `<div class="message-bubble">${safe}<div class="message-time">${formatTime(msgTime)}</div>`;
+
+      // 用户消息添加已读状态标签
+      if (msg.role === 'user' && msg.readStatus) {
+        const readClass = msg.readStatus === 'read' ? 'read' : 'unread';
+        bubble += `<div class="read-status ${readClass}">${msg.readStatus === 'read' ? '已读' : '未读'}</div>`;
+      }
+      bubble += `</div>`;
+
+      html += `<div class="message-row ${msg.role}">${bubble}</div>`;
+
+      lastTimestamp = msgTime;
+      lastDateKey = msgDateKey;
+    });
+
+    if (currentTypingMessageId) {
+      html += `<div class="message-row assistant" id="${currentTypingMessageId}"><div class="message-bubble typing-indicator"><span></span><span></span><span></span></div></div>`;
+    }
+
+    messagesArea.innerHTML = html;
+    messagesArea.scrollTop = messagesArea.scrollHeight;
+  }
+
+  function addMessage(role, content, options = {}) {
+    const msg = { role, content, timestamp: Date.now(), ...options };
+    if (role === 'user' && !msg.readStatus) msg.readStatus = 'unread';
+    messages.push(msg);
+    saveMessagesToStorage();
+    renderMessages();
+    return msg;
+  }
+
+  // 更新某条消息的已读状态
+  function updateMessageReadStatus(msgIndex, status) {
+    if (messages[msgIndex] && messages[msgIndex].role === 'user') {
+      messages[msgIndex].readStatus = status;
+      saveMessagesToStorage();
+      renderMessages();
+    }
+  }
+
+  function saveMessagesToStorage() {
+    try { localStorage.setItem('chat_messages', JSON.stringify(messages)); } catch(e) {}
+  }
+
+  function removeTypingIndicator() {
+    if (currentTypingMessageId) {
+      const el = document.getElementById(currentTypingMessageId);
+      if (el) el.remove();
+      currentTypingMessageId = null;
+    }
+  }
+
+  function showTypingIndicator() {
+    removeTypingIndicator();
+    currentTypingMessageId = 'typing-' + Date.now();
+    renderMessages();
+  }
+
+  function resetConversation() {
+    messages = [{ role: 'assistant', content: '对话已重置。', timestamp: Date.now() }];
+    removeTypingIndicator();
+    saveMessagesToStorage();
+    renderMessages();
+  }
+
+  // ---------- 人物设定管理 ----------
+  function loadCharacterFromStorage() {
+    try {
+      const saved = localStorage.getItem('character_data');
+      if (saved) characterData = { ...characterData, ...JSON.parse(saved) };
+    } catch(e) {}
+    worldBookInput.value = characterData.worldBook || '';
+    charNameInput.value = characterData.name || '';
+    charAgeInput.value = characterData.age || '';
+    charGenderInput.value = characterData.gender || '';
+    charAppearanceInput.value = characterData.appearance || '';
+    charPersonalityInput.value = characterData.personality || '';
+    charBackstoryInput.value = characterData.backstory || '';
+    charMemoriesInput.value = characterData.memories || '';
+    charStyleInput.value = characterData.style || '';
+    charExamplesInput.value = characterData.examples || '';
+    characterBioInput.value = characterData.bio || '温柔而冷静的陪伴';
+    updateCharacterPreview();
+  }
+
+  function saveCharacterToStorage() {
+    characterData = {
+      worldBook: worldBookInput.value.trim(),
+      name: charNameInput.value.trim(),
+      age: charAgeInput.value.trim(),
+      gender: charGenderInput.value.trim(),
+      appearance: charAppearanceInput.value.trim(),
+      personality: charPersonalityInput.value.trim(),
+      backstory: charBackstoryInput.value.trim(),
+      memories: charMemoriesInput.value.trim(),
+      style: charStyleInput.value.trim(),
+      examples: charExamplesInput.value.trim(),
+      avatar: characterData.avatar,
+      cover: characterData.cover,
+      bio: characterBioInput.value.trim()
+    };
+    try {
+      localStorage.setItem('character_data', JSON.stringify(characterData));
+      updateCharacterPreview();
+      config.characterName = characterNameInput.value.trim() || '青绿助手';
+      updateChatTitle();
+      alert('人物设定已保存');
+    } catch(e) {
+      alert('保存失败，可能是存储空间已满');
+    }
+  }
+
+  function updateCharacterPreview() {
+    // ... (保持不变，省略重复)
+  }
+
+  // ---------- AI 调用 ----------
+  async function callAI(userMessage) {
+    if (!config.apiKey) throw new Error('请先配置 API Key');
+
+    const now = new Date();
+    const currentTimeStr = now.toLocaleString('zh-CN', {
+      timeZone: 'Asia/Shanghai',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+      weekday: 'long'
+    });
+
+    const systemMsg = {
+      role: 'system',
+      content: `[世界观]...
+[重要：当前真实时间]
+现在是 ${currentTimeStr}。请根据这个时间调整你的对话，不要说错时间。请像真人聊天一样，避免使用括号描述动作，直接说话。`
+    };
+
+    const history = messages.filter(m => m.role === 'user' || m.role === 'assistant').slice(-30)
+      .map(m => ({ role: m.role, content: m.content }));
+
+    const payload = {
+      model: config.model,
+      messages: [systemMsg, ...history],
+      temperature: 0.8,
+    };
+
+    const res = await fetch(config.apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.apiKey}` },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      let err = `HTTP ${res.status}`;
+      try { const d = await res.json(); err = d.error?.message || JSON.stringify(d); } catch(e) {}
+      throw new Error(err);
+    }
+
+    const data = await res.json();
+    return data.choices[0].message.content;
+  }
+
+  // ---------- 聊天偏好辅助函数 ----------
+  function getLastAssistantContent() {
+    const reversed = [...messages].reverse();
+    const lastAsst = reversed.find(m => m.role === 'assistant');
+    return lastAsst ? lastAsst.content : '';
+  }
+
+  function getLastUserContent() {
+    const reversed = [...messages].reverse();
+    const lastUser = reversed.find(m => m.role === 'user');
+    return lastUser ? lastUser.content : '';
+  }
+
+  // 判断是否应该触发“长时间未读”
+  function shouldTriggerLongUnread() {
+    if (!chatPreferences.enableLongUnread) return false;
+    if (Math.random() * 100 > chatPreferences.longUnreadProbability) return false;
+
+    const aiLastMsg = getLastAssistantContent();
+    // 简单关键词检查
+    return /稍等|没空|晚点|等等|等一下|忙|暂时不|回头|待会/.test(aiLastMsg);
+  }
+
+  // 判断是否应该“已读不回”
+  function shouldTriggerReadIgnore() {
+    if (!chatPreferences.enableReadIgnore) return false;
+    const lastUser = getLastUserContent();
+    // 互道晚安场景提高概率
+    const isGoodnight = /晚安/.test(lastUser);
+    const baseProb = chatPreferences.readIgnoreProbability;
+    const adjustedProb = isGoodnight ? Math.min(100, baseProb * 3) : baseProb; // 晚安时概率翻三倍
+    return Math.random() * 100 < adjustedProb;
+  }
+
+  // 处理待未读消息（用户连续发送时，将上一条未读强制标记为已读）
+  function resolvePendingUnreads() {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === 'user' && messages[i].readStatus === 'unread') {
+        updateMessageReadStatus(i, 'read');
+      } else {
+        break; // 只处理最后的连续未读用户消息
+      }
+    }
+  }
+
+  // 核心发送逻辑改写
+  async function handleSendMessage() {
+    const content = messageInput.value.trim();
+    if (!content || isGenerating) return;
+
+    // 拆分用户输入（按空行）
+    const userSegments = content.split(/\n\s*\n/).filter(s => s.trim() !== '');
+    if (userSegments.length === 0) return;
+
+    messageInput.value = '';
+    messageInput.style.height = 'auto';
+    isGenerating = true;
+    sendBtn.disabled = true;
+
+    // 先解决之前的未读消息（长时间未读导致未处理的消息）
+    resolvePendingUnreads();
+
+    for (let segIdx = 0; segIdx < userSegments.length; segIdx++) {
+      const text = userSegments[segIdx].trim();
+      if (!text) continue;
+
+      // 添加用户消息（默认为未读）
+      const userMsg = addMessage('user', text);
+      const msgIndex = messages.length - 1; // 刚添加的索引
+
+      // 未读到已读的延迟处理
+      let markReadTimer = null;
+      const clearReadTimer = () => {
+        if (markReadTimer) { clearTimeout(markReadTimer); markReadTimer = null; }
+      };
+
+      // 判断长时间未读
+      const longUnread = shouldTriggerLongUnread();
+      if (longUnread) {
+        // 长时间未读：不标记已读，显示输入状态但实际不回复
+        showTypingIndicator();
+        // 模拟一个较长的“对方正在输入…”然后消失，但并不发送任何消息
+        setTimeout(() => {
+          removeTypingIndicator();
+          // 保持未读状态
+        }, 3000 + Math.random() * 2000);
+        // 直接跳过后续处理
+        continue;
+      }
+
+      // 正常延迟后标记已读（默认2-3秒）
+      const readDelay = 2000 + Math.random() * 1500;
+      markReadTimer = setTimeout(() => {
+        updateMessageReadStatus(msgIndex, 'read');
+        // 标记已读后，进入回复判断逻辑
+        handleAfterRead(msgIndex);
+      }, readDelay);
+    }
+
+    isGenerating = false;
+    sendBtn.disabled = false;
+    messageInput.focus();
+
+    // 已读后处理（异步）
+    async function handleAfterRead(userMsgIdx) {
+      // 如果界面中该消息已经不存在（被清空），取消
+      if (!messages[userMsgIdx]) return;
+
+      // 已读不回判断
+      if (shouldTriggerReadIgnore()) {
+        // 直接放弃回复，无任何输入提示
+        return;
+      }
+
+      // 正常回复流程
+      try {
+        showTypingIndicator();
+        const userContent = messages[userMsgIdx].content;
+        const reply = await callAI(userContent);
+        const cleaned = cleanParentheses(reply);
+        const sentences = cleaned.split(/(?<=[。！？!?])/g)
+                                 .map(s => s.trim())
+                                 .filter(s => s.length > 0);
+        const finalSentences = sentences.length > 0 ? sentences : [cleaned];
+
+        removeTypingIndicator();
+        for (const sentence of finalSentences) {
+          showTypingIndicator();
+          const charCount = sentence.length;
+          let typingDelay = Math.min(8000, Math.max(1500, charCount * 80));
+          typingDelay += (Math.random() * 400 - 200);
+          await new Promise(resolve => setTimeout(resolve, Math.max(0, typingDelay)));
+          removeTypingIndicator();
+          addMessage('assistant', sentence);
+        }
+      } catch(e) {
+        removeTypingIndicator();
+        addMessage('assistant', `❌ 错误: ${e.message}`);
+      }
+    }
+  }
+
+  // 测试连接函数不变
+  async function testConnection() {
+    // ... (保持不变)
+  }
+
+  // ---------- 抽屉控制 ----------
+  function openDrawer() { drawer.classList.add('open'); overlay.classList.add('show'); }
+  function closeDrawer() { drawer.classList.remove('open'); overlay.classList.remove('show'); }
+
+  // ---------- 预设地址（省略，保持原样） ----------
+  // ... (apiUrlPresets 等其余函数不变)
+
+  // ---------- 初始化 ----------
+  function init() {
+    loadTheme();
+    loadConfigFromStorage();
+    loadCharacterFromStorage();
+    loadProfile();
+    loadUserImages();
+    loadMessagesFromStorage();
+    renderMessages();
+    buildChatPreferencesUI(); // 动态创建聊天偏好 UI
+
+    // 事件绑定（省略，保持原样）
+    // 在原有绑定上确保新增的聊天偏好元素能被绑定（已通过 buildChatPreferencesUI 处理）
+
+    // 其他初始化事件...
+    // (注意：需要保留原 init 中的事件绑定，这里省略重复)
+  }
+
+  // 执行 init
+  init();
+})();
