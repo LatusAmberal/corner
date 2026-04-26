@@ -672,7 +672,7 @@
       updateChatTitle();
       showToast('人物设定已保存');
     } catch(e) {
-      alert('保存失败，可能是存储空间已满');
+      showToast('保存失败，可能是存储空间已满');
     }
   }
 
@@ -864,6 +864,7 @@
 
     async function generateAiReply() {
       try {
+        if (!userMsgIndices || userMsgIndices.length === 0) return;
         showTypingIndicator();
         // 传入最后一条消息作为触发
         const lastUserContent = messages[userMsgIndices[userMsgIndices.length - 1]].content;
@@ -899,7 +900,7 @@
   // ---------- 测试连接 ----------
   async function testConnection() {
     syncConfigFromForm();
-    if (!config.apiKey) { alert('请填写 API Key'); return; }
+    if (!config.apiKey) { showToast('请填写 API Key'); return; }
     try {
       const res = await fetch(config.apiUrl, {
         method: 'POST',
