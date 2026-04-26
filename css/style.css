@@ -424,52 +424,36 @@ body {
     min-height: 110px;
 }
 
-/* 消息分割线样式 */
+/* 分割线样式 */
 .message-separator {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 20px 0;
-    font-size: 12px;
+    margin: 16px 0;
+    width: 100%;
     color: var(--text-secondary);
+    font-size: 11px;
+    opacity: 0.6;
 }
 
 .message-separator span {
-    background: var(--bg-chat-main);
-    padding: 0 12px;
-    position: relative;
-    z-index: 1;
+    padding: 0 10px;
+    white-space: nowrap;
 }
 
-.message-separator::before,
-.message-separator::after {
-    content: "";
+.message-separator .line {
     flex: 1;
     height: 1px;
     background: var(--border-light);
-    margin: 0 15px;
 }
 
-.message-separator.reset-separator {
-    margin: 30px 0;
-    opacity: 0.8;
-    color: var(--text-secondary);
-    font-size: 12px;
+.reset-separator {
+    margin: 24px 0;
 }
 
-.message-separator.reset-separator .line {
-    flex: 1;
-    height: 1px;
-}
-
-.message-separator.reset-separator .line-left {
-    background: linear-gradient(to right, transparent, var(--border-light));
-    margin-right: 15px;
-}
-
-.message-separator.reset-separator .line-right {
-    background: linear-gradient(to left, transparent, var(--border-light));
-    margin-left: 15px;
+.reset-separator span {
+    font-weight: 500;
+    letter-spacing: 0.5px;
 }
 
 /* 消息气泡交互与已读状态 */
