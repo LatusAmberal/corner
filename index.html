@@ -23,7 +23,7 @@
     <!-- 外部样式 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/LatusAmberal/corner@main/css/style.css">
 </head>
 <body>
 <div class="app">
@@ -193,30 +193,27 @@
             <div class="settings-card">
                 <h3><i class="fas fa-id-card"></i> 人物表单</h3>
                 <div class="config-group">
-                    <label>角色名称（显示在标题栏和预览）</label>
-                    <input type="text" id="characterNameInput" value="角色名称">
+                    <label>角色姓名 & 名称（空格分隔）</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="charNameInput" placeholder="姓名（如：林清瑶）" style="flex: 1;">
+                        <input type="text" id="characterNameInput" placeholder="名称（如：清瑶）" style="flex: 1;">
+                    </div>
                 </div>
                 <div class="config-group">
                     <label>个性签名</label>
                     <input type="text" id="characterBioInput" placeholder="例如：温柔而冷静的陪伴" value="温柔而冷静的陪伴">
                 </div>
                 <div class="config-group">
-                    <label>姓名</label>
-                    <input type="text" id="charNameInput" placeholder="例如：林清瑶">
+                    <label>年龄</label>
+                    <input type="text" id="charAgeInput" placeholder="例如：24">
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                    <div class="config-group">
-                        <label>年龄</label>
-                        <input type="text" id="charAgeInput" placeholder="例如：24">
-                    </div>
-                    <div class="config-group">
-                        <label>性别</label>
-                        <input type="text" id="charGenderInput" placeholder="例如：女">
-                    </div>
+                <div class="config-group">
+                    <label>性别</label>
+                    <input type="text" id="charGenderInput" placeholder="例如：女">
                 </div>
                 <div class="config-group">
                     <label>外貌描写</label>
-                    <textarea id="charAppearanceInput" rows="2" placeholder="例如：黑色长发，常穿素色长裙，眼神清冷但偶有温柔"></textarea>
+                    <textarea id="charAppearanceInput" rows="2" placeholder="例如：黑色长发，常穿素色长裙，眼神清清但偶有温柔"></textarea>
                 </div>
                 <div class="config-group">
                     <label>人设提示词（基础角色指令）</label>
@@ -240,8 +237,11 @@
             <div class="settings-card">
                 <h3><i class="fas fa-brain"></i> 核心记忆</h3>
                 <div class="config-group">
-                    <label>重要事件/人物关系</label>
+                    <label>重要事件/人物关系（每行一条）</label>
                     <textarea id="charMemoriesInput" rows="3" placeholder="例如：- 师父在临终前将古剑托付给她\n- 曾经救过一个叫阿诺的少年\n- 对甜食没有抵抗力"></textarea>
+                </div>
+                <div id="memoriesCardContainer" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px;">
+                    <!-- 动态生成记忆卡片 -->
                 </div>
             </div>
             <div class="settings-card">
@@ -250,11 +250,14 @@
                     <label>风格描述</label>
                     <textarea id="charStyleInput" rows="2" placeholder="例如：句子简短，偶尔使用「……」，生气时会说「哼」"></textarea>
                 </div>
-                <details style="margin-top: 12px;">
+                <details style="margin-top: 12px;" id="styleAdvancedDetails">
                     <summary style="cursor: pointer; color: var(--accent);">高级设置 · 对话示例</summary>
                     <div class="config-group" style="margin-top: 12px;">
-                        <label>示例对话（每行一条，格式：用户说 → 角色回复）</label>
+                        <label>示例对话（每行一条，格式：用户：xxx \n 角色：xxx）</label>
                         <textarea id="charExamplesInput" rows="4" placeholder="用户：你好呀\n角色：……你是谁？有什么事吗？\n用户：想和你聊聊\n角色：哼，我很忙的，不过既然你坚持……"></textarea>
+                    </div>
+                    <div id="exampleBubblePreview" style="margin-top: 15px; background: var(--bg-chat-main); padding: 15px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; border: 1px solid var(--border-light);">
+                        <!-- 动态生成气泡预览 -->
                     </div>
                 </details>
             </div>
@@ -382,6 +385,6 @@
 
     <!-- 外部脚本 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-    <script src="js/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/LatusAmberal/corner@main/js/script.js"></script>
 </body>
 </html>
