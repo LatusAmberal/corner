@@ -2,93 +2,6 @@
 (function(){
   "use strict";
 
-  // ---------- 注入额外样式（用于已读状态和滑动条） ----------
-  const styleSheet = document.createElement("style");
-  styleSheet.textContent = `
-    .read-status {
-      font-size: 10px;
-      margin-top: 2px;
-      text-align: right;
-      line-height: 1;
-    }
-    .read-status.unread { color: #9ab3c0; }
-    .read-status.read { color: #0f9960; }
-    
-    .message-separator {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 20px 0;
-      color: var(--text-secondary);
-      font-size: 12px;
-    }
-    .message-separator::before,
-    .message-separator::after {
-      content: "";
-      flex: 1;
-      height: 1px;
-      background: var(--border-light);
-      margin: 0 15px;
-    }
-    .reset-separator {
-      margin: 30px 0;
-      opacity: 0.8;
-    }
-    .reset-separator span {
-      font-weight: normal;
-      font-size: 11px;
-      letter-spacing: 0.5px;
-    }
-    .message-row.user {
-      flex-direction: column;
-      align-items: flex-end;
-    }
-    .user .message-bubble {
-      margin-bottom: 2px;
-    }
-    .apple-slider {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 100%;
-      height: 4px;
-      background: var(--toggle-bg);
-      border-radius: 2px;
-      outline: none;
-      margin: 8px 0;
-    }
-    .apple-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 16px;
-      height: 16px;
-      background: var(--accent);
-      border-radius: 50%;
-      cursor: pointer;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-    }
-    .chat-prefs-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin: 8px 0;
-    }
-    .chat-prefs-row label {
-      font-size: 13px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .probability-bar {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 12px;
-    }
-    .probability-bar input[type=range] { flex: 1; }
-    .probability-bar span { min-width: 40px; text-align: right; }
-  `;
-  document.head.appendChild(styleSheet);
-
   // ---------- DOM 元素 ----------
   const apiProviderSelect = document.getElementById('apiProviderSelect');
   const modelSelect = document.getElementById('modelSelect');
@@ -240,35 +153,34 @@
     if (!drawerContent) return;
 
     const prefSection = document.createElement('div');
+    prefSection.className = 'chat-prefs-section';
     prefSection.innerHTML = `
-      <div style="margin-top: 20px; border-top: 1px solid var(--border-light); padding-top: 20px;">
-        <h4 style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-          <i class="fas fa-sliders-h"></i> 聊天偏好
-        </h4>
+      <h4 class="chat-prefs-header">
+        <i class="fas fa-sliders-h"></i> 聊天偏好
+      </h4>
 
-        <div class="chat-prefs-row">
-          <label><i class="fas fa-eye-slash"></i> 已读不回</label>
-          <div class="apple-toggle" id="readIgnoreToggle"></div>
-        </div>
-        <div class="probability-bar">
-          <label style="font-size: 12px; color: var(--text-secondary);">触发概率</label>
-          <input type="range" min="0" max="100" value="${chatPreferences.readIgnoreProbability}" class="apple-slider" id="readIgnoreProbSlider">
-          <span id="readIgnoreProbVal" style="font-size:12px;">${chatPreferences.readIgnoreProbability}%</span>
-        </div>
+      <div class="chat-prefs-row">
+        <label><i class="fas fa-eye-slash"></i> 已读不回</label>
+        <div class="apple-toggle" id="readIgnoreToggle"></div>
+      </div>
+      <div class="probability-bar">
+        <label class="probability-label">触发概率</label>
+        <input type="range" min="0" max="100" value="${chatPreferences.readIgnoreProbability}" class="apple-slider" id="readIgnoreProbSlider">
+        <span id="readIgnoreProbVal" class="probability-value">${chatPreferences.readIgnoreProbability}%</span>
+      </div>
 
-        <div class="chat-prefs-row" style="margin-top: 16px;">
-          <label><i class="fas fa-clock"></i> 长时间未读</label>
-          <div class="apple-toggle" id="longUnreadToggle"></div>
-        </div>
-        <div class="probability-bar">
-          <label style="font-size: 12px; color: var(--text-secondary);">触发概率</label>
-          <input type="range" min="0" max="100" value="${chatPreferences.longUnreadProbability}" class="apple-slider" id="longUnreadProbSlider">
-          <span id="longUnreadProbVal" style="font-size:12px;">${chatPreferences.longUnreadProbability}%</span>
-        </div>
-        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 8px;">
-          已读不回：已读后 AI 可能不回复（晚安等类似场景更易触发）。<br>
-          长时间未读：AI 可能在说出“稍等”等理由后暂时不读你的消息。
-        </div>
+      <div class="chat-prefs-row mt-16">
+        <label><i class="fas fa-clock"></i> 长时间未读</label>
+        <div class="apple-toggle" id="longUnreadToggle"></div>
+      </div>
+      <div class="probability-bar">
+        <label class="probability-label">触发概率</label>
+        <input type="range" min="0" max="100" value="${chatPreferences.longUnreadProbability}" class="apple-slider" id="longUnreadProbSlider">
+        <span id="longUnreadProbVal" class="probability-value">${chatPreferences.longUnreadProbability}%</span>
+      </div>
+      <div class="chat-prefs-info">
+        已读不回：已读后 AI 可能不回复（晚安等类似场景更易触发）。<br>
+        长时间未读：AI 可能在说出“稍等”等理由后暂时不读你的消息。
       </div>
     `;
     const clearBtnContainer = document.querySelector('.drawer-content > div:first-child');
@@ -377,10 +289,10 @@
   function updateApiStatusBadge() {
     if (config.apiKey && config.apiKey.trim().length > 5) {
       apiStatus.textContent = '已设置密钥';
-      apiStatus.style.background = '#0f9960';
+      apiStatus.className = 'status-badge active';
     } else {
       apiStatus.textContent = '未设置密钥';
-      apiStatus.style.background = 'var(--border-strong)';
+      apiStatus.className = 'status-badge inactive';
     }
   }
 
@@ -442,7 +354,11 @@
       if (msg.isReset) {
         const d = new Date(msgTime);
         const fullTime = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
-        html += `<div class="message-separator reset-separator"><span>${fullTime}</span></div>`;
+        html += `<div class="message-separator reset-separator">
+          <div class="line line-left"></div>
+          <span>${fullTime}</span>
+          <div class="line line-right"></div>
+        </div>`;
         lastTimestamp = msgTime;
         lastDateKey = msgDateKey;
         return;
@@ -459,15 +375,31 @@
       }
 
       const safe = escapeHtml(msg.content).replace(/\n/g, '<br>');
-      let bubble = `<div class="message-bubble">${safe}<div class="message-time">${formatTime(msgTime)}</div></div>`;
-
-      let rowContent = bubble;
+      
+      // 已读未读状态，移动到气泡末尾部分
+      let statusHtml = '';
       if (msg.role === 'user' && msg.readStatus) {
         const readClass = msg.readStatus === 'read' ? 'read' : 'unread';
-        rowContent += `<div class="read-status ${readClass}">${msg.readStatus === 'read' ? '已读' : '未读'}</div>`;
+        const readText = msg.readStatus === 'read' ? '已读' : '未读';
+        statusHtml = `<span class="read-status-inline ${readClass}">${readText}</span>`;
       }
 
-      html += `<div class="message-row ${msg.role}">${rowContent}</div>`;
+      let bubble = `
+        <div class="message-bubble" data-index="${index}" onclick="handleBubbleClick(event, ${index})">
+          <div class="bubble-content">${safe}</div>
+          <div class="message-info">
+            <div class="message-time">${formatTime(msgTime)}</div>
+            ${statusHtml}
+          </div>
+          <!-- 悬停操作菜单 -->
+          <div class="bubble-actions">
+            <i class="fas fa-trash-alt" title="删除" onclick="deleteMessage(${index})"></i>
+            <i class="fas fa-star" title="收藏" onclick="favoriteMessage(${index})"></i>
+            <i class="fas fa-edit" title="修改" onclick="editMessage(${index})"></i>
+          </div>
+        </div>`;
+
+      html += `<div class="message-row ${msg.role}">${bubble}</div>`;
 
       lastTimestamp = msgTime;
       lastDateKey = msgDateKey;
@@ -479,6 +411,82 @@
 
     messagesArea.innerHTML = html;
     messagesArea.scrollTop = messagesArea.scrollHeight;
+  }
+
+  // 消息操作函数
+  window.handleBubbleClick = function(e, index) {
+    if (window.innerWidth <= 768) { // 手机端
+      const actions = e.currentTarget.querySelector('.bubble-actions');
+      if (actions.classList.contains('show')) {
+        actions.classList.remove('show');
+      } else {
+        // 先关闭其他所有已打开的
+        document.querySelectorAll('.bubble-actions').forEach(el => el.classList.remove('show'));
+        actions.classList.add('show');
+      }
+      e.stopPropagation();
+    }
+  };
+
+  window.deleteMessage = function(index) {
+    if (confirm('确定删除这条消息吗？')) {
+      messages.splice(index, 1);
+      saveMessagesToStorage();
+      renderMessages();
+    }
+  };
+
+  window.favoriteMessage = function(index) {
+    const msg = messages[index];
+    const currentMemories = charMemoriesInput.value.trim();
+    const newMemory = (currentMemories ? '\n' : '') + `收藏：${msg.content}`;
+    charMemoriesInput.value = currentMemories + newMemory;
+    updateMemoriesCards();
+    saveCharacterToStorage();
+    showToast('已将该消息内容收藏至核心记忆！');
+  };
+
+  window.editMessage = function(index) {
+    const msg = messages[index];
+    const newContent = prompt('修改消息内容：', msg.content);
+    if (newContent !== null && newContent !== msg.content) {
+      const oldContent = msg.content;
+      msg.content = newContent;
+      
+      // 如果是 AI 的回复被修改，触发 AI 自主学习
+      if (msg.role === 'assistant') {
+        analyzeAndLearn(oldContent, newContent);
+      }
+      
+      saveMessagesToStorage();
+      renderMessages();
+    }
+  };
+
+  async function analyzeAndLearn(oldVal, newVal) {
+    try {
+      const prompt = `用户修改了你的回复：
+原回复：${oldVal}
+新回复：${newVal}
+
+请分析用户修改的意图，并根据新回复总结出一种对话风格规则。
+要求：
+1. 总结简洁，直接以指令形式输出。
+2. 比较原回复和新回复，找出差异点。
+3. 输出格式：[总结出的风格指令]
+4. 不要输出其他废话。`;
+
+      const learningResult = await callAI(prompt, "你是一个对话风格分析助手。");
+      if (learningResult) {
+        const currentStyle = charStyleInput.value.trim();
+        // 用 * 标注 AI 修改的部分
+        const newStyle = currentStyle + (currentStyle ? '\n' : '') + `* AI自动学习：${learningResult}`;
+        charStyleInput.value = newStyle;
+        saveCharacterToStorage();
+      }
+    } catch(e) {
+      console.error('AI Learning error:', e);
+    }
   }
 
   function addMessage(role, content, options = {}) {
@@ -559,12 +567,31 @@
     if (!container) return;
     const text = charMemoriesInput.value.trim();
     const lines = text.split('\n').filter(l => l.trim());
-    container.innerHTML = lines.map(line => `
-      <div style="background: var(--bg-header); border: 1px solid var(--border-light); padding: 10px; border-radius: 10px; font-size: 13px; color: var(--text-primary); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-        <i class="fas fa-bookmark" style="color: var(--accent); margin-right: 6px;"></i>
-        ${escapeHtml(line.replace(/^-\s*/, ''))}
-      </div>
-    `).join('');
+    
+    container.innerHTML = lines.map(line => {
+      let title = '记忆片段';
+      let description = line;
+      
+      if (line.includes('：') || line.includes(':')) {
+        const parts = line.split(/[：:]/);
+        title = parts[0].trim().replace(/^-\s*/, '');
+        description = parts.slice(1).join('：').trim();
+      } else if (line.startsWith('- ')) {
+        description = line.substring(2).trim();
+      }
+
+      return `
+        <div class="memory-card">
+          <div class="memory-card-header">
+            <i class="fas fa-bookmark memory-card-icon"></i>
+            ${escapeHtml(title)}
+          </div>
+          <div class="memory-card-content">
+            ${escapeHtml(description)}
+          </div>
+        </div>
+      `;
+    }).join('');
   }
 
   function updateExampleBubbles() {
@@ -573,7 +600,7 @@
     const text = charExamplesInput.value.trim();
     const lines = text.split('\n').filter(l => l.trim());
     
-    container.innerHTML = lines.map(line => {
+    let bubblesHtml = lines.map(line => {
       let role = 'assistant';
       let content = line;
       if (line.startsWith('用户：') || line.startsWith('User:')) {
@@ -585,20 +612,38 @@
       }
       
       const safe = escapeHtml(content);
-      const align = role === 'user' ? 'flex-end' : 'flex-start';
-      const bg = role === 'user' ? 'var(--bg-bubble-user)' : 'var(--bg-bubble-assistant)';
-      const color = role === 'user' ? 'var(--text-bubble-user)' : 'var(--text-primary)';
-      const radius = role === 'user' ? '12px 12px 2px 12px' : '12px 12px 12px 2px';
+      const alignClass = role === 'user' ? 'flex-end' : 'flex-start';
+      const bubbleClass = role === 'user' ? 'user' : 'assistant';
 
       return `
-        <div style="display: flex; justify-content: ${align}; width: 100%;">
-          <div style="background: ${bg}; color: ${color}; padding: 8px 12px; border-radius: ${radius}; font-size: 13px; max-width: 80%; word-break: break-word; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div class="message-row ${alignClass}">
+          <div class="example-bubble ${bubbleClass}">
             ${safe}
           </div>
         </div>
       `;
     }).join('');
+
+    // 添加“+”按钮
+    const addBtnHtml = `
+      <div class="flex-center mt-10">
+        <button class="btn btn-secondary btn-sm" onclick="addExampleGroup()">
+          <i class="fas fa-plus mr-5"></i> 添加一组对话
+        </button>
+      </div>
+    `;
+    
+    container.innerHTML = bubblesHtml + addBtnHtml;
   }
+
+  window.addExampleGroup = function() {
+    const currentText = charExamplesInput.value.trim();
+    const newGroup = (currentText ? '\n' : '') + "用户：你好\n角色：你好，有什么我可以帮你的吗？";
+    charExamplesInput.value = currentText + newGroup;
+    updateExampleBubbles();
+    // 自动触发一次输入事件以同步其他逻辑
+    charExamplesInput.dispatchEvent(new Event('input'));
+  };
 
   charMemoriesInput?.addEventListener('input', updateMemoriesCards);
   charExamplesInput?.addEventListener('input', updateExampleBubbles);
@@ -624,7 +669,7 @@
       updateCharacterPreview();
       config.characterName = characterNameInput.value.trim() || '青绿助手';
       updateChatTitle();
-      alert('人物设定已保存');
+      showToast('人物设定已保存');
     } catch(e) {
       alert('保存失败，可能是存储空间已满');
     }
@@ -640,7 +685,7 @@
     }
     if (characterPreviewAvatar) {
       if (characterData.avatar) {
-        characterPreviewAvatar.innerHTML = `<img src="${characterData.avatar}" style="width:100%;height:100%;object-fit:cover;">`;
+        characterPreviewAvatar.innerHTML = `<img src="${characterData.avatar}" class="avatar-img-full">`;
       } else {
         characterPreviewAvatar.innerHTML = '<i class="fas fa-user-astronaut"></i>';
       }
@@ -651,14 +696,14 @@
     
     const bio = characterBioInput.value.trim() || '温柔而冷静的陪伴';
     if (characterPreviewName) characterPreviewName.textContent = fullName;
-    if (characterPreviewBio) characterPreviewBio.innerHTML = `<i class="fas fa-quote-left" style="margin-right:6px;"></i>${bio}`;
+    if (characterPreviewBio) characterPreviewBio.innerHTML = `<i class="fas fa-quote-left mr-8"></i>${bio}`;
     
     // 更新标题栏
     updateChatTitle();
   }
 
   // ---------- AI 调用 ----------
-  async function callAI(userMessage) {
+  async function callAI(userMessage, customSystemPrompt = null) {
     if (!config.apiKey) throw new Error('请先配置 API Key');
 
     const now = new Date();
@@ -669,9 +714,30 @@
       weekday: 'long'
     });
 
+    // 整合人设信息
+    const charInfo = `
+[角色信息]
+姓名：${charNameInput.value} ${characterNameInput.value}
+年龄：${charAgeInput.value}
+性别：${charGenderInput.value}
+外貌：${charAppearanceInput.value}
+性格：${charPersonalityInput.value}
+经历：${charBackstoryInput.value}
+记忆：${charMemoriesInput.value}
+对话风格：${charStyleInput.value}
+对话示例：
+${charExamplesInput.value}
+
+[核心指令]
+1. 严格遵守上述“对话风格”和“对话示例”。
+2. 不要主动强调当前时间（除非用户询问或话题高度相关）。
+3. 像真人一样聊天，禁止使用括号描述动作。
+4. 保持角色的一致性，不要出戏。
+    `.trim();
+
     const systemMsg = {
       role: 'system',
-      content: `[世界观]...\n[重要：当前真实时间]\n现在是 ${currentTimeStr}。请根据这个时间调整你的对话，不要说错时间。请像真人聊天一样，避免使用括号描述动作，直接说话。`
+      content: customSystemPrompt || `${systemPromptInput.value}\n\n${charInfo}\n\n[当前真实时间]\n${currentTimeStr}`
     };
 
     const history = messages.filter(m => m.role === 'user' || m.role === 'assistant').slice(-30)
@@ -881,7 +947,7 @@
     const reader = new FileReader();
     reader.onload = (e) => {
       cropImage.src = e.target.result;
-      cropModalOverlay.style.display = 'flex';
+      cropModalOverlay.classList.add('show');
       if (cropper) cropper.destroy();
       cropper = new Cropper(cropImage, {
         aspectRatio: type === 'avatar' ? 1 : 16/9,
@@ -899,7 +965,7 @@
     const reader = new FileReader();
     reader.onload = (e) => {
       cropImage.src = e.target.result;
-      cropModalOverlay.style.display = 'flex';
+      cropModalOverlay.classList.add('show');
       if (cropper) cropper.destroy();
       cropper = new Cropper(cropImage, {
         aspectRatio: type === 'avatar' ? 1 : 16/9,
@@ -912,7 +978,7 @@
   }
 
   function closeCropModalFunc() {
-    cropModalOverlay.style.display = 'none';
+    cropModalOverlay.classList.remove('show');
     if (cropper) { cropper.destroy(); cropper = null; }
   }
 
@@ -927,8 +993,10 @@
       updateCharacterPreview();
     } else {
       if (currentCropType === 'avatar') {
-        document.getElementById('userAvatarBtn').innerHTML = `<img src="${dataURL}" style="width:100%;height:100%;object-fit:cover;">`;
-        document.getElementById('profileAvatarLarge').innerHTML = `<img src="${dataURL}" style="width:100%;height:100%;object-fit:cover;">`;
+        const userAvatarBtn = document.getElementById('userAvatarBtn');
+        const profileAvatarLarge = document.getElementById('profileAvatarLarge');
+        if (userAvatarBtn) userAvatarBtn.innerHTML = `<img src="${dataURL}" class="avatar-img-full">`;
+        if (profileAvatarLarge) profileAvatarLarge.innerHTML = `<img src="${dataURL}" class="avatar-img-full">`;
         try { localStorage.setItem('user_avatar', dataURL); } catch(e) {}
       } else {
         document.documentElement.style.setProperty('--profile-bg-image', `url(${dataURL})`);
@@ -943,7 +1011,7 @@
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = 'image/*';
-    fileInput.style.display = 'none';
+    fileInput.className = 'hidden';
     document.body.appendChild(fileInput);
     document.getElementById('editUploadAvatarBtn')?.addEventListener('click', () => {
       fileInput.onchange = (e) => { const f = e.target.files[0]; if (f) openCropModal(f, 'avatar'); fileInput.value = ''; };
@@ -963,8 +1031,8 @@
     try {
       const savedAvatar = localStorage.getItem('user_avatar');
       if (savedAvatar) {
-        document.getElementById('userAvatarBtn').innerHTML = `<img src="${savedAvatar}" style="width:100%;height:100%;object-fit:cover;">`;
-        document.getElementById('profileAvatarLarge').innerHTML = `<img src="${savedAvatar}" style="width:100%;height:100%;object-fit:cover;">`;
+        document.getElementById('userAvatarBtn').innerHTML = `<img src="${savedAvatar}" class="avatar-img-full">`;
+        document.getElementById('profileAvatarLarge').innerHTML = `<img src="${savedAvatar}" class="avatar-img-full">`;
       }
       const savedCover = localStorage.getItem('user_cover');
       if (savedCover) document.documentElement.style.setProperty('--profile-bg-image', `url(${savedCover})`);
@@ -976,10 +1044,25 @@
       const savedName = localStorage.getItem('profile_name') || '用户';
       const savedBio = localStorage.getItem('profile_bio') || '在一隅，遇见自己。';
       profileDisplayName.textContent = savedName;
-      profileBioDisplay.innerHTML = `<i class="fas fa-quote-left" style="margin-right: 8px;"></i>${savedBio}`;
+      profileBioDisplay.innerHTML = `<i class="fas fa-quote-left mr-8"></i>${savedBio}`;
       editProfileNameInput.value = savedName;
       editProfileBioInput.value = savedBio;
     } catch(e) {}
+  }
+
+  // ---------- 提示弹窗 ----------
+  function showToast(text) {
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification';
+    toast.textContent = text;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, 2000);
+    }, 10);
   }
 
   // ---------- 视图切换 ----------
@@ -1039,8 +1122,7 @@
         tbody.innerHTML = '';
         list.forEach(item => {
           const tr = document.createElement('tr');
-          tr.style.borderBottom='1px solid var(--border-light)';
-          tr.innerHTML = `<td style="padding:10px 0;">${item.displayName} ${item.count>1?'('+item.count+'项)':''}</td><td style="text-align:right;padding:10px 0;">${formatSize(item.bytes)}</td>`;
+          tr.innerHTML = `<td>${item.displayName} ${item.count>1?'('+item.count+'项)':''}</td><td class="text-right">${formatSize(item.bytes)}</td>`;
           tbody.appendChild(tr);
         });
       }
@@ -1135,8 +1217,8 @@
     const cancelEditProfileBtn = document.getElementById('cancelEditProfileBtn');
     const saveEditProfileBtn = document.getElementById('saveEditProfileBtn');
 
-    const closeEditModal = () => { editProfileModalOverlay.style.display='none'; };
-    editProfileBtn?.addEventListener('click', ()=> editProfileModalOverlay.style.display='flex');
+    const closeEditModal = () => { editProfileModalOverlay.classList.remove('show'); };
+    editProfileBtn?.addEventListener('click', ()=> editProfileModalOverlay.classList.add('show'));
     closeEditProfileModal?.addEventListener('click', closeEditModal);
     cancelEditProfileBtn?.addEventListener('click', closeEditModal);
     editProfileModalOverlay?.addEventListener('click', e => { if(e.target===editProfileModalOverlay) closeEditModal(); });
@@ -1146,7 +1228,7 @@
       localStorage.setItem('profile_name', name);
       localStorage.setItem('profile_bio', bio);
       profileDisplayName.textContent = name;
-      profileBioDisplay.innerHTML = `<i class="fas fa-quote-left" style="margin-right:8px;"></i>${bio}`;
+      profileBioDisplay.innerHTML = `<i class="fas fa-quote-left mr-8"></i>${bio}`;
       closeEditModal();
     });
 
