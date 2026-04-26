@@ -263,7 +263,7 @@
     charAgeInput.value = config.characterAge || '';
     charGenderInput.value = config.characterGender || '';
     charMemoriesInput.value = config.characterMemories || '';
-    exampleInput.value = config.exampleDialog || '';
+    charExamplesInput.value = config.exampleDialog || '';
     systemPromptInput.value = config.systemPrompt;
 
     // 更新 UI 显示
@@ -309,7 +309,7 @@
     config.characterAge = charAgeInput.value.trim();
     config.characterGender = charGenderInput.value.trim();
     config.characterMemories = charMemoriesInput.value.trim();
-    config.exampleDialog = exampleInput.value.trim();
+    config.exampleDialog = charExamplesInput.value.trim();
     config.systemPrompt = systemPromptInput.value.trim();
   }
 
@@ -703,77 +703,63 @@
   }
 
   // ---------- AI 调用 ----------
-  async function callAI(userMessage, customSystemPrompt = null) {
-    if (!config.apiKey) throw new Error('请先配置 API Key');
+    async function callAI(userMessage, customSystemPrompt = null) {
+        if (!config.apiKey) throw new Error('请先配置 API Key');
 
-    const now = new Date();
-    const currentTimeStr = now.toLocaleString('zh-CN', {
-      timeZone: 'Asia/Shanghai',
-      year: 'numeric', month: '2-digit', day: '2-digit',
-      hour: '2-digit', minute: '2-digit', second: '2-digit',
-      weekday: 'long'
-    });
-
-    // 整合人设信息
-    const charInfo = `
-[角色信息]
-姓名：${charNameInput.value} ${characterNameInput.value}
-年龄：${charAgeInput.value}
-性别：${charGenderInput.value}
-外貌：${charAppearanceInput.value}
-性格：${charPersonalityInput.value}
-经历：${charBackstoryInput.value}
-记忆：${charMemoriesInput.value}
-对话风格：${charStyleInput.value}
-对话示例：
-${charExamplesInput.value}
-
-[核心指令]
-1. 严格遵守上述“对话风格”和“对话示例”。
-2. 不要主动强调当前时间（除非用户询问或话题高度相关）。
-3. 像真人一样聊天，禁止使用括号描述动作。
-4. 保持角色的一致性，不要出戏。
+        // 整合人设信息
+        const charInfo = `
+    【角色信息】
+    姓名：${charNameInput.value} ${characterNameInput.value}
+    年龄：${charAgeInput.value}
+    性别：${charGenderInput.value}
+    外貌：${charAppearanceInput.value}
+    性格：${charPersonalityInput.value}
+    经历：${charBackstoryInput.value}
+    记忆：${charMemoriesInput.value}
+    对话风格：${charStyleInput.value}
+    对话示例（必须严格模仿）：
+    ${charExamplesInput.value}
     `.trim();
 
-    const systemMsg = {
-    role: 'system',
-    content: customSystemPrompt || `
+        const systemMsg = {
+            role: 'system',
+            content: customSystemPrompt || `
     ${systemPromptInput.value}
 
     ${charInfo}
 
-    [核心指令]
-    1. 严格遵守上述“对话风格”和“对话示例”，不可偏离。
-    2. 当前系统时间仅用于内部逻辑对齐（如早晚问候），对话中除非用户明确询问，否则**禁止主动提及年份、日期、季节等时间信息**。
-    3. 像真人一样聊天，**禁止使用括号描述动作**。
+    【核心指令】
+    1. 你必须完全遵守上述“对话风格”和“对话示例”，将其视为唯一的交流方式，不得偏离。
+    2. 禁止主动提及当前时间、年份、日期、季节等具体时间信息。你只需要根据对话上下文确认早晚、是否周末等模糊时间概念，但绝不能出现“2026年”、“今天4月26日”等具体描述。
+    3. 像真人一样聊天，禁止使用括号描述动作，例如（微笑）、（叹气）等。
     4. 保持角色一致性，不要出戏。
-        `.trim()
-    };
+            `.trim()
+        };
 
-    const history = messages.filter(m => m.role === 'user' || m.role === 'assistant').slice(-30)
-      .map(m => ({ role: m.role, content: m.content }));
+        const history = messages.filter(m => m.role === 'user' || m.role === 'assistant').slice(-30)
+            .map(m => ({ role: m.role, content: m.content }));
 
-    const payload = {
-      model: config.model,
-      messages: [systemMsg, ...history],
-      temperature: 0.8,
-    };
+        const payload = {
+            model: config.model,
+            messages: [systemMsg, ...history],
+            temperature: 0.8,
+        };
 
-    const res = await fetch(config.apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.apiKey}` },
-      body: JSON.stringify(payload)
-    });
+        const res = await fetch(config.apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.apiKey}` },
+            body: JSON.stringify(payload)
+        });
 
-    if (!res.ok) {
-      let err = `HTTP ${res.status}`;
-      try { const d = await res.json(); err = d.error?.message || JSON.stringify(d); } catch(e) {}
-      throw new Error(err);
+        if (!res.ok) {
+            let err = `HTTP ${res.status}`;
+            try { const d = await res.json(); err = d.error?.message || JSON.stringify(d); } catch(e) {}
+            throw new Error(err);
+        }
+
+        const data = await res.json();
+        return data.choices[0].message.content;
     }
-
-    const data = await res.json();
-    return data.choices[0].message.content;
-  }
 
   // ---------- 聊天偏好辅助函数 ----------
   function getLastAssistantContent() {
