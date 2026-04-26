@@ -23,7 +23,7 @@
     <!-- 外部样式 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/LatusAmberal/corner@main/css/style.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <div class="app">
@@ -71,14 +71,14 @@
 
         <!-- 设置视图 -->
         <div class="settings-view" id="settingsView">
-            <h2 style="margin-bottom: 20px; font-weight: 500;"><i class="fas fa-cog" style="margin-right: 12px;"></i>设置</h2>
+            <h2 class="mb-20 fw-500"><i class="fas fa-cog mr-12"></i>设置</h2>
             <div class="settings-card">
                 <h3><i class="fas fa-palette"></i> 外观</h3>
-                <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div class="flex-between">
                     <span class="theme-toggle-label"><i class="fas fa-moon"></i> 深色模式</span>
                     <div class="apple-toggle" id="themeToggleSettings"></div>
                 </div>
-                <div style="margin-top: 8px; font-size: 13px; color: var(--text-secondary);">
+                <div class="mt-8 fs-13 text-secondary">
                     <span id="themeLabelTextSettings">深色模式</span>
                 </div>
             </div>
@@ -122,18 +122,18 @@
                             <option value="custom">自定义</option>
                         </optgroup>
                     </select>
-                    <input type="text" id="modelInput" placeholder="自定义模型ID" value="deepseek-chat" style="margin-top: 8px;">
+                    <input type="text" id="modelInput" placeholder="自定义模型ID" value="deepseek-chat" class="mt-8">
                 </div>
                 <div class="config-group">
                     <label>API Key</label>
                     <input type="password" id="apiKeyInput" placeholder="sk-..." autocomplete="off">
                     <span class="status-badge" id="apiStatus">未设置</span>
                 </div>
-                <div style="display: flex; gap: 12px; margin-top: 16px;">
+                <div class="flex-gap-12 mt-16">
                     <button class="btn btn-primary" id="saveConfigBtn"><i class="fas fa-save"></i> 保存配置</button>
                     <button class="btn btn-secondary" id="testConnectionBtn"><i class="fas fa-vial"></i> 测试连接</button>
                 </div>
-                <div style="margin-top: 16px; font-size: 12px; color: var(--text-secondary); background: var(--input-bg); padding: 12px; border-radius: 8px; border-left: 3px solid var(--accent);">
+                <div class="info-box">
                     <i class="fas fa-info-circle"></i> <strong>免费 API 推荐</strong><br>
                     • DeepSeek：注册送额度，地址 <code>https://api.deepseek.com/v1/chat/completions</code><br>
                     • Groq：免费，地址 <code>https://api.groq.com/openai/v1/chat/completions</code><br>
@@ -149,15 +149,15 @@
                     <div class="profile-avatar-large" id="profileAvatarLarge"><i class="fas fa-user"></i></div>
                     <div class="profile-info">
                         <h2 id="profileDisplayName">用户</h2>
-                        <p id="profileBioDisplay"><i class="fas fa-quote-left" style="margin-right: 8px;"></i>在一隅，遇见自己。</p>
+                        <p id="profileBioDisplay"><i class="fas fa-quote-left mr-8"></i>在一隅，遇见自己。</p>
                     </div>
                     <button class="btn btn-secondary" id="editProfileBtn"><i class="fas fa-pen"></i> 编辑个人资料</button>
                 </div>
             </div>
             <div class="profile-content">
-                <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
-                    <i class="fas fa-tools" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
-                    <h3 style="font-weight: 400; margin-bottom: 8px;">更多功能开发中</h3>
+                <div class="empty-state">
+                    <i class="fas fa-tools fs-48 mb-20 opacity-5"></i>
+                    <h3 class="fw-400 mb-8">更多功能开发中</h3>
                     <p>敬请期待</p>
                 </div>
             </div>
@@ -165,9 +165,9 @@
 
         <!-- 人物管理视图 -->
         <div class="character-view" id="characterView">
-            <h2 style="margin-bottom: 20px; font-weight: 500;"><i class="fas fa-user-tag" style="margin-right: 12px;"></i>人物设定</h2>
-            <div style="display: flex; align-items: baseline; margin-bottom: 6px;">
-                <span style="font-size: 16px; font-weight: 500; color: var(--text-primary);"><i class="fas fa-image" style="margin-right: 8px;"></i>角色卡片预览</span>
+            <h2 class="mb-20 fw-500"><i class="fas fa-user-tag mr-12"></i>人物设定</h2>
+            <div class="preview-header">
+                <span class="fs-16 fw-500 text-primary"><i class="fas fa-image mr-8"></i>角色卡片预览</span>
             </div>
             <div class="character-preview-card" id="characterPreviewCard">
                 <div class="character-preview-bg" id="characterPreviewBg"></div>
@@ -175,11 +175,11 @@
                     <div class="character-preview-avatar" id="characterPreviewAvatar"><i class="fas fa-user-astronaut"></i></div>
                     <div class="character-preview-info">
                         <h3 id="characterPreviewName">角色名称</h3>
-                        <p id="characterPreviewBio"><i class="fas fa-quote-left" style="margin-right: 6px;"></i>温柔而冷静的陪伴</p>
+                        <p id="characterPreviewBio"><i class="fas fa-quote-left mr-8"></i>温柔而冷静的陪伴</p>
                     </div>
-                    <div style="display: flex; gap: 8px;">
-                        <button class="btn btn-secondary" id="editCharacterAvatarBtn" style="padding: 8px 12px; white-space: nowrap;"><i class="fas fa-camera"></i> 头像</button>
-                        <button class="btn btn-secondary" id="editCharacterCoverBtn" style="padding: 8px 12px; white-space: nowrap;"><i class="fas fa-image"></i> 背景</button>
+                    <div class="flex-gap-8">
+                        <button class="btn btn-secondary white-space-nowrap" id="editCharacterAvatarBtn"><i class="fas fa-camera"></i> 头像</button>
+                        <button class="btn btn-secondary white-space-nowrap" id="editCharacterCoverBtn"><i class="fas fa-image"></i> 背景</button>
                     </div>
                 </div>
             </div>
@@ -194,9 +194,9 @@
                 <h3><i class="fas fa-id-card"></i> 人物表单</h3>
                 <div class="config-group">
                     <label>角色姓名 & 名称（空格分隔）</label>
-                    <div style="display: flex; gap: 10px;">
-                        <input type="text" id="charNameInput" placeholder="姓名（如：林清瑶）" style="flex: 1;">
-                        <input type="text" id="characterNameInput" placeholder="名称（如：清瑶）" style="flex: 1;">
+                    <div class="flex-gap-10">
+                        <input type="text" id="charNameInput" placeholder="姓名（如：林清瑶）" class="flex-1">
+                        <input type="text" id="characterNameInput" placeholder="名称（如：清瑶）" class="flex-1">
                     </div>
                 </div>
                 <div class="config-group">
@@ -240,7 +240,7 @@
                     <label>重要事件/人物关系（每行一条）</label>
                     <textarea id="charMemoriesInput" rows="3" placeholder="例如：- 师父在临终前将古剑托付给她\n- 曾经救过一个叫阿诺的少年\n- 对甜食没有抵抗力"></textarea>
                 </div>
-                <div id="memoriesCardContainer" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px;">
+                <div id="memoriesCardContainer" class="memory-card-grid mt-12">
                     <!-- 动态生成记忆卡片 -->
                 </div>
             </div>
@@ -250,59 +250,53 @@
                     <label>风格描述</label>
                     <textarea id="charStyleInput" rows="2" placeholder="例如：句子简短，偶尔使用「……」，生气时会说「哼」"></textarea>
                 </div>
-                <details style="margin-top: 12px;" id="styleAdvancedDetails">
-                    <summary style="cursor: pointer; color: var(--accent);">高级设置 · 对话示例</summary>
-                    <div class="config-group" style="margin-top: 12px;">
+                <details class="mt-12" id="styleAdvancedDetails">
+                    <summary class="advanced-summary">高级设置 · 对话示例</summary>
+                    <div class="config-group mt-12">
                         <label>示例对话（每行一条，格式：用户：xxx \n 角色：xxx）</label>
                         <textarea id="charExamplesInput" rows="4" placeholder="用户：你好呀\n角色：……你是谁？有什么事吗？\n用户：想和你聊聊\n角色：哼，我很忙的，不过既然你坚持……"></textarea>
                     </div>
-                    <div id="exampleBubblePreview" style="margin-top: 15px; background: var(--bg-chat-main); padding: 15px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; border: 1px solid var(--border-light);">
+                    <div id="exampleBubblePreview" class="example-bubble-container">
                         <!-- 动态生成气泡预览 -->
                     </div>
                 </details>
             </div>
-            <div style="display: flex; gap: 12px; margin-top: 8px; margin-bottom: 24px;">
+            <div class="flex-gap-12 mt-8 mb-24">
                 <button class="btn btn-primary" id="saveCharacterBtn"><i class="fas fa-save"></i> 保存人物设定</button>
                 <button class="btn btn-secondary" id="resetCharacterBtn"><i class="fas fa-undo-alt"></i> 重置</button>
             </div>
         </div>
 
         <!-- 数据管理视图 -->
-        <div class="data-manager-view" id="dataManagerView" style="flex:1; background: var(--bg-chat-main); padding: 24px 32px; overflow-y: auto; color: var(--text-primary);">
-            <h2 style="margin-bottom: 20px; font-weight: 500;"><i class="fas fa-database" style="margin-right: 12px;"></i>数据管理</h2>
+        <div class="data-manager-view" id="dataManagerView">
+            <h2 class="mb-20 fw-500"><i class="fas fa-database mr-12"></i>数据管理</h2>
             <div class="settings-card">
                 <h3><i class="fas fa-chart-pie"></i> 存储概览</h3>
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
-                    <div style="background: var(--bg-header); border-radius: 12px; padding: 16px;">
-                        <div style="font-size: 13px; color: var(--text-secondary);">总占用空间</div>
-                        <div style="font-size: 32px; font-weight: 600; margin-top: 8px;" id="totalStorageSize">0 KB</div>
+                <div class="storage-grid">
+                    <div class="storage-item">
+                        <div class="fs-13 text-secondary">总占用空间</div>
+                        <div class="storage-value" id="totalStorageSize">0 KB</div>
                     </div>
-                    <div style="background: var(--bg-header); border-radius: 12px; padding: 16px;">
-                        <div style="font-size: 13px; color: var(--text-secondary);">存储项数量</div>
-                        <div style="font-size: 32px; font-weight: 600; margin-top: 8px;" id="totalStorageItems">0</div>
+                    <div class="storage-item">
+                        <div class="fs-13 text-secondary">存储项数量</div>
+                        <div class="storage-value" id="totalStorageItems">0</div>
                     </div>
                 </div>
-                <div style="margin-top: 20px;">
-                    <table style="width:100%; border-collapse: collapse;">
-                        <thead>
-                            <tr style="border-bottom: 1px solid var(--border-light);">
-                                <th style="text-align: left; padding: 12px 0; color: var(--text-secondary); font-weight: 500;">存储项</th>
-                                <th style="text-align: right; padding: 12px 0; color: var(--text-secondary); font-weight: 500;">大小</th>
-                            </tr>
-                        </thead>
+                <div class="mt-20">
+                    <table class="storage-table">
                         <tbody id="storageDetailsTable"></tbody>
                     </table>
                 </div>
             </div>
             <div class="settings-card">
                 <h3><i class="fas fa-exchange-alt"></i> 导入 / 导出</h3>
-                <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">导出全部数据为 JSON 文件，或从之前导出的文件恢复所有设置。</p>
-                <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-                    <button class="btn btn-primary" id="exportDataBtn" style="flex:1;"><i class="fas fa-download"></i> 导出全部数据</button>
-                    <button class="btn btn-secondary" id="importDataBtn" style="flex:1;"><i class="fas fa-upload"></i> 导入数据文件</button>
-                    <input type="file" id="importFileInput" accept=".json,application/json" style="display:none;">
+                <p class="fs-14 text-secondary mb-20">导出全部数据为 JSON 文件，或从之前导出的文件恢复所有设置。</p>
+                <div class="flex-gap-16 flex-wrap">
+                    <button class="btn btn-primary flex-1" id="exportDataBtn"><i class="fas fa-download"></i> 导出全部数据</button>
+                    <button class="btn btn-secondary flex-1" id="importDataBtn"><i class="fas fa-upload"></i> 导入数据文件</button>
+                    <input type="file" id="importFileInput" accept=".json,application/json" class="hidden">
                 </div>
-                <div style="margin-top: 16px; font-size: 13px; color: var(--text-secondary);">
+                <div class="mt-16 fs-13 text-secondary">
                     <i class="fas fa-info-circle"></i> 导入数据将覆盖当前所有设置，建议先导出备份。
                 </div>
             </div>
@@ -310,7 +304,7 @@
     </main>
 
     <!-- 图片裁剪模态框 -->
-    <div class="modal-overlay" id="cropModalOverlay" style="display: none;">
+    <div class="modal-overlay" id="cropModalOverlay">
         <div class="modal-container">
             <div class="modal-header">
                 <h3>调整图片</h3>
@@ -329,8 +323,8 @@
     </div>
 
     <!-- 编辑个人资料模态框 -->
-    <div class="modal-overlay" id="editProfileModalOverlay" style="display: none;">
-        <div class="modal-container" style="width: 450px;">
+    <div class="modal-overlay" id="editProfileModalOverlay">
+        <div class="modal-container w-450">
             <div class="modal-header">
                 <h3>编辑个人资料</h3>
                 <button class="modal-close" id="closeEditProfileModal">&times;</button>
@@ -346,16 +340,16 @@
                 </div>
                 <div class="config-group">
                     <label>头像</label>
-                    <div style="display: flex; gap: 12px; align-items: center;">
-                        <button class="btn btn-secondary" id="editUploadAvatarBtn" style="flex: 1;"><i class="fas fa-camera"></i> 上传头像</button>
-                        <span style="font-size: 12px; color: var(--text-secondary);">1:1</span>
+                    <div class="flex-center flex-gap-12">
+                        <button class="btn btn-secondary flex-1" id="editUploadAvatarBtn"><i class="fas fa-camera"></i> 上传头像</button>
+                        <span class="fs-12 opacity-5">1:1</span>
                     </div>
                 </div>
                 <div class="config-group">
                     <label>主页背景</label>
-                    <div style="display: flex; gap: 12px; align-items: center;">
-                        <button class="btn btn-secondary" id="editUploadCoverBtn" style="flex: 1;"><i class="fas fa-image"></i> 上传背景图</button>
-                        <span style="font-size: 12px; color: var(--text-secondary);">16:9</span>
+                    <div class="flex-center flex-gap-12">
+                        <button class="btn btn-secondary flex-1" id="editUploadCoverBtn"><i class="fas fa-image"></i> 上传背景图</button>
+                        <span class="fs-12 opacity-5">16:9</span>
                     </div>
                 </div>
             </div>
@@ -370,14 +364,14 @@
     <div class="drawer-overlay" id="drawerOverlay"></div>
     <div class="config-drawer" id="configDrawer">
         <div class="drawer-header">
-            <h3><i class="fas fa-sliders-h" style="margin-right: 8px;"></i> 控制中心</h3>
+            <h3><i class="fas fa-sliders-h mr-8"></i> 控制中心</h3>
             <button class="close-drawer" id="closeDrawerBtn"><i class="fas fa-times"></i></button>
         </div>
         <div class="drawer-content">
-            <div style="margin-top: 20px;">
-                <button class="btn btn-warning" id="clearChatBtn" style="width: 100%;"><i class="fas fa-trash-alt"></i> 清空对话记录</button>
+            <div class="mt-20">
+                <button class="btn btn-warning w-full" id="clearChatBtn"><i class="fas fa-trash-alt"></i> 清空对话记录</button>
             </div>
-            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-light);">
+            <div class="fs-12 opacity-5 mt-20 pt-16 bt-1">
                 <i class="fas fa-info-circle"></i> 完整 API 设置请点击左侧齿轮图标。
             </div>
         </div>
