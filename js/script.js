@@ -300,11 +300,11 @@
     config.apiKey = apiKeyInput.value.trim();
     config.apiUrl = apiUrlInput.value.trim();
     config.model = modelInput.value.trim();
-    
+
     const namePart1 = charNameInput.value.trim();
     const namePart2 = characterNameInput.value.trim();
     config.characterName = [namePart1, namePart2].filter(Boolean).join(' ') || '青绿角色';
-    
+
     config.characterBio = characterBioInput.value.trim();
     config.characterAge = charAgeInput.value.trim();
     config.characterGender = charGenderInput.value.trim();
@@ -375,7 +375,7 @@
       }
 
       const safe = escapeHtml(msg.content).replace(/\n/g, '<br>');
-      
+
       // 已读未读状态，移动到气泡末尾部分
       let statusHtml = '';
       if (msg.role === 'user' && msg.readStatus) {
@@ -452,12 +452,12 @@
     if (newContent !== null && newContent !== msg.content) {
       const oldContent = msg.content;
       msg.content = newContent;
-      
+
       // 如果是 AI 的回复被修改，触发 AI 自主学习
       if (msg.role === 'assistant') {
         analyzeAndLearn(oldContent, newContent);
       }
-      
+
       saveMessagesToStorage();
       renderMessages();
     }
@@ -567,11 +567,11 @@
     if (!container) return;
     const text = charMemoriesInput.value.trim();
     const lines = text.split('\n').filter(l => l.trim());
-    
+
     container.innerHTML = lines.map(line => {
       let title = '记忆片段';
       let description = line;
-      
+
       if (line.includes('：') || line.includes(':')) {
         const parts = line.split(/[：:]/);
         title = parts[0].trim().replace(/^-\s*/, '');
@@ -599,7 +599,7 @@
     if (!container) return;
     const text = charExamplesInput.value.trim();
     const lines = text.split('\n').filter(l => l.trim());
-    
+
     let bubblesHtml = lines.map(line => {
       let role = 'assistant';
       let content = line;
@@ -610,7 +610,7 @@
         role = 'assistant';
         content = line.replace(/^(角色：|Assistant:|Bot:)/, '');
       }
-      
+
       const safe = escapeHtml(content);
       const alignClass = role === 'user' ? 'flex-end' : 'flex-start';
       const bubbleClass = role === 'user' ? 'user' : 'assistant';
@@ -632,7 +632,7 @@
         </button>
       </div>
     `;
-    
+
     container.innerHTML = bubblesHtml + addBtnHtml;
   }
 
@@ -693,11 +693,11 @@
     const namePart1 = charNameInput.value.trim();
     const namePart2 = characterNameInput.value.trim();
     const fullName = [namePart1, namePart2].filter(Boolean).join(' ') || '角色名称';
-    
+
     const bio = characterBioInput.value.trim() || '温柔而冷静的陪伴';
     if (characterPreviewName) characterPreviewName.textContent = fullName;
     if (characterPreviewBio) characterPreviewBio.innerHTML = `<i class="fas fa-quote-left mr-8"></i>${bio}`;
-    
+
     // 更新标题栏
     updateChatTitle();
   }
@@ -736,8 +736,18 @@ ${charExamplesInput.value}
     `.trim();
 
     const systemMsg = {
-      role: 'system',
-      content: customSystemPrompt || `${systemPromptInput.value}\n\n${charInfo}\n\n[当前真实时间]\n${currentTimeStr}`
+    role: 'system',
+    content: customSystemPrompt || `
+    ${systemPromptInput.value}
+
+    ${charInfo}
+
+    [核心指令]
+    1. 严格遵守上述“对话风格”和“对话示例”，不可偏离。
+    2. 当前系统时间仅用于内部逻辑对齐（如早晚问候），对话中除非用户明确询问，否则**禁止主动提及年份、日期、季节等时间信息**。
+    3. 像真人一样聊天，**禁止使用括号描述动作**。
+    4. 保持角色一致性，不要出戏。
+        `.trim()
     };
 
     const history = messages.filter(m => m.role === 'user' || m.role === 'assistant').slice(-30)
@@ -836,7 +846,7 @@ ${charExamplesInput.value}
       userMsgIndices.forEach(idx => {
         if (messages[idx]) updateMessageReadStatus(idx, 'read');
       });
-      
+
       // 触发 AI 回复
       handleAiResponse();
     }, readDelay);
@@ -846,21 +856,24 @@ ${charExamplesInput.value}
     messageInput.focus();
 
     async function handleAiResponse() {
-      if (shouldTriggerReadIgnore()) return;
+    if (shouldTriggerReadIgnore()) return;
 
-      // 如果触发长时间未读，则模拟几小时后的回复
-      if (shouldTriggerLongUnread()) {
-        // 模拟“长时间未读”
-        // 用户要求“几个小时的范围内标记为已读但是回复”
-        // 这里我们模拟一个较长的延迟，比如 10-20 秒，代表“几小时”
-        const longDelay = 10000 + Math.random() * 10000;
+    // 长时间未读：先标记已读，然后延迟很长时间再回复
+    if (shouldTriggerLongUnread()) {
+        // 1. 先强制将用户消息标记为已读（因为对方已经看了）
+        userMsgIndices.forEach(idx => {
+            if (messages[idx]) updateMessageReadStatus(idx, 'read');
+        });
+
+        // 2. 延迟 10～30 秒，模拟几小时后才回复
+        const longDelay = 10000 + Math.random() * 20000;
         setTimeout(async () => {
-          await generateAiReply();
+            await generateAiReply();
         }, longDelay);
-      } else {
+    } else {
         await generateAiReply();
-      }
     }
+}
 
     async function generateAiReply() {
       try {
@@ -869,12 +882,12 @@ ${charExamplesInput.value}
         const lastUserContent = messages[userMsgIndices[userMsgIndices.length - 1]].content;
         const reply = await callAI(lastUserContent);
         const cleaned = cleanParentheses(reply);
-        
+
         // 限制回复的消息条数，不要因为用户发了多条就回更多
         const sentences = cleaned.split(/(?<=[。！？!?])/g)
                                  .map(s => s.trim())
                                  .filter(s => s.length > 0);
-        
+
         // 限制最多回复 2-3 条消息，使回复更真实
         const maxReplies = Math.floor(Math.random() * 2) + 1; // 1-2条
         const finalSentences = sentences.slice(0, maxReplies);
