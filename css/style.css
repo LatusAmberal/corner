@@ -547,6 +547,9 @@ body {
     opacity: 0.6;
 }
 
+.read-status-inline.read { color: #0f9960; }
+.read-status-inline.unread { color: #9ab3c0; }
+
 .read-status-inline.read {
     color: var(--accent);
     opacity: 0.9;
@@ -969,8 +972,8 @@ body {
 }
 
 .btn-secondary {
-    background: var(--menu-btn-hover); 
-    color: var(--text-primary); 
+    background: var(--menu-btn-hover);
+    color: var(--text-primary);
     border: 1px solid var(--border-light);
 }
 .btn-warning {
