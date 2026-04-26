@@ -7,12 +7,45 @@
   styleSheet.textContent = `
     .read-status {
       font-size: 10px;
-      margin-top: 4px;
+      margin-top: 2px;
       text-align: right;
       line-height: 1;
     }
     .read-status.unread { color: #9ab3c0; }
     .read-status.read { color: #0f9960; }
+    
+    .message-separator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 20px 0;
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+    .message-separator::before,
+    .message-separator::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border-light);
+      margin: 0 15px;
+    }
+    .reset-separator {
+      margin: 30px 0;
+      opacity: 0.8;
+    }
+    .reset-separator span {
+      font-weight: normal;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+    }
+    .message-row.user {
+      flex-direction: column;
+      align-items: flex-end;
+    }
+    .user .message-bubble {
+      margin-bottom: 2px;
+    }
     .apple-slider {
       -webkit-appearance: none;
       appearance: none;
@@ -308,11 +341,26 @@
     apiKeyInput.value = config.apiKey || '';
     apiUrlInput.value = config.apiUrl;
     modelInput.value = config.model;
-    characterNameInput.value = config.characterName;
+    // 加载配置到表单
+    if (config.characterName) {
+      const names = config.characterName.split(' ');
+      charNameInput.value = names[0] || '';
+      characterNameInput.value = names[1] || '';
+    }
+    characterBioInput.value = config.characterBio || '';
+    charAgeInput.value = config.characterAge || '';
+    charGenderInput.value = config.characterGender || '';
+    charMemoriesInput.value = config.characterMemories || '';
+    exampleInput.value = config.exampleDialog || '';
     systemPromptInput.value = config.systemPrompt;
+
+    // 更新 UI 显示
     updateChatTitle();
     updateApiStatusBadge();
     populateSelectsFromConfig();
+    updateCharacterPreview();
+    updateMemoriesCards();
+    updateExampleBubbles();
   }
 
   function saveConfigToStorage() {
@@ -320,7 +368,10 @@
   }
 
   function updateChatTitle() {
-    chatTitleDisplay.textContent = config.characterName || '青绿角色';
+    const namePart1 = charNameInput.value.trim();
+    const namePart2 = characterNameInput.value.trim();
+    const fullName = [namePart1, namePart2].filter(Boolean).join(' ') || '青绿角色';
+    chatTitleDisplay.textContent = fullName;
   }
 
   function updateApiStatusBadge() {
@@ -337,7 +388,16 @@
     config.apiKey = apiKeyInput.value.trim();
     config.apiUrl = apiUrlInput.value.trim();
     config.model = modelInput.value.trim();
-    config.characterName = characterNameInput.value.trim() || '青绿';
+    
+    const namePart1 = charNameInput.value.trim();
+    const namePart2 = characterNameInput.value.trim();
+    config.characterName = [namePart1, namePart2].filter(Boolean).join(' ') || '青绿角色';
+    
+    config.characterBio = characterBioInput.value.trim();
+    config.characterAge = charAgeInput.value.trim();
+    config.characterGender = charGenderInput.value.trim();
+    config.characterMemories = charMemoriesInput.value.trim();
+    config.exampleDialog = exampleInput.value.trim();
     config.systemPrompt = systemPromptInput.value.trim();
   }
 
@@ -379,6 +439,15 @@
       const msgTime = msg.timestamp;
       const msgDateKey = new Date(msgTime).toDateString();
 
+      if (msg.isReset) {
+        const d = new Date(msgTime);
+        const fullTime = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+        html += `<div class="message-separator reset-separator"><span>${fullTime}</span></div>`;
+        lastTimestamp = msgTime;
+        lastDateKey = msgDateKey;
+        return;
+      }
+
       if (index === 0 || msgDateKey !== lastDateKey) {
         const isToday = (msgTime >= todayStart && msgTime < todayStart + 86400000);
         const label = isToday ? '今天' : formatDateSeparator(msgTime);
@@ -390,15 +459,15 @@
       }
 
       const safe = escapeHtml(msg.content).replace(/\n/g, '<br>');
-      let bubble = `<div class="message-bubble">${safe}<div class="message-time">${formatTime(msgTime)}</div>`;
+      let bubble = `<div class="message-bubble">${safe}<div class="message-time">${formatTime(msgTime)}</div></div>`;
 
+      let rowContent = bubble;
       if (msg.role === 'user' && msg.readStatus) {
         const readClass = msg.readStatus === 'read' ? 'read' : 'unread';
-        bubble += `<div class="read-status ${readClass}">${msg.readStatus === 'read' ? '已读' : '未读'}</div>`;
+        rowContent += `<div class="read-status ${readClass}">${msg.readStatus === 'read' ? '已读' : '未读'}</div>`;
       }
-      bubble += `</div>`;
 
-      html += `<div class="message-row ${msg.role}">${bubble}</div>`;
+      html += `<div class="message-row ${msg.role}">${rowContent}</div>`;
 
       lastTimestamp = msgTime;
       lastDateKey = msgDateKey;
@@ -457,7 +526,7 @@
   }
 
   function resetConversation() {
-    messages = [{ role: 'assistant', content: '对话已重置。', timestamp: Date.now() }];
+    messages = [{ role: 'system', content: '', timestamp: Date.now(), isReset: true }];
     removeTypingIndicator();
     saveMessagesToStorage();
     renderMessages();
@@ -481,7 +550,58 @@
     charExamplesInput.value = characterData.examples || '';
     characterBioInput.value = characterData.bio || '温柔而冷静的陪伴';
     updateCharacterPreview();
+    updateMemoriesCards();
+    updateExampleBubbles();
   }
+
+  function updateMemoriesCards() {
+    const container = document.getElementById('memoriesCardContainer');
+    if (!container) return;
+    const text = charMemoriesInput.value.trim();
+    const lines = text.split('\n').filter(l => l.trim());
+    container.innerHTML = lines.map(line => `
+      <div style="background: var(--bg-header); border: 1px solid var(--border-light); padding: 10px; border-radius: 10px; font-size: 13px; color: var(--text-primary); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <i class="fas fa-bookmark" style="color: var(--accent); margin-right: 6px;"></i>
+        ${escapeHtml(line.replace(/^-\s*/, ''))}
+      </div>
+    `).join('');
+  }
+
+  function updateExampleBubbles() {
+    const container = document.getElementById('exampleBubblePreview');
+    if (!container) return;
+    const text = charExamplesInput.value.trim();
+    const lines = text.split('\n').filter(l => l.trim());
+    
+    container.innerHTML = lines.map(line => {
+      let role = 'assistant';
+      let content = line;
+      if (line.startsWith('用户：') || line.startsWith('User:')) {
+        role = 'user';
+        content = line.replace(/^(用户：|User:)/, '');
+      } else if (line.startsWith('角色：') || line.startsWith('Assistant:') || line.startsWith('Bot:')) {
+        role = 'assistant';
+        content = line.replace(/^(角色：|Assistant:|Bot:)/, '');
+      }
+      
+      const safe = escapeHtml(content);
+      const align = role === 'user' ? 'flex-end' : 'flex-start';
+      const bg = role === 'user' ? 'var(--bg-bubble-user)' : 'var(--bg-bubble-assistant)';
+      const color = role === 'user' ? 'var(--text-bubble-user)' : 'var(--text-primary)';
+      const radius = role === 'user' ? '12px 12px 2px 12px' : '12px 12px 12px 2px';
+
+      return `
+        <div style="display: flex; justify-content: ${align}; width: 100%;">
+          <div style="background: ${bg}; color: ${color}; padding: 8px 12px; border-radius: ${radius}; font-size: 13px; max-width: 80%; word-break: break-word; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            ${safe}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  charMemoriesInput?.addEventListener('input', updateMemoriesCards);
+  charExamplesInput?.addEventListener('input', updateExampleBubbles);
 
   function saveCharacterToStorage() {
     characterData = {
@@ -525,10 +645,16 @@
         characterPreviewAvatar.innerHTML = '<i class="fas fa-user-astronaut"></i>';
       }
     }
-    const name = characterNameInput.value.trim() || '青绿助手';
+    const namePart1 = charNameInput.value.trim();
+    const namePart2 = characterNameInput.value.trim();
+    const fullName = [namePart1, namePart2].filter(Boolean).join(' ') || '角色名称';
+    
     const bio = characterBioInput.value.trim() || '温柔而冷静的陪伴';
-    if (characterPreviewName) characterPreviewName.textContent = name;
+    if (characterPreviewName) characterPreviewName.textContent = fullName;
     if (characterPreviewBio) characterPreviewBio.innerHTML = `<i class="fas fa-quote-left" style="margin-right:6px;"></i>${bio}`;
+    
+    // 更新标题栏
+    updateChatTitle();
   }
 
   // ---------- AI 调用 ----------
@@ -618,6 +744,7 @@
     const content = messageInput.value.trim();
     if (!content || isGenerating) return;
 
+    // 分割多条消息（按空行分割）
     const userSegments = content.split(/\n\s*\n/).filter(s => s.trim() !== '');
     if (userSegments.length === 0) return;
 
@@ -628,52 +755,69 @@
 
     resolvePendingUnreads();
 
+    // 先把用户的所有消息都发出来
+    const userMsgIndices = [];
     for (let segIdx = 0; segIdx < userSegments.length; segIdx++) {
       const text = userSegments[segIdx].trim();
       if (!text) continue;
-
-      const userMsg = addMessage('user', text);
-      const msgIndex = messages.length - 1;
-
-      if (shouldTriggerLongUnread()) {
-        showTypingIndicator();
-        setTimeout(() => {
-          removeTypingIndicator();
-        }, 3000 + Math.random() * 2000);
-        continue;
-      }
-
-      const readDelay = 2000 + Math.random() * 1500;
-      setTimeout(() => {
-        if (!messages[msgIndex]) return;
-        updateMessageReadStatus(msgIndex, 'read');
-        handleAfterRead(msgIndex);
-      }, readDelay);
+      addMessage('user', text);
+      userMsgIndices.push(messages.length - 1);
     }
+
+    // 随机延迟已读
+    const readDelay = 1000 + Math.random() * 2000;
+    setTimeout(() => {
+      userMsgIndices.forEach(idx => {
+        if (messages[idx]) updateMessageReadStatus(idx, 'read');
+      });
+      
+      // 触发 AI 回复
+      handleAiResponse();
+    }, readDelay);
 
     isGenerating = false;
     sendBtn.disabled = false;
     messageInput.focus();
 
-    async function handleAfterRead(userMsgIdx) {
-      if (!messages[userMsgIdx]) return;
+    async function handleAiResponse() {
       if (shouldTriggerReadIgnore()) return;
 
+      // 如果触发长时间未读，则模拟几小时后的回复
+      if (shouldTriggerLongUnread()) {
+        // 模拟“长时间未读”
+        // 用户要求“几个小时的范围内标记为已读但是回复”
+        // 这里我们模拟一个较长的延迟，比如 10-20 秒，代表“几小时”
+        const longDelay = 10000 + Math.random() * 10000;
+        setTimeout(async () => {
+          await generateAiReply();
+        }, longDelay);
+      } else {
+        await generateAiReply();
+      }
+    }
+
+    async function generateAiReply() {
       try {
         showTypingIndicator();
-        const userContent = messages[userMsgIdx].content;
-        const reply = await callAI(userContent);
+        // 传入最后一条消息作为触发
+        const lastUserContent = messages[userMsgIndices[userMsgIndices.length - 1]].content;
+        const reply = await callAI(lastUserContent);
         const cleaned = cleanParentheses(reply);
+        
+        // 限制回复的消息条数，不要因为用户发了多条就回更多
         const sentences = cleaned.split(/(?<=[。！？!?])/g)
                                  .map(s => s.trim())
                                  .filter(s => s.length > 0);
-        const finalSentences = sentences.length > 0 ? sentences : [cleaned];
+        
+        // 限制最多回复 2-3 条消息，使回复更真实
+        const maxReplies = Math.floor(Math.random() * 2) + 1; // 1-2条
+        const finalSentences = sentences.slice(0, maxReplies);
 
         removeTypingIndicator();
         for (const sentence of finalSentences) {
           showTypingIndicator();
           const charCount = sentence.length;
-          let typingDelay = Math.min(8000, Math.max(1500, charCount * 80));
+          let typingDelay = Math.min(6000, Math.max(1000, charCount * 60));
           typingDelay += (Math.random() * 400 - 200);
           await new Promise(resolve => setTimeout(resolve, Math.max(0, typingDelay)));
           removeTypingIndicator();
@@ -980,7 +1124,10 @@
     });
 
     characterNameInput.addEventListener('input', updateCharacterPreview);
+    charNameInput.addEventListener('input', updateCharacterPreview);
     characterBioInput.addEventListener('input', updateCharacterPreview);
+    charAgeInput.addEventListener('input', updateCharacterPreview);
+    charGenderInput.addEventListener('input', updateCharacterPreview);
 
     const editProfileBtn = document.getElementById('editProfileBtn');
     const editProfileModalOverlay = document.getElementById('editProfileModalOverlay');
