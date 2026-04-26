@@ -367,11 +367,11 @@
       if (index === 0 || msgDateKey !== lastDateKey) {
         const isToday = (msgTime >= todayStart && msgTime < todayStart + 86400000);
         const label = isToday ? '今天' : formatDateSeparator(msgTime);
-        html += `<div class="message-separator"><span>${label}</span></div>`;
+        html += `<div class="message-separator"><div class="line"></div><span>${label}</span><div class="line"></div></div>`;
       } else if (index > 0 && (msgTime - lastTimestamp > oneHour)) {
         const d = new Date(msgTime);
         const timeLabel = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-        html += `<div class="message-separator"><span>${timeLabel}</span></div>`;
+        html += `<div class="message-separator"><div class="line"></div><span>${timeLabel}</span><div class="line"></div></div>`;
       }
 
       const safe = escapeHtml(msg.content).replace(/\n/g, '<br>');
@@ -534,7 +534,8 @@
   }
 
   function resetConversation() {
-    messages = [{ role: 'system', content: '', timestamp: Date.now(), isReset: true }];
+    // 不再添加带有内容的系统消息，只记录一个 isReset 标记
+    messages.push({ role: 'system', content: '', timestamp: Date.now(), isReset: true });
     removeTypingIndicator();
     saveMessagesToStorage();
     renderMessages();
@@ -906,10 +907,10 @@
         body: JSON.stringify({ model: config.model, messages: [{role:'user',content:'ping'}], max_tokens:5 })
       });
       const data = await res.json();
-      if (res.ok) alert('✅ 连接成功！');
-      else alert('❌ 失败: ' + (data.error?.message || res.status));
-    } catch(e) { alert('网络错误: ' + e.message); }
-  }
+      if (res.ok) showToast('✅ 连接成功！');
+    else showToast('❌ 失败: ' + (data.error?.message || res.status));
+  } catch(e) { showToast('网络错误: ' + e.message); }
+}
 
   // ---------- 抽屉 ----------
   function openDrawer() { drawer.classList.add('open'); overlay.classList.add('show'); }
@@ -992,7 +993,6 @@
       updateCharacterPreview();
     } else {
       if (currentCropType === 'avatar') {
-        const userAvatarBtn = document.getElementById('userAvatarBtn');
         const profileAvatarLarge = document.getElementById('profileAvatarLarge');
         if (userAvatarBtn) userAvatarBtn.innerHTML = `<img src="${dataURL}" class="avatar-img-full">`;
         if (profileAvatarLarge) profileAvatarLarge.innerHTML = `<img src="${dataURL}" class="avatar-img-full">`;
@@ -1146,9 +1146,9 @@
         if (!confirm('导入将覆盖当前所有数据，确定继续吗？')) return;
         localStorage.clear();
         Object.entries(data).forEach(([k,v])=>localStorage.setItem(k,v));
-        alert('导入成功，页面将刷新。');
-        location.reload();
-      } catch(err) { alert('导入失败：'+err.message); }
+        showToast('导入成功，页面将刷新。');
+        setTimeout(() => location.reload(), 1500);
+      } catch(err) { showToast('导入失败：'+err.message); }
     };
     reader.readAsText(file);
   }
@@ -1160,6 +1160,14 @@
     loadCharacterFromStorage();
     loadProfile();
     loadUserImages();
+    // 首次加载时不强制重置，而是加载存储的记录
+    const saved = localStorage.getItem('chat_messages');
+    if (saved) {
+      messages = JSON.parse(saved);
+    } else {
+      // 只有完全没数据时才初始化
+      messages = [{ role: 'system', content: '', timestamp: Date.now(), isReset: true }];
+    }
     renderMessages();
     buildChatPreferencesUI();
 
@@ -1245,4 +1253,4 @@
   }
 
   init();
-})();
+)();
