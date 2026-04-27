@@ -14,7 +14,6 @@
   const overlay = document.getElementById('drawerOverlay');
   const closeDrawerBtn = document.getElementById('closeDrawerBtn');
   const modelInput = document.getElementById('modelInput');
-  const characterNameInput = document.getElementById('characterNameInput');
   const systemPromptInput = document.getElementById('systemPromptInput');
   const testConnectionBtn = document.getElementById('testConnectionBtn');
   const clearChatBtn = document.getElementById('clearChatBtn');
@@ -53,6 +52,21 @@
   const characterPreviewBio = document.getElementById('characterPreviewBio');
   const editCharacterAvatarBtn = document.getElementById('editCharacterAvatarBtn');
   const editCharacterCoverBtn = document.getElementById('editCharacterCoverBtn');
+
+  const commonDialogOverlay = document.getElementById('commonDialogOverlay');
+  const dialogTitle = document.getElementById('dialogTitle');
+  const dialogMessage = document.getElementById('dialogMessage');
+  const dialogCustomBody = document.getElementById('dialogCustomBody');
+  const dialogConfirmBtn = document.getElementById('dialogConfirmBtn');
+  const dialogCancelBtn = document.getElementById('dialogCancelBtn');
+  const closeCommonDialog = document.getElementById('closeCommonDialog');
+
+  const batchSendBtn = document.getElementById('batchSendBtn');
+  const batchSendModalOverlay = document.getElementById('batchSendModalOverlay');
+  const closeBatchSendModal = document.getElementById('closeBatchSendModal');
+  const cancelBatchSendBtn = document.getElementById('cancelBatchSendBtn');
+  const confirmBatchSendBtn = document.getElementById('confirmBatchSendBtn');
+  const batchMessageInput = document.getElementById('batchMessageInput');
 
   // ---------- 状态 ----------
   let messages = (() => {
@@ -250,21 +264,23 @@
       const saved = localStorage.getItem('chat_roleplay_config_v2');
       if (saved) config = { ...config, ...JSON.parse(saved) };
     } catch(e) {}
-    apiKeyInput.value = config.apiKey || '';
-    apiUrlInput.value = config.apiUrl;
-    modelInput.value = config.model;
+
+    const setVal = (el, val) => { if (el) el.value = val; };
+
+    setVal(apiKeyInput, config.apiKey || '');
+    setVal(apiUrlInput, config.apiUrl);
+    setVal(modelInput, config.model);
+    
     // 加载配置到表单
     if (config.characterName) {
-      const names = config.characterName.split(' ');
-      charNameInput.value = names[0] || '';
-      characterNameInput.value = names[1] || '';
+      setVal(charNameInput, config.characterName);
     }
-    characterBioInput.value = config.characterBio || '';
-    charAgeInput.value = config.characterAge || '';
-    charGenderInput.value = config.characterGender || '';
-    charMemoriesInput.value = config.characterMemories || '';
-    charExamplesInput.value = config.exampleDialog || '';
-    systemPromptInput.value = config.systemPrompt;
+    setVal(characterBioInput, config.characterBio || '');
+    setVal(charAgeInput, config.characterAge || '');
+    setVal(charGenderInput, config.characterGender || '');
+    setVal(charMemoriesInput, config.characterMemories || '');
+    setVal(charExamplesInput, config.exampleDialog || '');
+    setVal(systemPromptInput, config.systemPrompt);
 
     // 更新 UI 显示
     updateChatTitle();
@@ -281,8 +297,7 @@
 
   function updateChatTitle() {
     const namePart1 = charNameInput.value.trim();
-    const namePart2 = characterNameInput.value.trim();
-    const fullName = [namePart1, namePart2].filter(Boolean).join(' ') || '青绿角色';
+    const fullName = namePart1 || '青绿角色';
     chatTitleDisplay.textContent = fullName;
   }
 
@@ -297,20 +312,20 @@
   }
 
   function syncConfigFromForm() {
-    config.apiKey = apiKeyInput.value.trim();
-    config.apiUrl = apiUrlInput.value.trim();
-    config.model = modelInput.value.trim();
+    const getVal = (el) => el ? el.value.trim() : '';
 
-    const namePart1 = charNameInput.value.trim();
-    const namePart2 = characterNameInput.value.trim();
-    config.characterName = [namePart1, namePart2].filter(Boolean).join(' ') || '青绿角色';
+    config.apiKey = getVal(apiKeyInput);
+    config.apiUrl = getVal(apiUrlInput);
+    config.model = getVal(modelInput);
 
-    config.characterBio = characterBioInput.value.trim();
-    config.characterAge = charAgeInput.value.trim();
-    config.characterGender = charGenderInput.value.trim();
-    config.characterMemories = charMemoriesInput.value.trim();
-    config.exampleDialog = charExamplesInput.value.trim();
-    config.systemPrompt = systemPromptInput.value.trim();
+    config.characterName = getVal(charNameInput) || '青绿角色';
+
+    config.characterBio = getVal(characterBioInput);
+    config.characterAge = getVal(charAgeInput);
+    config.characterGender = getVal(charGenderInput);
+    config.characterMemories = getVal(charMemoriesInput);
+    config.exampleDialog = getVal(charExamplesInput);
+    config.systemPrompt = getVal(systemPromptInput);
   }
 
   function applyConfig() {
@@ -318,6 +333,30 @@
     saveConfigToStorage();
     updateChatTitle();
     updateApiStatusBadge();
+  }
+
+  function updateModelVisibility() {
+    const provider = apiProviderSelect.value;
+    const optgroups = modelSelect.querySelectorAll('optgroup');
+    optgroups.forEach(group => {
+      if (group.label.toLowerCase().includes(provider.toLowerCase()) || 
+          (provider === 'custom' && group.label === '其他')) {
+        group.style.display = '';
+      } else {
+        group.style.display = 'none';
+      }
+    });
+
+    // 如果当前选中的模型在隐藏的组里，自动选择该组的第一个
+    const currentOption = modelSelect.options[modelSelect.selectedIndex];
+    const currentGroup = currentOption.parentElement;
+    if (currentGroup.style.display === 'none') {
+      const firstVisibleGroup = Array.from(optgroups).find(g => g.style.display !== 'none');
+      if (firstVisibleGroup && firstVisibleGroup.options.length > 0) {
+        modelSelect.value = firstVisibleGroup.options[0].value;
+        updateModelInputFromSelect();
+      }
+    }
   }
 
   // ---------- 消息渲染 ----------
@@ -376,12 +415,12 @@
 
       const safe = escapeHtml(msg.content).replace(/\n/g, '<br>');
 
-      // 已读未读状态，移动到气泡末尾部分
+      // 已读未读状态，移动到气泡外侧（左侧下方）
       let statusHtml = '';
       if (msg.role === 'user' && msg.readStatus) {
         const readClass = msg.readStatus === 'read' ? 'read' : 'unread';
         const readText = msg.readStatus === 'read' ? '已读' : '未读';
-        statusHtml = `<span class="read-status-inline ${readClass}">${readText}</span>`;
+        statusHtml = `<span class="read-status-outside ${readClass}">${readText}</span>`;
       }
 
       let bubble = `
@@ -389,7 +428,6 @@
           <div class="bubble-content">${safe}</div>
           <div class="message-info">
             <div class="message-time">${formatTime(msgTime)}</div>
-            ${statusHtml}
           </div>
           <!-- 悬停操作菜单 -->
           <div class="bubble-actions">
@@ -399,7 +437,11 @@
           </div>
         </div>`;
 
-      html += `<div class="message-row ${msg.role}">${bubble}</div>`;
+      if (msg.role === 'user' && statusHtml) {
+        html += `<div class="message-row ${msg.role}">${statusHtml}${bubble}</div>`;
+      } else {
+        html += `<div class="message-row ${msg.role}">${bubble}</div>`;
+      }
 
       lastTimestamp = msgTime;
       lastDateKey = msgDateKey;
@@ -429,11 +471,16 @@
   };
 
   window.deleteMessage = function(index) {
-    if (confirm('确定删除这条消息吗？')) {
-      messages.splice(index, 1);
-      saveMessagesToStorage();
-      renderMessages();
-    }
+    showCommonDialog({
+      title: '删除消息',
+      message: '确定要删除这条消息吗？此操作不可撤销。',
+      confirmText: '删除',
+      onConfirm: () => {
+        messages.splice(index, 1);
+        saveMessagesToStorage();
+        renderMessages();
+      }
+    });
   };
 
   window.favoriteMessage = function(index) {
@@ -443,24 +490,35 @@
     charMemoriesInput.value = currentMemories + newMemory;
     updateMemoriesCards();
     saveCharacterToStorage();
-    showToast('已将该消息内容收藏至核心记忆！');
+    
+    showCommonDialog({
+      title: '收藏成功',
+      message: '已将该消息内容收藏至核心记忆！',
+      showCancel: false,
+      confirmText: '知道了'
+    });
   };
 
   window.editMessage = function(index) {
     const msg = messages[index];
-    const newContent = prompt('修改消息内容：', msg.content);
-    if (newContent !== null && newContent !== msg.content) {
-      const oldContent = msg.content;
-      msg.content = newContent;
-
-      // 如果是 AI 的回复被修改，触发 AI 自主学习
-      if (msg.role === 'assistant') {
-        analyzeAndLearn(oldContent, newContent);
+    const inputId = 'editMessageInput_' + index;
+    const customBody = `<textarea id="${inputId}" class="w-full mt-10" rows="5" style="padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--bg-side); color:var(--text-main);">${msg.content}</textarea>`;
+    
+    showCommonDialog({
+      title: '修改消息',
+      customBody: customBody,
+      confirmText: '保存修改',
+      onConfirm: () => {
+        const newContent = document.getElementById(inputId).value.trim();
+        if (newContent && newContent !== msg.content) {
+          const oldContent = msg.content;
+          msg.content = newContent;
+          if (msg.role === 'assistant') analyzeAndLearn(oldContent, newContent);
+          saveMessagesToStorage();
+          renderMessages();
+        }
       }
-
-      saveMessagesToStorage();
-      renderMessages();
-    }
+    });
   };
 
   async function analyzeAndLearn(oldVal, newVal) {
@@ -546,17 +604,21 @@
       const saved = localStorage.getItem('character_data');
       if (saved) characterData = { ...characterData, ...JSON.parse(saved) };
     } catch(e) {}
-    worldBookInput.value = characterData.worldBook || '';
-    charNameInput.value = characterData.name || '';
-    charAgeInput.value = characterData.age || '';
-    charGenderInput.value = characterData.gender || '';
-    charAppearanceInput.value = characterData.appearance || '';
-    charPersonalityInput.value = characterData.personality || '';
-    charBackstoryInput.value = characterData.backstory || '';
-    charMemoriesInput.value = characterData.memories || '';
-    charStyleInput.value = characterData.style || '';
-    charExamplesInput.value = characterData.examples || '';
-    characterBioInput.value = characterData.bio || '温柔而冷静的陪伴';
+    
+    const setVal = (el, val) => { if (el) el.value = val; };
+
+    setVal(worldBookInput, characterData.worldBook || '');
+    setVal(charNameInput, characterData.name || '');
+    setVal(charAgeInput, characterData.age || '');
+    setVal(charGenderInput, characterData.gender || '');
+    setVal(charAppearanceInput, characterData.appearance || '');
+    setVal(charPersonalityInput, characterData.personality || '');
+    setVal(charBackstoryInput, characterData.backstory || '');
+    setVal(charMemoriesInput, characterData.memories || '');
+    setVal(charStyleInput, characterData.style || '');
+    setVal(charExamplesInput, characterData.examples || '');
+    setVal(characterBioInput, characterData.bio || '温柔而冷静的陪伴');
+    
     updateCharacterPreview();
     updateMemoriesCards();
     updateExampleBubbles();
@@ -649,25 +711,27 @@
   charExamplesInput?.addEventListener('input', updateExampleBubbles);
 
   function saveCharacterToStorage() {
+    const getVal = (el) => el ? el.value.trim() : '';
+
     characterData = {
-      worldBook: worldBookInput.value.trim(),
-      name: charNameInput.value.trim(),
-      age: charAgeInput.value.trim(),
-      gender: charGenderInput.value.trim(),
-      appearance: charAppearanceInput.value.trim(),
-      personality: charPersonalityInput.value.trim(),
-      backstory: charBackstoryInput.value.trim(),
-      memories: charMemoriesInput.value.trim(),
-      style: charStyleInput.value.trim(),
-      examples: charExamplesInput.value.trim(),
+      worldBook: getVal(worldBookInput),
+      name: getVal(charNameInput),
+      age: getVal(charAgeInput),
+      gender: getVal(charGenderInput),
+      appearance: getVal(charAppearanceInput),
+      personality: getVal(charPersonalityInput),
+      backstory: getVal(charBackstoryInput),
+      memories: getVal(charMemoriesInput),
+      style: getVal(charStyleInput),
+      examples: getVal(charExamplesInput),
       avatar: characterData.avatar,
       cover: characterData.cover,
-      bio: characterBioInput.value.trim()
+      bio: getVal(characterBioInput)
     };
     try {
       localStorage.setItem('character_data', JSON.stringify(characterData));
       updateCharacterPreview();
-      config.characterName = characterNameInput.value.trim() || '青绿助手';
+      config.characterName = getVal(charNameInput) || '青绿助手';
       updateChatTitle();
       showToast('人物设定已保存');
     } catch(e) {
@@ -690,11 +754,11 @@
         characterPreviewAvatar.innerHTML = '<i class="fas fa-user-astronaut"></i>';
       }
     }
-    const namePart1 = charNameInput.value.trim();
-    const namePart2 = characterNameInput.value.trim();
-    const fullName = [namePart1, namePart2].filter(Boolean).join(' ') || '角色名称';
+    const getVal = (el) => el ? el.value.trim() : '';
+    const namePart1 = getVal(charNameInput);
+    const fullName = namePart1 || '角色名称';
 
-    const bio = characterBioInput.value.trim() || '温柔而冷静的陪伴';
+    const bio = getVal(characterBioInput) || '温柔而冷静的陪伴';
     if (characterPreviewName) characterPreviewName.textContent = fullName;
     if (characterPreviewBio) characterPreviewBio.innerHTML = `<i class="fas fa-quote-left mr-8"></i>${bio}`;
 
@@ -706,25 +770,26 @@
     async function callAI(userMessage, customSystemPrompt = null) {
         if (!config.apiKey) throw new Error('请先配置 API Key');
 
+        const getVal = (el) => el ? el.value : '';
         // 整合人设信息
         const charInfo = `
     【角色信息】
-    姓名：${charNameInput.value} ${characterNameInput.value}
-    年龄：${charAgeInput.value}
-    性别：${charGenderInput.value}
-    外貌：${charAppearanceInput.value}
-    性格：${charPersonalityInput.value}
-    经历：${charBackstoryInput.value}
-    记忆：${charMemoriesInput.value}
-    对话风格：${charStyleInput.value}
+    姓名：${getVal(charNameInput)}
+    年龄：${getVal(charAgeInput)}
+    性别：${getVal(charGenderInput)}
+    外貌：${getVal(charAppearanceInput)}
+    性格：${getVal(charPersonalityInput)}
+    经历：${getVal(charBackstoryInput)}
+    记忆：${getVal(charMemoriesInput)}
+    对话风格：${getVal(charStyleInput)}
     对话示例（必须严格模仿）：
-    ${charExamplesInput.value}
+    ${getVal(charExamplesInput)}
     `.trim();
 
         const systemMsg = {
             role: 'system',
             content: customSystemPrompt || `
-    ${systemPromptInput.value}
+    ${getVal(systemPromptInput)}
 
     ${charInfo}
 
@@ -802,16 +867,18 @@
   }
 
   // ---------- 发送消息 ----------
-  async function handleSendMessage() {
+  async function handleSendMessage(overrideSegments = null) {
     const content = messageInput.value.trim();
-    if (!content || isGenerating) return;
+    if (!overrideSegments && (!content || isGenerating)) return;
 
-    // 分割多条消息（按空行分割）
-    const userSegments = content.split(/\n\s*\n/).filter(s => s.trim() !== '');
+    // 分割多条消息（如果是批量发送，按行分割；如果是普通发送，按空行分割）
+    const userSegments = overrideSegments || content.split(/\n\s*\n/).filter(s => s.trim() !== '');
     if (userSegments.length === 0) return;
 
-    messageInput.value = '';
-    messageInput.style.height = 'auto';
+    if (!overrideSegments) {
+      messageInput.value = '';
+      messageInput.style.height = 'auto';
+    }
     isGenerating = true;
     sendBtn.disabled = true;
 
@@ -869,17 +936,14 @@
         const reply = await callAI(lastUserContent);
         const cleaned = cleanParentheses(reply);
 
-        // 限制回复的消息条数，不要因为用户发了多条就回更多
-        const sentences = cleaned.split(/(?<=[。！？!?])/g)
+        // 按照句号、问号、感叹号以及换行符进行拆分
+        // 修改：对方换行和使用句号=发送下一条消息到气泡
+        const sentences = cleaned.split(/(?<=[。\.！？!?\n])/g)
                                  .map(s => s.trim())
                                  .filter(s => s.length > 0);
 
-        // 限制最多回复 2-3 条消息，使回复更真实
-        const maxReplies = Math.floor(Math.random() * 2) + 1; // 1-2条
-        const finalSentences = sentences.slice(0, maxReplies);
-
         removeTypingIndicator();
-        for (const sentence of finalSentences) {
+        for (const sentence of sentences) {
           showTypingIndicator();
           const charCount = sentence.length;
           let typingDelay = Math.min(6000, Math.max(1000, charCount * 60));
@@ -943,6 +1007,7 @@
 
   function openCropModal(file, type) {
     currentCropType = type;
+    window._cropTarget = 'user';
     const reader = new FileReader();
     reader.onload = (e) => {
       cropImage.src = e.target.result;
@@ -979,6 +1044,7 @@
   function closeCropModalFunc() {
     cropModalOverlay.classList.remove('show');
     if (cropper) { cropper.destroy(); cropper = null; }
+    window._cropTarget = null;
   }
 
   function saveCroppedImage() {
@@ -986,7 +1052,8 @@
     const canvas = cropper.getCroppedCanvas();
     const dataURL = canvas.toDataURL('image/jpeg', 0.9);
 
-    if (window._cropTarget === 'character') {
+    const cropTarget = window._cropTarget || 'user';
+    if (cropTarget === 'character') {
       if (currentCropType === 'avatar') characterData.avatar = dataURL;
       else characterData.cover = dataURL;
       updateCharacterPreview();
@@ -1080,6 +1147,29 @@
     }
   }
 
+  // ---------- 通用弹窗逻辑 ----------
+  function showCommonDialog({ title = '提示', message = '', customBody = '', confirmText = '确定', cancelText = '取消', showCancel = true, onConfirm = null }) {
+    dialogTitle.textContent = title;
+    dialogMessage.textContent = message;
+    dialogMessage.style.display = message ? 'block' : 'none';
+    dialogCustomBody.innerHTML = customBody;
+    dialogConfirmBtn.textContent = confirmText;
+    dialogCancelBtn.textContent = cancelText;
+    dialogCancelBtn.style.display = showCancel ? 'inline-block' : 'none';
+
+    commonDialogOverlay.classList.add('show');
+
+    const close = () => { commonDialogOverlay.classList.remove('show'); };
+
+    dialogConfirmBtn.onclick = () => {
+      if (onConfirm) onConfirm();
+      close();
+    };
+    dialogCancelBtn.onclick = close;
+    closeCommonDialog.onclick = close;
+    commonDialogOverlay.onclick = (e) => { if (e.target === commonDialogOverlay) close(); };
+  }
+
   // ---------- 数据管理 ----------
   function getByteSize(str) { return new Blob([str]).size; }
   function formatSize(bytes) {
@@ -1143,11 +1233,17 @@
     reader.onload = (e) => {
       try {
         const data = JSON.parse(e.target.result);
-        if (!confirm('导入将覆盖当前所有数据，确定继续吗？')) return;
-        localStorage.clear();
-        Object.entries(data).forEach(([k,v])=>localStorage.setItem(k,v));
-        alert('导入成功，页面将刷新。');
-        location.reload();
+        showCommonDialog({
+          title: '导入数据',
+          message: '导入将覆盖当前所有数据，确定继续吗？',
+          confirmText: '确定导入',
+          onConfirm: () => {
+            localStorage.clear();
+            Object.entries(data).forEach(([k,v])=>localStorage.setItem(k,v));
+            alert('导入成功，页面将刷新。');
+            location.reload();
+          }
+        });
       } catch(err) { alert('导入失败：'+err.message); }
     };
     reader.readAsText(file);
@@ -1172,8 +1268,18 @@
     overlay.addEventListener('click', closeDrawer);
     saveConfigBtn.addEventListener('click', ()=>{ applyConfig(); closeDrawer(); });
     testConnectionBtn.addEventListener('click', testConnection);
-    clearChatBtn.addEventListener('click', ()=>{ if(confirm('清空对话？')) resetConversation(); });
-    apiProviderSelect.addEventListener('change', updateApiUrlFromProvider);
+    clearChatBtn.addEventListener('click', ()=>{
+      showCommonDialog({
+        title: '清空对话',
+        message: '确定要清空所有对话记录吗？此操作不可撤销。',
+        confirmText: '清空',
+        onConfirm: () => resetConversation()
+      });
+    });
+    apiProviderSelect.addEventListener('change', () => {
+      updateApiUrlFromProvider();
+      updateModelVisibility();
+    });
     modelSelect.addEventListener('change', updateModelInputFromSelect);
 
     chatIcon.addEventListener('click', ()=>setActiveView('chat'));
@@ -1184,11 +1290,16 @@
 
     saveCharacterBtn.addEventListener('click', saveCharacterToStorage);
     resetCharacterBtn.addEventListener('click', ()=>{
-      if(confirm('重置所有人物设定？')) {
-        localStorage.removeItem('character_data');
-        characterData = { worldBook:'',name:'',avatar:'',cover:'',bio:'',age:'',gender:'',appearance:'',personality:'',backstory:'',memories:'',style:'',examples:'' };
-        loadCharacterFromStorage();
-      }
+      showCommonDialog({
+        title: '重置设定',
+        message: '确定要重置所有人物设定吗？',
+        confirmText: '重置',
+        onConfirm: () => {
+          localStorage.removeItem('character_data');
+          characterData = { worldBook:'',name:'',avatar:'',cover:'',bio:'',age:'',gender:'',appearance:'',personality:'',backstory:'',memories:'',style:'',examples:'' };
+          loadCharacterFromStorage();
+        }
+      });
     });
 
     editCharacterAvatarBtn.addEventListener('click', ()=>{
@@ -1204,7 +1315,6 @@
       inp.click();
     });
 
-    characterNameInput.addEventListener('input', updateCharacterPreview);
     charNameInput.addEventListener('input', updateCharacterPreview);
     characterBioInput.addEventListener('input', updateCharacterPreview);
     charAgeInput.addEventListener('input', updateCharacterPreview);
@@ -1242,6 +1352,31 @@
     setTimeout(refreshStorageStats, 100);
     initUploadButtons();
     updateCharacterPreview();
+    updateModelVisibility();
+
+    // 批量发送相关
+    const closeBatchModal = () => { batchSendModalOverlay.classList.remove('show'); };
+    const handleBatchSend = () => {
+      const content = batchMessageInput.value.trim();
+      if (!content) return;
+      const lines = content.split('\n').map(l => l.trim()).filter(l => l !== '');
+      if (lines.length > 0) {
+        handleSendMessage(lines);
+        batchMessageInput.value = '';
+        closeBatchModal();
+      }
+    };
+
+    batchSendBtn?.addEventListener('click', () => { 
+      batchSendModalOverlay.classList.add('show'); 
+      batchMessageInput.focus(); 
+    });
+    closeBatchSendModal?.addEventListener('click', closeBatchModal);
+    cancelBatchSendBtn?.addEventListener('click', closeBatchModal);
+    batchSendModalOverlay?.addEventListener('click', (e) => { 
+      if(e.target === batchSendModalOverlay) closeBatchModal(); 
+    });
+    confirmBatchSendBtn?.addEventListener('click', handleBatchSend);
   }
 
   init();
