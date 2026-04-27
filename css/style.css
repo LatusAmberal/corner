@@ -189,9 +189,9 @@ body {
     scroll-behavior: smooth;
 }
 
-.message-row { display: flex; width: 100%; }
+.message-row { display: flex; width: 100%; align-items: flex-end; }
 .message-row.assistant { justify-content: flex-start; }
-.message-row.user { justify-content: flex-end; }
+.message-row.user { justify-content: flex-end; gap: 8px; }
 
 .message-bubble {
     max-width: 70%;
@@ -523,21 +523,20 @@ body {
     transform: scale(1.1);
 }
 
-.read-status-inline {
+.read-status-outside {
     font-size: 10px;
-    margin-left: 6px;
+    margin-bottom: 4px;
     opacity: 0.6;
+    white-space: nowrap;
+    user-select: none;
 }
 
-.read-status-inline.read { color: #0f9960; }
-.read-status-inline.unread { color: #9ab3c0; }
-
-.read-status-inline.read {
+.read-status-outside.read {
     color: var(--accent);
     opacity: 0.9;
 }
 
-.read-status-inline.unread {
+.read-status-outside.unread {
     color: var(--text-secondary);
 }
 
@@ -657,10 +656,14 @@ body {
     width: 100%;
     height: 100%;
     background: rgba(0,0,0,0.7);
-    display: flex;
+    display: none; /* 修改：默认隐藏 */
     align-items: center;
     justify-content: center;
     z-index: 2000;
+}
+
+.modal-overlay.show {
+    display: flex; /* 新增：支持 .show 类显示 */
 }
 
 .modal-container {
@@ -673,6 +676,7 @@ body {
     flex-direction: column;
     overflow: hidden;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    color: var(--text-primary); /* 新增：确保文字颜色随主题变化 */
 }
 
 .modal-header {
@@ -683,9 +687,14 @@ body {
     align-items: center;
 }
 
+.modal-header h3 {
+    color: var(--text-primary);
+}
+
 .modal-body {
     padding: 20px;
     overflow-y: auto;
+    color: var(--text-primary);
 }
 
 .modal-footer {
@@ -870,6 +879,26 @@ body {
     font-size: 18px;
     transition: 0.15s;
     flex-shrink: 0;
+}
+
+.batch-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    width: 36px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    transition: 0.15s;
+    flex-shrink: 0;
+}
+
+.batch-btn:hover {
+    color: var(--accent);
+    transform: scale(1.1);
 }
 .send-btn:hover {
     background: var(--accent-hover);
@@ -1162,6 +1191,7 @@ body.light-theme .profile-banner::before {
 
 /* 大头像：圆形 + 描边 + 阴影，更醒目 */
 .profile-avatar-large {
+    position: relative;
     width: 90px;
     height: 90px;
     border-radius: 50%;
@@ -1280,55 +1310,7 @@ body.light-theme .profile-banner .btn-secondary:hover {
   display: block;
 }
 
-/* 模态框样式 */
-.modal-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.7);
-    z-index: 2000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.modal-container {
-    background: var(--drawer-bg);
-    border-radius: 16px;
-    width: 500px;
-    max-width: 90%;
-    max-height: 80vh;
-    display: flex;
-    flex-direction: column;
-    border: 1px solid var(--border-light);
-}
-.modal-header {
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border-light);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-.modal-header h3 { margin: 0; }
-.modal-close {
-    background: none; border: none;
-    font-size: 24px; color: var(--text-secondary);
-    cursor: pointer;
-}
-.config-group {
-    margin-top: 10px;   /* 调整这个值来控制距离上一个输入框的间距 */
-}
-.config-group:first-of-type {
-    margin-top: 0;     /* 第一个配置组不要上边距 */
-}
-.modal-body {
-    padding: 20px;
-    flex: 1;
-    overflow: auto;
-}
-.crop-container {
-    max-height: 300px;
-    display: flex;
-    justify-content: center;
-}
+
 .crop-container img {
     max-width: 100%;
     max-height: 300px;
