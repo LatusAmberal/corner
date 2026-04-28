@@ -28,8 +28,9 @@
 <body>
 <div class="app">
     <!-- 左侧菜单 -->
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar">
         <div class="sidebar-icon active" title="当前对话"><i class="fas fa-comment-dots"></i></div>
+        <div class="sidebar-icon" title="专注" id="focusIcon"><i class="fas fa-hourglass-half"></i></div>
         <div class="sidebar-icon" title="人物管理" id="characterIcon"><i class="fas fa-user-tag"></i></div>
         <div class="sidebar-divider"></div>
         <div class="sidebar-icon" title="设置"><i class="fas fa-cog"></i></div>
@@ -41,9 +42,11 @@
             </div>
         </div>
     </aside>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <!-- 聊天主体 -->
     <main class="chat-main" id="chatMain">
+        <button class="menu-btn global-menu-btn" id="globalMenuBtn" title="菜单"><i class="fas fa-bars"></i></button>
         <!-- 聊天视图 -->
         <div class="chat-view" id="chatView">
             <header class="chat-header">
@@ -61,6 +64,10 @@
                     </div>
                 </div>
             </div>
+            <!-- 快速回到底部按钮 -->
+            <button class="scroll-to-bottom-btn" id="scrollToBottomBtn" title="回到最新消息" style="display:none;">
+                <i class="fas fa-chevron-down"></i>
+            </button>
             <div class="input-area">
                 <div class="input-container">
                     <button class="batch-btn" id="batchSendBtn" title="批量发送"><i class="fas fa-layer-group"></i></button>
@@ -164,6 +171,70 @@
             </div>
         </div>
 
+        <!-- 专注视图 -->
+        <div class="focus-view" id="focusView">
+            <h2 class="focus-page-title fw-500"><i class="fas fa-hourglass-half mr-12"></i>专注</h2>
+
+            <!-- 对方专注置顶条（仅当对方专注开启时显示） -->
+            <div class="ai-focus-topbar" id="focusAiCard" style="display:none;">
+                <div class="ai-focus-topbar-left">
+                    <i class="fas fa-user-astronaut ai-focus-topbar-icon"></i>
+                    <span class="ai-focus-topbar-label" id="focusAiActivityDisplay">陪你专注</span>
+                    <span class="ai-focus-topbar-timer" id="focusAiTimerDisplay">25:00</span>
+                </div>
+                <div class="ai-focus-topbar-right">
+                    <button class="ai-focus-topbar-btn" id="editAiFocusBtn" title="修改对方专注"><i class="fas fa-pen"></i></button>
+                    <button class="ai-focus-topbar-btn danger" id="endAiFocusBtn" style="display:none;" title="结束对方专注"><i class="fas fa-stop-circle"></i></button>
+                </div>
+            </div>
+
+            <div class="settings-card">
+                <h3><i class="fas fa-bullseye"></i> 我的专注</h3>
+                <div class="focus-main">
+                    <div class="focus-timer" id="focusUserTimerDisplay">25:00</div>
+                    <div class="focus-meta">
+                        <div class="focus-activity" id="focusUserActivityDisplay">学习</div>
+                        <div class="flex-between mt-12">
+                            <span class="theme-toggle-label"><i class="fas fa-stopwatch"></i> 倒计时 / 正计时</span>
+                            <div class="apple-toggle" id="focusModeToggle"></div>
+                        </div>
+                        <div class="flex-between mt-12">
+                            <span class="theme-toggle-label"><i class="fas fa-user-friends"></i> 邀请对方一起</span>
+                            <div class="apple-toggle" id="inviteToggleMain"></div>
+                        </div>
+                        <div class="flex-gap-12 mt-16 flex-wrap">
+                            <button class="btn btn-secondary" id="focusSettingsBtn"><i class="fas fa-sliders-h mr-8"></i>选择活动</button>
+                            <button class="btn btn-primary" id="focusStartBtn"><i class="fas fa-play mr-8"></i>开始</button>
+                            <button class="btn btn-warning" id="focusResetBtn"><i class="fas fa-stop-circle mr-8"></i>结束专注</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 专注动画区域（始终显示，未设置时显示占位） -->
+            <div class="focus-anim-section" id="focusAnimSection">
+                <!-- 占位（无动画时） -->
+                <div class="focus-anim-placeholder" id="focusAnimPlaceholder">
+                    <i class="fas fa-film fa-2x mb-8" style="display:block;opacity:0.3;"></i>
+                    <span class="fs-13 text-secondary">点击下方按钮上传专注动画</span>
+                    <button class="btn btn-secondary mt-10" id="focusAnimQuickUploadBtn">
+                        <i class="fas fa-plus mr-6"></i>上传用户动画
+                    </button>
+                </div>
+                <!-- 单人动画 / 单个双人GIF -->
+                <img class="focus-anim-video" id="focusAnimSingle" style="display:none;" alt="专注动画" />
+                <!-- 双人双图并排（双人均专注时） -->
+                <div class="focus-anim-duo-container" id="focusAnimDuoContainer" style="display:none;">
+                    <img class="focus-anim-video" id="focusAnimDuoUser" alt="用户动画" />
+                    <img class="focus-anim-video" id="focusAnimDuoChar" alt="角色动画" />
+                </div>
+                <!-- 右上角自定义按钮 -->
+                <button class="focus-anim-customize-btn" id="focusAnimCustomizeBtn" title="管理动画">
+                    <i class="fas fa-images"></i>
+                </button>
+            </div>
+        </div>
+
         <!-- 人物管理视图 -->
         <div class="character-view" id="characterView">
             <h2 class="mb-20 fw-500"><i class="fas fa-user-tag mr-12"></i>人物设定</h2>
@@ -248,14 +319,21 @@
                     <label>风格描述</label>
                     <textarea id="charStyleInput" rows="2" placeholder="例如：句子简短，偶尔使用「……」，生气时会说「哼」"></textarea>
                 </div>
+                <!-- AI自动学习的风格词条区域 -->
+                <div class="config-group mt-12" id="learnedTraitsSection">
+                    <label class="flex-align-center">
+                        <span>AI学习词条</span>
+                        <span class="fs-12 text-secondary ml-8" id="learnedTraitsCount">（0/5）</span>
+                    </label>
+                    <div id="learnedTraitsContainer" class="learned-traits-container">
+                        <div class="learned-traits-empty text-secondary fs-13">暂无AI学习的词条</div>
+                    </div>
+                    <div class="fs-12 text-secondary mt-6">点击词条可选入风格描述，未选词条仅供展示不会被AI读取</div>
+                </div>
                 <details class="mt-12" id="styleAdvancedDetails">
                     <summary class="advanced-summary">高级设置 · 对话示例</summary>
-                    <div class="config-group mt-12">
-                        <label>示例对话（每行一条，格式：用户：xxx \n 角色：xxx）</label>
-                        <textarea id="charExamplesInput" rows="4" placeholder="用户：你好呀\n角色：……你是谁？有什么事吗？\n用户：想和你聊聊\n角色：哼，我很忙的，不过既然你坚持……"></textarea>
-                    </div>
-                    <div id="exampleBubblePreview" class="example-bubble-container">
-                        <!-- 动态生成气泡预览 -->
+                    <div id="exampleBubblePreview" class="example-bubble-container mt-12">
+                        <!-- 动态生成气泡预览，点击气泡可直接编辑 -->
                     </div>
                 </details>
             </div>
@@ -297,6 +375,15 @@
                 <div class="mt-16 fs-13 text-secondary">
                     <i class="fas fa-info-circle"></i> 导入数据将覆盖当前所有设置，建议先导出备份。
                 </div>
+            </div>
+
+            <!-- 危险操作区域 -->
+            <div class="settings-card danger-zone">
+                <h3><i class="fas fa-skull-crossbones"></i> 危险操作</h3>
+                <p class="fs-14 text-secondary mb-16">以下操作不可逆，请在执行前确认。</p>
+                <button class="btn btn-danger-outline w-full" id="clearAllDataBtn">
+                    <i class="fas fa-trash-alt mr-8"></i>清除所有本地数据
+                </button>
             </div>
         </div>
     </main>
@@ -414,6 +501,8 @@
     </div>
 
     <!-- 外部脚本 -->
+    <!-- 隐藏的示例对话输入框（数据存储用，不在界面显示） -->
+    <textarea id="charExamplesInput" style="display:none;" rows="4" placeholder="用户：你好呀&#10;角色：……你是谁？有什么事吗？"></textarea>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script src="js/script.js"></script>
 </body>
