@@ -30,8 +30,9 @@
     <!-- 左侧菜单 -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-icon active" title="当前对话"><i class="fas fa-comment-dots"></i></div>
-        <div class="sidebar-icon" title="专注" id="focusIcon"><i class="fas fa-hourglass-half"></i></div>
         <div class="sidebar-icon" title="人物管理" id="characterIcon"><i class="fas fa-user-tag"></i></div>
+        <div class="sidebar-icon" title="专注" id="focusIcon"><i class="fas fa-hourglass-half"></i></div>
+        <div class="sidebar-icon" title="统计" id="statsIcon"><i class="fas fa-chart-bar"></i></div>
         <div class="sidebar-divider"></div>
         <div class="sidebar-icon" title="设置"><i class="fas fa-cog"></i></div>
         <div class="sidebar-icon" title="数据管理" id="dataManagerIcon"><i class="fas fa-database"></i></div>
@@ -73,6 +74,26 @@
                     <button class="batch-btn" id="batchSendBtn" title="批量发送"><i class="fas fa-layer-group"></i></button>
                     <textarea id="messageInput" placeholder="输入消息… (Enter发送)" rows="1"></textarea>
                     <button class="send-btn" id="sendBtn" title="发送"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+
+            <!-- 批量发送模态框（放在 input-area 后面，避免被父容器遮挡） -->
+            <div class="modal-overlay" id="batchSendModalOverlay">
+                <div class="modal-container w-450">
+                    <div class="modal-header">
+                        <h3>批量发送</h3>
+                        <button class="modal-close" id="closeBatchSendModal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="config-group">
+                            <label>每行将作为一条独立气泡发送</label>
+                            <textarea id="batchMessageInput" rows="10" placeholder="第一条消息\n第二条消息\n..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" id="cancelBatchSendBtn">取消</button>
+                        <button class="btn btn-primary" id="confirmBatchSendBtn"><i class="fas fa-paper-plane"></i> 立即发送</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -159,6 +180,8 @@
                         <h2 id="profileDisplayName">用户</h2>
                         <p id="profileBioDisplay"><i class="fas fa-quote-left mr-8"></i>在一隅，遇见自己。</p>
                     </div>
+                </div>
+                <div class="profile-banner-actions">
                     <button class="btn btn-secondary" id="editProfileBtn"><i class="fas fa-pen"></i> 编辑个人资料</button>
                 </div>
             </div>
@@ -173,7 +196,12 @@
 
         <!-- 专注视图 -->
         <div class="focus-view" id="focusView">
-            <h2 class="focus-page-title fw-500"><i class="fas fa-hourglass-half mr-12"></i>专注</h2>
+            <h2 class="focus-page-title fw-500">
+                <i class="fas fa-hourglass-half mr-12"></i>专注
+                <button class="focus-history-btn" id="focusHistoryBtn" title="历史专注记录">
+                    <i class="fas fa-history"></i>
+                </button>
+            </h2>
 
             <!-- 对方专注置顶条（仅当对方专注开启时显示） -->
             <div class="ai-focus-topbar" id="focusAiCard" style="display:none;">
@@ -198,11 +226,17 @@
                             <span class="theme-toggle-label"><i class="fas fa-stopwatch"></i> 倒计时 / 正计时</span>
                             <div class="apple-toggle" id="focusModeToggle"></div>
                         </div>
-                        <div class="flex-between mt-12">
-                            <span class="theme-toggle-label"><i class="fas fa-user-friends"></i> 邀请对方一起</span>
-                            <div class="apple-toggle" id="inviteToggleMain"></div>
+                        <div class="flex-between mt-12 align-center">
+                            <div class="invite-label-wrap">
+                                <span class="theme-toggle-label"><i class="fas fa-user-friends"></i> 邀请对方一起</span>
+                                <span class="focus-mode-hint" id="focusModeHint">正计时模式下AI自行决定完成专注/活动所需的时间并且会自主停止计时(也可以手动结束计时)</span>
+                            </div>
+                            <div class="flex-align-center gap-8">
+                                <button class="ai-focus-end-btn" id="endAiFocusBtn2" title="结束对方专注" style="display:none;"><i class="fas fa-stop-circle"></i></button>
+                                <div class="apple-toggle" id="inviteToggleMain"></div>
+                            </div>
                         </div>
-                        <div class="flex-gap-12 mt-16 flex-wrap">
+                        <div class="flex-gap-12 mt-16 flex-wrap flex-end">
                             <button class="btn btn-secondary" id="focusSettingsBtn"><i class="fas fa-sliders-h mr-8"></i>选择活动</button>
                             <button class="btn btn-primary" id="focusStartBtn"><i class="fas fa-play mr-8"></i>开始</button>
                             <button class="btn btn-warning" id="focusResetBtn"><i class="fas fa-stop-circle mr-8"></i>结束专注</button>
@@ -233,6 +267,172 @@
                     <i class="fas fa-images"></i>
                 </button>
             </div>
+            
+            <!-- 历史专注记录抽屉 -->
+            <div class="focus-history-drawer" id="focusHistoryDrawer">
+                <div class="focus-history-drawer-header">
+                    <h3><i class="fas fa-history"></i> 专注记录</h3>
+                    <button class="focus-history-drawer-close" id="closeFocusHistoryBtn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="focus-history-drawer-content" id="focusHistoryList">
+                    <!-- 动态渲染 -->
+                </div>
+            </div>
+            <div class="focus-history-overlay" id="focusHistoryOverlay"></div>
+        </div>
+
+        <!-- 统计视图 -->
+        <div class="stats-view" id="statsView">
+            <h2 class="stats-page-title fw-500"><i class="fas fa-chart-bar mr-12"></i>统计</h2>
+            
+            <!-- 统计栏目切换 -->
+            <div class="stats-tabs">
+                <button class="stats-tab active" data-tab="today">今日统计</button>
+                <button class="stats-tab" data-tab="chat">聊天统计</button>
+                <button class="stats-tab" data-tab="focus">专注活动统计</button>
+                <button class="stats-tab" data-tab="other">其他统计</button>
+            </div>
+            
+            <!-- 今日统计 -->
+            <div class="stats-content active" id="statsTodayContent">
+                <!-- 心情统计（后续开发） -->
+                <div class="stats-card">
+                    <h3><i class="fas fa-heart"></i> 心情统计</h3>
+                    <div class="empty-state">
+                        <i class="fas fa-heartbeat fs-32 mb-12 opacity-5"></i>
+                        <p>心情统计功能开发中...</p>
+                    </div>
+                </div>
+                
+                <!-- 日程统计 -->
+                <div class="stats-card">
+                    <h3><i class="fas fa-calendar-alt"></i> 今日日程</h3>
+                    <div class="schedule-header">
+                        <span class="schedule-date" id="scheduleDateDisplay"></span>
+                        <button class="btn btn-secondary btn-sm" id="addScheduleBtn"><i class="fas fa-plus mr-4"></i>添加日程</button>
+                    </div>
+                    <div class="schedule-timeline" id="scheduleTimeline">
+                        <div class="schedule-empty">
+                            <i class="fas fa-clock opacity-5"></i>
+                            <p>暂无日程安排</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 聊天统计 -->
+            <div class="stats-content" id="statsChatContent">
+                <div class="stats-card">
+                    <h3><i class="fas fa-comments"></i> 对话概况</h3>
+                    <div class="chat-stats-grid">
+                        <div class="chat-stat-item">
+                            <div class="chat-stat-value" id="chatStatCount">0</div>
+                            <div class="chat-stat-label">对话消息数</div>
+                        </div>
+                        <div class="chat-stat-item">
+                            <div class="chat-stat-value" id="chatStatDays">0</div>
+                            <div class="chat-stat-label">对话天数</div>
+                        </div>
+                        <div class="chat-stat-item">
+                            <div class="chat-stat-value" id="chatStatStartDate">-</div>
+                            <div class="chat-stat-label">首次对话</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stats-card">
+                    <h3><i class="fas fa-fire"></i> 消息热力图</h3>
+                    <div class="heatmap-month-nav">
+                        <button class="heatmap-nav-btn" id="heatmapPrevMonth"><i class="fas fa-chevron-left"></i></button>
+                        <span class="heatmap-current-month" id="heatmapCurrentMonth"></span>
+                        <button class="heatmap-nav-btn" id="heatmapNextMonth"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <div class="heatmap-container" id="heatmapContainer">
+                        <div class="heatmap-grid" id="heatmapGrid"></div>
+                    </div>
+                </div>
+                
+                <div class="stats-card">
+                    <h3><i class="fas fa-chart-pie"></i> 消息统计</h3>
+                    <div class="message-stats-grid">
+                        <div class="message-stat-item">
+                            <div class="message-stat-value user-color" id="userMsgCount">0</div>
+                            <div class="message-stat-label">你的消息</div>
+                        </div>
+                        <div class="message-stat-item">
+                            <div class="message-stat-value char-color" id="charMsgCount">0</div>
+                            <div class="message-stat-label">角色消息</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stats-card">
+                    <h3><i class="fas fa-crown"></i> 高频词排行</h3>
+                    <div class="word-ranking-list" id="wordRankingList">
+                        <div class="word-ranking-empty">
+                            <i class="fas fa-list opacity-5"></i>
+                            <p>暂无数据</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 专注活动统计 -->
+            <div class="stats-content" id="statsFocusContent">
+                <div class="stats-card">
+                    <h3><i class="fas fa-clock"></i> 专注总览</h3>
+                    <div class="focus-total-stats">
+                        <div class="focus-total-item focus-total-shared">
+                            <i class="fas fa-users"></i>
+                            <div class="focus-total-info">
+                                <div class="focus-total-value" id="totalFocusHours">0h</div>
+                                <div class="focus-total-label">共同专注</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="focus-total-stats focus-total-row">
+                        <div class="focus-total-item user-side">
+                            <i class="fas fa-user"></i>
+                            <div class="focus-total-info">
+                                <div class="focus-total-value" id="userFocusHours">0h</div>
+                                <div class="focus-total-label">你的专注</div>
+                            </div>
+                        </div>
+                        <div class="focus-total-item char-side">
+                            <i class="fas fa-user-astronaut"></i>
+                            <div class="focus-total-info">
+                                <div class="focus-total-value" id="charFocusHours">0h</div>
+                                <div class="focus-total-label">角色专注</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stats-card">
+                    <h3><i class="fas fa-list"></i> 专注记录</h3>
+                    <div class="focus-records-list" id="focusRecordsList">
+                        <div class="focus-record-empty">
+                            <i class="fas fa-hourglass-half opacity-5"></i>
+                            <p>暂无专注记录</p>
+                            <p class="fs-12 text-secondary">正计时超过5分钟、倒计时正常结束的专注会被记录</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 其他统计 -->
+            <div class="stats-content" id="statsOtherContent">
+                <div class="stats-card">
+                    <h3><i class="fas fa-tools"></i> 更多统计</h3>
+                    <div class="empty-state">
+                        <i class="fas fa-tools fs-48 mb-20 opacity-5"></i>
+                        <h3 class="fw-400 mb-8">更多统计功能开发中</h3>
+                        <p>敬请期待</p>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- 人物管理视图 -->
@@ -249,10 +449,10 @@
                         <h3 id="characterPreviewName">角色名称</h3>
                         <p id="characterPreviewBio"><i class="fas fa-quote-left mr-8"></i>温柔而冷静的陪伴</p>
                     </div>
-                    <div class="flex-gap-8">
-                        <button class="btn btn-secondary white-space-nowrap" id="editCharacterAvatarBtn"><i class="fas fa-camera"></i> 头像</button>
-                        <button class="btn btn-secondary white-space-nowrap" id="editCharacterCoverBtn"><i class="fas fa-image"></i> 背景</button>
-                    </div>
+                </div>
+                <div class="character-preview-actions flex-gap-8">
+                    <button class="btn btn-secondary white-space-nowrap" id="editCharacterAvatarBtn"><i class="fas fa-camera"></i> 头像</button>
+                    <button class="btn btn-secondary white-space-nowrap" id="editCharacterCoverBtn"><i class="fas fa-image"></i> 背景</button>
                 </div>
             </div>
             <div class="settings-card">
@@ -441,26 +641,6 @@
             <div class="modal-footer">
                 <button class="btn btn-secondary" id="cancelEditProfileBtn">取消</button>
                 <button class="btn btn-primary" id="saveEditProfileBtn">保存</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 批量发送模态框 -->
-    <div class="modal-overlay" id="batchSendModalOverlay">
-        <div class="modal-container w-450">
-            <div class="modal-header">
-                <h3>批量发送</h3>
-                <button class="modal-close" id="closeBatchSendModal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="config-group">
-                    <label>每行将作为一条独立气泡发送</label>
-                    <textarea id="batchMessageInput" rows="10" placeholder="第一条消息\n第二条消息\n..."></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" id="cancelBatchSendBtn">取消</button>
-                <button class="btn btn-primary" id="confirmBatchSendBtn"><i class="fas fa-paper-plane"></i> 立即发送</button>
             </div>
         </div>
     </div>
