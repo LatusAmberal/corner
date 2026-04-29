@@ -265,6 +265,7 @@ body.sidebar-open .sidebar-overlay {
     background: var(--bg-bubble-user);
     color: var(--text-bubble-user);
     border-top-right-radius: 6px;
+    max-width: 100%; /* 填满wrapper，宽度由wrapper的max-width限制 */
 }
 
 /* 辅助/工具类 */
@@ -680,6 +681,16 @@ body.sidebar-open .sidebar-overlay {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
+    max-width: 70%; /* 与assistant气泡max-width保持一致 */
+    min-width: 0;   /* 防止 flex 子元素撑开父容器 */
+    overflow: hidden; /* 防止内容溢出 */
+}
+
+.user .message-bubble {
+    max-width: 100%; /* 填满wrapper，宽度由wrapper限制 */
+    word-break: break-word;
+    overflow-wrap: break-word;
+    box-sizing: border-box;
 }
 
 /* 已读标签在气泡外部底部 */
@@ -1569,6 +1580,12 @@ body.light-theme .profile-banner::before {
 
     .message-bubble {
         max-width: 78%;
+    }
+    .user .message-bubble {
+        max-width: 100%; /* 移动端：同样撑满wrapper，由wrapper限制 */
+    }
+    .user-message-wrapper {
+        max-width: 75%; /* 移动端wrapper略宽 */
     }
 
     .input-area {
@@ -2526,6 +2543,72 @@ body.light-theme .character-preview-content .btn-secondary:hover {
     margin-bottom: 16px;
 }
 
+/* 页面标题行（标题+右侧操作按钮）*/
+.view-title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+}
+.view-title-row h2 {
+    flex: 1;
+}
+
+/* 导入导出图标按钮组（旧，兼容保留） */
+.import-export-icons {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-shrink: 0;
+    padding-top: 2px;
+}
+
+/* 导入导出卡片（各界面独立栏目） */
+.import-export-card {
+    padding: 14px 16px !important;
+}
+.import-export-card h3 {
+    margin-bottom: 12px !important;
+    font-size: 14px !important;
+}
+.import-export-btn-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* 上下排列间距（抽屉导出导入竖向按钮） */
+.flex-col-gap-8 {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.flex-col-gap-10 {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.icon-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+    background: var(--bg-header);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+.icon-btn:hover {
+    background: var(--menu-btn-hover);
+    color: var(--accent);
+    border-color: var(--accent);
+}
+.ml-8 { margin-left: 8px; }
+
 /* 统计栏目切换 */
 .stats-tabs {
     display: flex;
@@ -2728,116 +2811,6 @@ body.light-theme .character-preview-content .btn-secondary:hover {
     margin-top: 4px;
 }
 
-/* 热力图 */
-.heatmap-container {
-    padding: 8px 0;
-}
-.heatmap-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-.heatmap-week-header {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 2px;
-    margin-bottom: 4px;
-}
-.heatmap-weekday {
-    font-size: 11px;
-    color: var(--text-secondary);
-    text-align: center;
-    padding: 2px;
-}
-.heatmap-days-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 2px;
-}
-.heatmap-day-cell {
-    aspect-ratio: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    border-radius: 4px;
-    background: transparent;
-    color: var(--text-secondary);
-    cursor: default;
-}
-.heatmap-day-cell.empty {
-    background: transparent;
-    color: var(--text-secondary);
-    opacity: 0.3;
-}
-.heatmap-day-cell.level-1 { background: rgba(15, 153, 96, 0.15); color: var(--text-secondary); }
-.heatmap-day-cell.level-2 { background: rgba(15, 153, 96, 0.35); color: var(--text-primary); }
-.heatmap-day-cell.level-3 { background: rgba(15, 153, 96, 0.6); color: #fff; }
-.heatmap-day-cell.level-4 { background: var(--accent); color: #fff; font-weight: 600; }
-
-/* 热力图月份导航 */
-.heatmap-month-nav {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    margin-bottom: 12px;
-}
-.heatmap-nav-btn {
-    background: transparent;
-    border: 1px solid var(--border-light);
-    color: var(--text-secondary);
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 12px;
-    transition: all 0.15s;
-}
-.heatmap-nav-btn:hover {
-    background: var(--menu-btn-hover);
-    color: var(--accent);
-    border-color: var(--accent);
-}
-.heatmap-current-month {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-primary);
-    min-width: 100px;
-    text-align: center;
-}
-.heatmap-current-month:hover {
-    color: var(--accent);
-}
-
-/* 月份选择器 */
-.month-picker-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-}
-.month-picker-item {
-    padding: 12px;
-    border: 1px solid var(--border-light);
-    border-radius: 8px;
-    background: transparent;
-    color: var(--text-primary);
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.15s;
-}
-.month-picker-item:hover {
-    background: var(--menu-btn-hover);
-    border-color: var(--accent);
-}
-.month-picker-item.selected {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: white;
-}
 
 /* 消息统计 */
 .message-stats-grid {
