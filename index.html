@@ -100,7 +100,17 @@
 
         <!-- 设置视图 -->
         <div class="settings-view" id="settingsView">
-            <h2 class="mb-20 fw-500"><i class="fas fa-cog mr-12"></i>设置</h2>
+            <div class="view-title-row">
+                <h2 class="mb-20 fw-500"><i class="fas fa-cog mr-12"></i>设置</h2>
+            </div>
+            <div class="settings-card import-export-card">
+                <h3><i class="fas fa-exchange-alt"></i> 导入 / 导出</h3>
+                <div class="import-export-btn-row">
+                    <button class="btn btn-secondary flex-1" id="settingsExportBtn"><i class="fas fa-file-export mr-6"></i> 导出设置</button>
+                    <button class="btn btn-secondary flex-1" id="settingsImportBtn"><i class="fas fa-file-import mr-6"></i> 导入设置</button>
+                    <input type="file" id="settingsImportInput" accept=".json" style="display:none">
+                </div>
+            </div>
             <div class="settings-card">
                 <h3><i class="fas fa-palette"></i> 外观</h3>
                 <div class="flex-between">
@@ -183,6 +193,14 @@
                 </div>
                 <div class="profile-banner-actions">
                     <button class="btn btn-secondary" id="editProfileBtn"><i class="fas fa-pen"></i> 编辑个人资料</button>
+                </div>
+            </div>
+            <div class="settings-card import-export-card">
+                <h3><i class="fas fa-exchange-alt"></i> 导入 / 导出</h3>
+                <div class="import-export-btn-row">
+                    <button class="btn btn-secondary flex-1" id="profileExportBtn"><i class="fas fa-file-export mr-6"></i> 导出个人资料</button>
+                    <button class="btn btn-secondary flex-1" id="profileImportBtn"><i class="fas fa-file-import mr-6"></i> 导入个人资料</button>
+                    <input type="file" id="profileImportInput" accept=".json" style="display:none">
                 </div>
             </div>
             <div class="profile-content">
@@ -285,7 +303,17 @@
 
         <!-- 统计视图 -->
         <div class="stats-view" id="statsView">
-            <h2 class="stats-page-title fw-500"><i class="fas fa-chart-bar mr-12"></i>统计</h2>
+            <div class="view-title-row">
+                <h2 class="stats-page-title fw-500"><i class="fas fa-chart-bar mr-12"></i>统计</h2>
+            </div>
+            <div class="settings-card import-export-card">
+                <h3><i class="fas fa-exchange-alt"></i> 导入 / 导出</h3>
+                <div class="import-export-btn-row">
+                    <button class="btn btn-secondary flex-1" id="statsExportBtn"><i class="fas fa-file-export mr-6"></i> 导出统计</button>
+                    <button class="btn btn-secondary flex-1" id="statsImportBtn"><i class="fas fa-file-import mr-6"></i> 导入统计</button>
+                    <input type="file" id="statsImportInput" accept=".json" style="display:none">
+                </div>
+            </div>
             
             <!-- 统计栏目切换 -->
             <div class="stats-tabs">
@@ -342,17 +370,6 @@
                     </div>
                 </div>
                 
-                <div class="stats-card">
-                    <h3><i class="fas fa-fire"></i> 消息热力图</h3>
-                    <div class="heatmap-month-nav">
-                        <button class="heatmap-nav-btn" id="heatmapPrevMonth"><i class="fas fa-chevron-left"></i></button>
-                        <span class="heatmap-current-month" id="heatmapCurrentMonth"></span>
-                        <button class="heatmap-nav-btn" id="heatmapNextMonth"><i class="fas fa-chevron-right"></i></button>
-                    </div>
-                    <div class="heatmap-container" id="heatmapContainer">
-                        <div class="heatmap-grid" id="heatmapGrid"></div>
-                    </div>
-                </div>
                 
                 <div class="stats-card">
                     <h3><i class="fas fa-chart-pie"></i> 消息统计</h3>
@@ -437,7 +454,17 @@
 
         <!-- 人物管理视图 -->
         <div class="character-view" id="characterView">
-            <h2 class="mb-20 fw-500"><i class="fas fa-user-tag mr-12"></i>人物设定</h2>
+            <div class="view-title-row">
+                <h2 class="mb-20 fw-500"><i class="fas fa-user-tag mr-12"></i>人物设定</h2>
+            </div>
+            <div class="settings-card import-export-card">
+                <h3><i class="fas fa-exchange-alt"></i> 导入 / 导出</h3>
+                <div class="import-export-btn-row">
+                    <button class="btn btn-secondary flex-1" id="characterExportBtn"><i class="fas fa-file-export mr-6"></i> 导出人物设定</button>
+                    <button class="btn btn-secondary flex-1" id="characterImportBtn"><i class="fas fa-file-import mr-6"></i> 导入人物设定</button>
+                    <input type="file" id="characterImportInput" accept=".json" style="display:none">
+                </div>
+            </div>
             <div class="preview-header">
                 <span class="fs-16 fw-500 text-primary"><i class="fas fa-image mr-8"></i>角色卡片预览</span>
             </div>
@@ -658,6 +685,14 @@
             </div>
             <div class="fs-12 opacity-5 mt-20 pt-16 bt-1">
                 <i class="fas fa-info-circle"></i> 完整 API 设置请点击左侧齿轮图标。
+            </div>
+            <div class="pt-16 bt-1">
+                <div class="fs-13 text-secondary mb-12"><i class="fas fa-exchange-alt mr-5"></i> 聊天数据 &amp; 控制中心配置</div>
+                <div class="flex-col-gap-10">
+                    <button class="btn btn-secondary w-full" id="chatDataExportBtn"><i class="fas fa-file-export mr-5"></i> 导出</button>
+                    <button class="btn btn-secondary w-full" id="chatDataImportBtn"><i class="fas fa-file-import mr-5"></i> 导入</button>
+                    <input type="file" id="chatDataImportInput" accept=".json" style="display:none">
+                </div>
             </div>
         </div>
     </div>
