@@ -30,6 +30,7 @@
   const chatIcon = document.querySelector('.sidebar-icon[title="当前对话"]');
   const characterIcon = document.getElementById('characterIcon');
   const dataManagerIcon = document.getElementById('dataManagerIcon');
+  const statsIcon = document.getElementById('statsIcon');
   const userAvatarBtn = document.getElementById('userAvatarBtn');
   const chatMain = document.getElementById('chatMain');
   const profileDisplayName = document.getElementById('profileDisplayName');
@@ -99,12 +100,19 @@
     apiUrl: 'https://api.deepseek.com/v1/chat/completions',
     model: 'deepseek-chat',
     characterName: '青绿',
-    systemPrompt: '你是一个冷静又带点青涩的助手，说话简洁但偶尔流露出温柔。请用中文交流，保持角色。'
+    systemPrompt: ''
   };
 
   let isGenerating = false;
   let currentTypingMessageId = null;
   let currentTheme = 'dark';
+  
+  // ---------- 核心记忆自动提取状态 ----------
+  let messagesSinceLastMemoryCheck = 0;
+  const MEMORY_CHECK_THRESHOLD = 20; // 多少条用户+AI消息后触发一次检查
+  let lastMemoryCheckTime = 0;
+  const MEMORY_CHECK_COOLDOWN = 60000; // 检查冷却时间：1分钟
+  let memorySuggestionPending = false;
 
   // 聊天偏好状态
   let chatPreferences = {
@@ -112,6 +120,20 @@
     readIgnoreProbability: 5,
     enableLongUnread: false,
     longUnreadProbability: 5
+  };
+
+  // 主动发消息状态
+  let proactiveMsgPrefs = {
+    enabled: false,
+    intervalMinutes: 60,
+    probability: 50
+  };
+  let proactiveLastCheckTs = 0;  // 上次主动消息检查时间戳
+  let proactiveTickerId = null;
+
+  // 通知状态
+  let notificationPrefs = {
+    enabled: false
   };
 
   let characterData = {
@@ -131,10 +153,184 @@
   };
 
   let focusState = {
-    user: { activity: '学习', mode: 'down', durationSec: 25 * 60, remainingSec: 25 * 60, elapsedSec: 0, running: false, lastStartTs: 0, startRemainingSec: 25 * 60, startElapsedSec: 0 },
-    ai: { enabled: false, locked: false, activity: '陪你专注', mode: 'down', durationSec: 25 * 60, remainingSec: 25 * 60, elapsedSec: 0, running: false, lastStartTs: 0, startRemainingSec: 25 * 60, startElapsedSec: 0 }
+    user: { activity: '学习', mode: 'down', durationSec: 25 * 60, remainingSec: 25 * 60, elapsedSec: 0, running: false, lastStartTs: 0, startRemainingSec: 25 * 60, startElapsedSec: 0, overlapStartTs: 0 },
+    ai: { enabled: false, locked: false, activity: '陪你专注', mode: 'down', durationSec: 25 * 60, remainingSec: 25 * 60, elapsedSec: 0, running: false, lastStartTs: 0, startRemainingSec: 25 * 60, startElapsedSec: 0, overlapStartTs: 0 }
   };
   let focusTickerId = null;
+
+  // ---------- 统计数据存储 ----------
+  const statsData = {
+    // 专注记录
+    focusRecords: [],  // [{owner: 'user'|'char', activity: string, durationSec: number, date: 'YYYY-MM-DD', time: 'HH:MM'}]
+    // 日程
+    schedules: [],      // [{owner: 'user'|'char', activity: string, time: 'HH:MM', date: 'YYYY-MM-DD'}]
+    // 聊天统计
+    chatStats: {
+      firstChatDate: null,
+      totalMessages: 0,
+      userMessages: 0,
+      charMessages: 0,
+      dailyMessages: {}  // {'YYYY-MM-DD': count}
+    },
+    // 共同专注总时长（秒）
+    totalOverlapSec: 0
+  };
+
+  // 加载统计数据
+  function loadStatsData() {
+    try {
+      const saved = localStorage.getItem('stats_data');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.focusRecords) statsData.focusRecords = parsed.focusRecords;
+        if (parsed.schedules) statsData.schedules = parsed.schedules;
+        if (parsed.chatStats) statsData.chatStats = { ...statsData.chatStats, ...parsed.chatStats };
+        if (typeof parsed.totalOverlapSec === 'number') statsData.totalOverlapSec = parsed.totalOverlapSec;
+      }
+    } catch(e) {}
+  }
+
+  // 保存统计数据
+  function saveStatsData() {
+    try {
+      localStorage.setItem('stats_data', JSON.stringify(statsData));
+    } catch(e) {}
+  }
+
+  // 添加专注记录（只在满足条件时添加）
+  // 返回值：true=已记录，false=未记录，'confirm'=需要用户确认
+  function addFocusRecord(owner, activity, durationSec, mode) {
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0];
+    const timeStr = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+    
+    // 判断是否应该记录
+    // 规则：1. 任何专注小于1分钟不计入 2. 用户正计时小于5分钟不计入
+    // 3. 倒计时提前结束不计入 4. 角色倒计时正常结束计入，角色正计时>=1分钟计入
+    
+    const MINute = 60;  // 1分钟
+    const FIVE_MINUTES = 5 * 60;  // 5分钟
+    
+    // 规则1：小于1分钟不计入
+    if (durationSec < MINute) {
+      showToast('专注时长不足1分钟，不计入记录');
+      return false;
+    }
+    
+    if (mode === 'up') {
+      // 正计时模式
+      if (owner === 'user') {
+        // 用户正计时：必须>=5分钟
+        if (durationSec < FIVE_MINUTES) {
+          return 'confirm_under_5min';  // 需要确认弹窗
+        }
+      }
+      // 角色正计时：>=1分钟即可（已在规则1中处理）
+      // 记录
+      statsData.focusRecords.push({
+        owner: owner,
+        activity: activity,
+        durationSec: durationSec,
+        date: dateStr,
+        time: timeStr
+      });
+      saveStatsData();
+      return true;
+    } else {
+      // 倒计时模式：正常结束才记录
+      // durationSec 在倒计时模式下就是设定的时长，所以通过实际经过时间来验证
+      // 已在上面判断了1分钟，这里倒计时正常结束直接记录
+      statsData.focusRecords.push({
+        owner: owner,
+        activity: activity,
+        durationSec: durationSec,
+        date: dateStr,
+        time: timeStr
+      });
+      saveStatsData();
+      return true;
+    }
+  }
+  
+  // 确认提前结束专注（用户点击确认后调用）
+  function confirmEarlyEndFocus() {
+    const elapsed = focusState.user.mode === 'up'
+      ? focusState.user.elapsedSec
+      : (focusState.user.startRemainingSec - focusState.user.remainingSec);
+    const duration = focusState.user.durationSec || 0;
+    const activity = focusState.user.activity || '专注';
+    
+    // 直接结束，不记录
+    resetUserOnly();
+    showToast('本次专注不计入记录');
+  }
+
+  // 添加日程
+  function addSchedule(owner, activity, time) {
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0];
+    
+    statsData.schedules.push({
+      owner: owner,
+      activity: activity,
+      time: time,
+      date: dateStr
+    });
+    saveStatsData();
+  }
+
+  // 删除日程
+  function deleteSchedule(index) {
+    if (index >= 0 && index < statsData.schedules.length) {
+      statsData.schedules.splice(index, 1);
+      saveStatsData();
+    }
+  }
+
+  // 更新聊天统计
+  function updateChatStats(role) {
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0];
+    
+    if (!statsData.chatStats.firstChatDate) {
+      statsData.chatStats.firstChatDate = dateStr;
+    }
+    
+    statsData.chatStats.totalMessages++;
+    statsData.chatStats.dailyMessages[dateStr] = (statsData.chatStats.dailyMessages[dateStr] || 0) + 1;
+    
+    if (role === 'user') {
+      statsData.chatStats.userMessages++;
+    } else {
+      statsData.chatStats.charMessages++;
+    }
+    
+    saveStatsData();
+  }
+
+  // 获取高频词
+  function getTopWords(count = 20) {
+    const wordCount = {};
+    const stopWords = new Set(['的', '了', '在', '是', '我', '你', '他', '她', '它', '们', '这', '那', '有', '和', '与', '也', '都', '就', '不', '很', '要', '会', '可以', '一个', '什么', '怎么', '为什么', '没有', '什么', '这个', '那个', '但是', '如果', '因为', '所以', '虽然', '然后', '还是', '或者', '而且', '不过', '已经', '可能', '应该', '自己', '现在', '这里', '那里', '知道', '觉得', '想', '能', '啊', '呢', '吧', '吗', '呀', '哦', '嗯', '哈哈', '...', '……', '。', '，', '？', '！', ':', ';', '...']);
+    
+    messages.forEach(msg => {
+      // 跳过时间戳消息（isReset类型）
+      if (msg.isReset) return;
+      if (msg.content) {
+        const words = msg.content.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, ' ').split(/\s+/);
+        words.forEach(word => {
+          if (word.length >= 2 && !stopWords.has(word.toLowerCase())) {
+            wordCount[word] = (wordCount[word] || 0) + 1;
+          }
+        });
+      }
+    });
+    
+    return Object.entries(wordCount)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, count)
+      .map(([word, count]) => ({ word, count }));
+  }
 
   // ---------- 清除括号及其内容 ----------
   function cleanParentheses(text) {
@@ -272,6 +468,191 @@
       updateSliderFill(document.getElementById('readIgnoreProbSlider'));
       updateSliderFill(document.getElementById('longUnreadProbSlider'));
     }, 0);
+  }
+
+  // ---------- 主动发消息 ----------
+  function loadProactiveMsgPrefs() {
+    try {
+      const saved = localStorage.getItem('proactive_msg_prefs');
+      if (saved) proactiveMsgPrefs = { ...proactiveMsgPrefs, ...JSON.parse(saved) };
+    } catch(e) {}
+    try {
+      const saved2 = localStorage.getItem('notification_prefs');
+      if (saved2) notificationPrefs = { ...notificationPrefs, ...JSON.parse(saved2) };
+    } catch(e) {}
+  }
+
+  function saveProactiveMsgPrefs() {
+    try { localStorage.setItem('proactive_msg_prefs', JSON.stringify(proactiveMsgPrefs)); } catch(e) {}
+  }
+
+  function saveNotificationPrefs() {
+    try { localStorage.setItem('notification_prefs', JSON.stringify(notificationPrefs)); } catch(e) {}
+  }
+
+  function buildProactiveMsgUI() {
+    const drawerContent = document.querySelector('.drawer-content');
+    if (!drawerContent) return;
+
+    // 在聊天偏好上方插入
+    const prefsSection = document.querySelector('.chat-prefs-section');
+    if (!prefsSection) return;
+
+    // --- 主动发消息功能 ---
+    const proactiveSection = document.createElement('div');
+    proactiveSection.id = 'proactiveMsgSection';
+    proactiveSection.innerHTML = `
+      <div class="drawer-divider-label">主动发消息</div>
+      <div class="chat-prefs-row">
+        <label><i class="fas fa-bolt"></i> 主动发消息</label>
+        <div class="apple-toggle" id="proactiveMsgToggle"></div>
+      </div>
+      <div class="proactive-controls" id="proactiveControls" style="display:none;">
+        <div class="probability-bar">
+          <label class="probability-label"><i class="fas fa-clock"></i> 间隔时间</label>
+          <input type="range" min="10" max="240" value="${proactiveMsgPrefs.intervalMinutes}" class="apple-slider" id="proactiveIntervalSlider">
+          <span id="proactiveIntervalVal" class="probability-value">${proactiveMsgPrefs.intervalMinutes}分钟</span>
+        </div>
+        <div class="probability-bar">
+          <label class="probability-label"><i class="fas fa-percentage"></i> 触发概率</label>
+          <input type="range" min="5" max="100" value="${proactiveMsgPrefs.probability}" class="apple-slider" id="proactiveProbSlider">
+          <span id="proactiveProbVal" class="probability-value">${proactiveMsgPrefs.probability}%</span>
+        </div>
+        <div class="chat-prefs-info">
+          AI 将在间隔时间后，以概率触发主动发消息
+        </div>
+      </div>
+    `;
+    prefsSection.before(proactiveSection);
+
+    // --- 通知功能 ---
+    const notifySection = document.createElement('div');
+    notifySection.id = 'notifySection';
+    notifySection.innerHTML = `
+      <div class="drawer-divider-label">通知</div>
+      <div class="chat-prefs-row">
+        <label><i class="fas fa-bell"></i> 通知</label>
+        <div class="apple-toggle" id="notifyToggle"></div>
+      </div>
+      <div class="chat-prefs-info" id="notifyStatusInfo">
+        开启后，AI 回复时将发送通知
+      </div>
+    `;
+    proactiveSection.after(notifySection);
+
+    // 绑定事件
+    const toggleEl = document.getElementById('proactiveMsgToggle');
+    const controlsEl = document.getElementById('proactiveControls');
+    const intervalSlider = document.getElementById('proactiveIntervalSlider');
+    const probSlider = document.getElementById('proactiveProbSlider');
+    const intervalVal = document.getElementById('proactiveIntervalVal');
+    const probVal = document.getElementById('proactiveProbVal');
+    const notifyToggle = document.getElementById('notifyToggle');
+    const notifyInfo = document.getElementById('notifyStatusInfo');
+
+    function updateSliderFill2(slider) {
+      if (!slider) return;
+      const min = Number(slider.min), max = Number(slider.max), val = Number(slider.value);
+      const pct = ((val - min) / (max - min)) * 100;
+      slider.style.background = `linear-gradient(to right, var(--accent) ${pct}%, var(--border-strong) ${pct}%)`;
+    }
+
+    // 初始化状态
+    toggleEl.classList.toggle('active', proactiveMsgPrefs.enabled);
+    controlsEl.style.display = proactiveMsgPrefs.enabled ? '' : 'none';
+    notifyToggle.classList.toggle('active', notificationPrefs.enabled);
+    updateSliderFill2(intervalSlider);
+    updateSliderFill2(probSlider);
+
+    toggleEl.addEventListener('click', () => {
+      proactiveMsgPrefs.enabled = !proactiveMsgPrefs.enabled;
+      toggleEl.classList.toggle('active', proactiveMsgPrefs.enabled);
+      controlsEl.style.display = proactiveMsgPrefs.enabled ? '' : 'none';
+      saveProactiveMsgPrefs();
+      if (proactiveMsgPrefs.enabled) startProactiveTicker();
+      else stopProactiveTicker();
+    });
+
+    intervalSlider.addEventListener('input', (e) => {
+      proactiveMsgPrefs.intervalMinutes = parseInt(e.target.value);
+      intervalVal.textContent = proactiveMsgPrefs.intervalMinutes + '分钟';
+      updateSliderFill2(e.target);
+      saveProactiveMsgPrefs();
+    });
+
+    probSlider.addEventListener('input', (e) => {
+      proactiveMsgPrefs.probability = parseInt(e.target.value);
+      probVal.textContent = proactiveMsgPrefs.probability + '%';
+      updateSliderFill2(e.target);
+      saveProactiveMsgPrefs();
+    });
+
+    notifyToggle.addEventListener('click', async () => {
+      if (!notificationPrefs.enabled) {
+        // 请求通知权限
+        if (!('Notification' in window)) {
+          showCommonDialog({ title: '不支持通知', message: '当前浏览器不支持通知功能' });
+          return;
+        }
+        const perm = await Notification.requestPermission();
+        if (perm === 'granted') {
+          notificationPrefs.enabled = true;
+          notifyToggle.classList.add('active');
+          notifyInfo.textContent = '通知已开启 ✓';
+          saveNotificationPrefs();
+        } else {
+          showCommonDialog({ title: '权限被拒绝', message: '请在浏览器设置中允许通知权限' });
+        }
+      } else {
+        notificationPrefs.enabled = false;
+        notifyToggle.classList.remove('active');
+        notifyInfo.textContent = '开启后，AI 回复时将发送通知';
+        saveNotificationPrefs();
+      }
+    });
+
+    // 如果已开启，启动 ticker
+    if (proactiveMsgPrefs.enabled) startProactiveTicker();
+  }
+
+  /** 主动发消息计时器 */
+  function startProactiveTicker() {
+    if (proactiveTickerId) clearInterval(proactiveTickerId);
+    proactiveLastCheckTs = Date.now();
+    proactiveTickerId = setInterval(checkProactiveMessage, 60 * 1000); // 每分钟检查一次
+  }
+
+  function stopProactiveTicker() {
+    if (proactiveTickerId) { clearInterval(proactiveTickerId); proactiveTickerId = null; }
+  }
+
+  /** 检查是否应该主动发消息 */
+  async function checkProactiveMessage() {
+    if (!proactiveMsgPrefs.enabled || isGenerating) return;
+    const elapsed = (Date.now() - proactiveLastCheckTs) / 1000 / 60; // 分钟
+    if (elapsed < proactiveMsgPrefs.intervalMinutes) return;
+
+    // 已到达间隔，掷骰子
+    proactiveLastCheckTs = Date.now();
+    const roll = Math.random() * 100;
+    if (roll > proactiveMsgPrefs.probability) return;
+
+    // 触发主动消息
+    const triggerMsg = await callAI('请以角色的口吻说一句话来主动开启对话（只有一条消息，简洁自然，符合角色设定）。', '你是一个辅助助手，只需输出一句话用于开启对话，不要多余内容。');
+    if (triggerMsg && triggerMsg.trim()) {
+      addMessage('assistant', triggerMsg.trim());
+      triggerNotification('青绿 发来一条消息', triggerMsg.trim());
+    }
+  }
+
+  /** 触发浏览器通知 */
+  function triggerNotification(title, body) {
+    if (!notificationPrefs.enabled || Notification.permission !== 'granted') return;
+    try {
+      const n = new Notification(title, { body, icon: 'logos/icon.png', silent: false });
+      n.onclick = () => { window.focus(); n.close(); };
+      setTimeout(() => n.close(), 8000);
+    } catch(e) { console.warn('Notification error:', e); }
   }
 
   // ---------- 配置管理 ----------
@@ -465,13 +846,10 @@
 
       const safe = escapeHtml(msg.content).replace(/\n/g, '<br>');
 
-      // 已读未读状态，移动到气泡外侧（左侧下方）
-      let statusHtml = '';
-      if (msg.role === 'user' && msg.readStatus) {
-        const readClass = msg.readStatus === 'read' ? 'read' : 'unread';
-        const readText = msg.readStatus === 'read' ? '已读' : '未读';
-        statusHtml = `<span class="read-status-outside ${readClass}">${readText}</span>`;
-      }
+      // 已读未读状态，放在气泡外部底部（用户气泡的左下角外侧）
+      const readStatusHtml = (msg.role === 'user' && msg.readStatus) 
+        ? `<span class="read-status-outside ${msg.readStatus === 'read' ? 'read' : 'unread'}">${msg.readStatus === 'read' ? '已读' : '未读'}</span>` 
+        : '';
 
       let bubble = `
         <div class="message-bubble" data-index="${index}" onclick="handleBubbleClick(event, ${index})">
@@ -487,14 +865,17 @@
           </div>
         </div>`;
 
-      if (msg.role === 'user' && statusHtml) {
-        html += `<div class="message-row ${msg.role}">${statusHtml}${bubble}${buildAvatarHtml('user')}</div>`;
+      if (msg.role === 'assistant') {
+        html += `<div class="message-row assistant">${buildAvatarHtml('assistant')}${bubble}</div>`;
       } else {
-        if (msg.role === 'assistant') {
-          html += `<div class="message-row assistant">${buildAvatarHtml('assistant')}${bubble}</div>`;
-        } else {
-          html += `<div class="message-row user">${bubble}${buildAvatarHtml('user')}</div>`;
-        }
+        // 用户消息：已读标签放在气泡外部下方
+        html += `<div class="message-row user">
+          <div class="user-message-wrapper">
+            ${bubble}
+            ${readStatusHtml}
+          </div>
+          ${buildAvatarHtml('user')}
+        </div>`;
       }
 
       lastTimestamp = msgTime;
@@ -511,18 +892,38 @@
 
   // 消息操作函数
   window.handleBubbleClick = function(e, index) {
-    if (window.innerWidth <= 600) { // 手机端
-      const actions = e.currentTarget.querySelector('.bubble-actions');
-      if (actions.classList.contains('show')) {
-        actions.classList.remove('show');
-      } else {
-        // 先关闭其他所有已打开的
-        document.querySelectorAll('.bubble-actions').forEach(el => el.classList.remove('show'));
-        actions.classList.add('show');
-      }
-      e.stopPropagation();
+    // 点击操作按钮本身（修改/删除/收藏），不触发动作菜单切换
+    const isActionIcon = e.target.closest('.bubble-actions i');
+    if (isActionIcon) return;
+
+    const actions = e.currentTarget.querySelector('.bubble-actions');
+    if (actions.classList.contains('show')) {
+      actions.classList.remove('show');
+    } else {
+      // 关闭其他所有已打开的
+      document.querySelectorAll('.bubble-actions').forEach(el => el.classList.remove('show'));
+      actions.classList.add('show');
     }
+    e.stopPropagation();
   };
+
+  // 点击页面任意位置，关闭所有气泡操作菜单
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.bubble-actions')) {
+      document.querySelectorAll('.bubble-actions.show').forEach(el => el.classList.remove('show'));
+    }
+  });
+
+  // 滚动聊天记录时关闭气泡菜单
+  if (messagesArea) {
+    let scrollTimer;
+    messagesArea.addEventListener('scroll', () => {
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(() => {
+        document.querySelectorAll('.bubble-actions.show').forEach(el => el.classList.remove('show'));
+      }, 100);
+    });
+  }
 
   window.deleteMessage = function(index) {
     showCommonDialog({
@@ -609,12 +1010,147 @@
     }
   }
 
+  // ---------- 核心记忆自动提取 ----------
+  async function checkAndSuggestMemories() {
+    // 检查冷却时间，避免频繁触发
+    const now = Date.now();
+    if (now - lastMemoryCheckTime < MEMORY_CHECK_COOLDOWN) return;
+    if (memorySuggestionPending) return;
+    if (!config.apiKey) return;
+    
+    lastMemoryCheckTime = now;
+    memorySuggestionPending = true;
+    
+    try {
+      // 收集最近30条对话（不含系统消息和重置标记）
+      const recentMsgs = messages.slice(-60)
+        .filter(m => (m.role === 'user' || m.role === 'assistant') && !m.isReset)
+        .slice(-30);
+      
+      if (recentMsgs.length < 5) {
+        memorySuggestionPending = false;
+        return; // 对话太少，不需要检查
+      }
+      
+      const chatHistory = recentMsgs.map(m => 
+        `[${m.role === 'user' ? '用户' : '角色'}] ${m.content}`
+      ).join('\n\n');
+      
+      // 获取当前已有记忆，避免重复
+      const existingMemories = charMemoriesInput ? charMemoriesInput.value.trim() : '';
+      
+      const prompt = `【对话记录】
+${chatHistory}
+
+【已有记忆】（请忽略已存在的内容）
+${existingMemories || '暂无'}
+
+请分析上述对话记录，提取其中可能有意义的"重要事件"、"人物关系"、"偏好习惯"等信息。
+这些信息应该对AI角色理解和记住用户有帮助。
+
+判断标准：
+1. 用户明确提及的重要事件（如生日、纪念日、经历）
+2. 用户表达的偏好或习惯（如喜欢/讨厌某事物）
+3. 用户与角色之间的重要互动（如角色做出的承诺、用户的请求）
+4. 值得记住的人物关系或身份信息
+
+请严格判断，只有"确实值得记录"的内容才输出。如果对话中没有值得记录的内容，请只输出"[无建议]"。
+输出格式：每条记忆一行，格式为"主题：具体内容"。最多输出3条，不要过度提取。`;
+      
+      const suggestion = await callAI(prompt, "你是记忆分析助手，帮助用户管理重要的对话记忆。");
+      
+      if (!suggestion || suggestion.trim() === '[无建议]' || suggestion.trim() === '') {
+        memorySuggestionPending = false;
+        return;
+      }
+      
+      // 解析建议的记忆
+      const lines = suggestion.split('\n')
+        .map(l => l.trim())
+        .filter(l => l && !l.startsWith('[') && (l.includes('：') || l.includes(':')));
+      
+      if (lines.length === 0) {
+        memorySuggestionPending = false;
+        return;
+      }
+      
+      // 显示建议弹窗
+      const suggestionsHtml = lines.map((line, i) => 
+        `<div class="memory-suggestion-item">
+          <label class="memory-suggestion-label">
+            <input type="checkbox" class="memory-suggestion-checkbox" data-idx="${i}" checked>
+            <span class="memory-suggestion-text">${escapeHtml(line)}</span>
+          </label>
+        </div>`
+      ).join('');
+      
+      showCommonDialog({
+        title: '✨ 发现可记录的内容',
+        customBody: `
+          <div class="memory-suggestion-container">
+            <p class="memory-suggestion-hint">根据最近的对话，AI建议添加以下记忆：</p>
+            ${suggestionsHtml}
+            <p class="memory-suggestion-tip">勾选要添加的记忆，点击确定保存</p>
+          </div>
+        `,
+        confirmText: '添加选中记忆',
+        cancelText: '忽略',
+        onConfirm: () => {
+          const checkboxes = document.querySelectorAll('.memory-suggestion-checkbox:checked');
+          if (checkboxes.length === 0) return;
+          
+          let currentMemories = charMemoriesInput ? charMemoriesInput.value.trim() : '';
+          let newMemories = [];
+          
+          checkboxes.forEach(cb => {
+            const idx = parseInt(cb.dataset.idx);
+            const text = lines[idx];
+            if (text && !currentMemories.includes(text)) {
+              newMemories.push(text);
+            }
+          });
+          
+          if (newMemories.length > 0) {
+            const prefix = currentMemories ? '\n' : '';
+            charMemoriesInput.value = currentMemories + prefix + newMemories.map(m => `- ${m}`).join('\n');
+            // 保存到角色数据
+            characterData.memories = charMemoriesInput.value;
+            saveCharacterToStorage();
+            // 更新卡片显示
+            updateMemoriesCards();
+            
+            showToast(`已添加 ${newMemories.length} 条记忆`);
+          }
+        }
+      });
+      
+    } catch(e) {
+      console.error('Memory suggestion error:', e);
+    } finally {
+      memorySuggestionPending = false;
+    }
+  }
+  
+  // 更新消息计数并触发检查
+  function trackMessageForMemoryCheck() {
+    messagesSinceLastMemoryCheck++;
+    if (messagesSinceLastMemoryCheck >= MEMORY_CHECK_THRESHOLD) {
+      messagesSinceLastMemoryCheck = 0;
+      // 异步检查，不阻塞用户操作
+      setTimeout(() => checkAndSuggestMemories(), 500);
+    }
+  }
+
   function addMessage(role, content, options = {}) {
     const msg = { role, content, timestamp: Date.now(), ...options };
     if (role === 'user' && !msg.readStatus) msg.readStatus = 'unread';
     messages.push(msg);
     saveMessagesToStorage();
     renderMessages();
+    // 更新聊天统计
+    updateChatStats(role);
+    // 触发记忆检查
+    trackMessageForMemoryCheck();
     return msg;
   }
 
@@ -918,7 +1454,7 @@
         const systemMsg = {
             role: 'system',
             content: customSystemPrompt || `
-    ${getVal(systemPromptInput)}
+    ${getVal(systemPromptInput) || '你是一个冷静又带点青涩的助手，说话简洁但偶尔流露出温柔。请用中文交流，保持角色。'}
 
     ${charInfo}
 
@@ -1086,6 +1622,8 @@
           await new Promise(resolve => setTimeout(resolve, Math.max(0, typingDelay)));
           removeTypingIndicator();
           addMessage('assistant', sentence);
+          // AI 回复时触发通知
+          triggerNotification(charNameInput.value + ' 发来消息', sentence);
         }
       } catch(e) {
         removeTypingIndicator();
@@ -1111,8 +1649,32 @@
   }
 
   // ---------- 抽屉 ----------
-  function openDrawer() { drawer.classList.add('open'); overlay.classList.add('show'); }
-  function closeDrawer() { drawer.classList.remove('open'); overlay.classList.remove('show'); }
+  let drawerClickHandler = null;
+  function openDrawer() { 
+    drawer.classList.add('open'); 
+    overlay.classList.add('show'); 
+    
+    // 延迟添加点击监听，避免触发当前点击事件
+    setTimeout(() => {
+      drawerClickHandler = (e) => {
+        // 如果点击的是抽屉内部，不关闭
+        if (drawer.contains(e.target)) return;
+        // 如果点击的是触发按钮，不关闭
+        if (configBtn.contains(e.target)) return;
+        closeDrawer();
+      };
+      document.addEventListener('click', drawerClickHandler);
+    }, 0);
+  }
+  function closeDrawer() { 
+    drawer.classList.remove('open'); 
+    overlay.classList.remove('show'); 
+    // 移除点击监听
+    if (drawerClickHandler) {
+      document.removeEventListener('click', drawerClickHandler);
+      drawerClickHandler = null;
+    }
+  }
 
   function openSidebar() {
     document.body.classList.add('sidebar-open');
@@ -1281,7 +1843,7 @@
 
   // ---------- 视图切换 ----------
   function setActiveView(view) {
-    chatMain.classList.remove('chat-hidden', 'profile-hidden', 'character-hidden', 'data-hidden', 'focus-hidden');
+    chatMain.classList.remove('chat-hidden', 'profile-hidden', 'character-hidden', 'data-hidden', 'focus-hidden', 'stats-hidden');
     document.querySelectorAll('.sidebar-icon').forEach(icon => icon.classList.remove('active'));
     userAvatarBtn.classList.remove('active');
     if (view === 'chat') chatIcon.classList.add('active');
@@ -1289,11 +1851,636 @@
     else if (view === 'profile') { chatMain.classList.add('profile-hidden'); userAvatarBtn.classList.add('active'); }
     else if (view === 'character') { chatMain.classList.add('character-hidden'); characterIcon.classList.add('active'); }
     else if (view === 'focus') { chatMain.classList.add('focus-hidden'); focusIcon?.classList.add('active'); }
+    else if (view === 'stats') { 
+      chatMain.classList.add('stats-hidden'); 
+      statsIcon?.classList.add('active'); 
+      // 打开统计视图时默认显示今日统计tab
+      document.querySelectorAll('.stats-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.stats-content').forEach(c => c.classList.remove('active'));
+      document.querySelector('.stats-tab[data-tab="today"]')?.classList.add('active');
+      document.getElementById('statsTodayContent')?.classList.add('active');
+      refreshStatsView();
+    }
     else if (view === 'data') {
       chatMain.classList.add('data-hidden');
       dataManagerIcon.classList.add('active');
       refreshStorageStats();
     }
+  }
+
+  // ---------- 统计视图 ----------
+  function refreshStatsView() {
+    // 设置当前日期
+    const now = new Date();
+    document.getElementById('scheduleDateDisplay').textContent = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 ${['周日','周一','周二','周三','周四','周五','周六'][now.getDay()]}`;
+    
+    // 刷新各统计内容
+    renderTodaySchedule();
+    renderChatStats();
+    renderFocusStats();
+  }
+
+  // 渲染今日日程
+  function renderTodaySchedule() {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const todaySchedules = statsData.schedules.filter(s => s.date === todayStr);
+    const todayRecords = statsData.focusRecords.filter(r => r.date === todayStr);
+    
+    const container = document.getElementById('scheduleTimeline');
+    if (todaySchedules.length === 0 && todayRecords.length === 0) {
+      container.innerHTML = `<div class="schedule-empty"><i class="fas fa-clock opacity-5"></i><p>暂无日程安排</p></div>`;
+      return;
+    }
+    
+    // 合并所有项目，按时间排序
+    const allItems = [
+      ...todaySchedules.map(s => ({ type: 'schedule', ...s })),
+      ...todayRecords.map(r => ({ type: 'focus', ...r }))
+    ].sort((a, b) => a.time.localeCompare(b.time));
+    
+    if (allItems.length === 0) {
+      container.innerHTML = `<div class="schedule-empty"><i class="fas fa-clock opacity-5"></i><p>暂无日程安排</p></div>`;
+      return;
+    }
+    
+    // 生成时间线HTML
+    let html = '<div class="timeline-container">';
+    
+    allItems.forEach((item, index) => {
+      const isLast = index === allItems.length - 1;
+      if (item.type === 'schedule') {
+        const scheduleIndex = statsData.schedules.findIndex(s => s.date === item.date && s.time === item.time && s.activity === item.activity);
+        const isChar = item.owner === 'char';
+        html += `
+          <div class="timeline-row ${isChar ? 'char-side' : 'user-side'}">
+            <div class="timeline-left">
+              ${isChar ? `<span class="timeline-content char-content">${item.activity}</span><span class="timeline-time">${item.time}</span><span class="timeline-marker char-marker">·</span>` : ''}
+            </div>
+            <div class="timeline-center">
+              <div class="timeline-dot ${isChar ? 'char-dot' : 'user-dot'}"></div>
+              ${!isLast ? '<div class="timeline-line"></div>' : ''}
+            </div>
+            <div class="timeline-right">
+              ${!isChar ? `<span class="timeline-marker user-marker">·</span><span class="timeline-time">${item.time}</span><span class="timeline-content user-content">${item.activity}</span>` : ''}
+            </div>
+          </div>`;
+      } else {
+        const minutes = Math.round(item.durationSec / 60);
+        const isChar = item.owner === 'char';
+        const focusText = `专注 ${minutes}分钟`;
+        html += `
+          <div class="timeline-row ${isChar ? 'char-side' : 'user-side'}">
+            <div class="timeline-left">
+              ${isChar ? `<span class="timeline-content char-content"><i class="fas fa-hourglass-half"></i> ${focusText}</span><span class="timeline-time">${item.time}</span><span class="timeline-marker char-marker">·</span>` : ''}
+            </div>
+            <div class="timeline-center">
+              <div class="timeline-dot ${isChar ? 'char-dot' : 'user-dot'}"></div>
+              ${!isLast ? '<div class="timeline-line"></div>' : ''}
+            </div>
+            <div class="timeline-right">
+              ${!isChar ? `<span class="timeline-marker user-marker">·</span><span class="timeline-time">${item.time}</span><span class="timeline-content user-content"><i class="fas fa-hourglass-half"></i> ${focusText}</span>` : ''}
+            </div>
+          </div>`;
+      }
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+  }
+
+  // 删除日程并刷新
+  window.deleteScheduleAndRefresh = function(index) {
+    deleteSchedule(index);
+    renderTodaySchedule();
+  };
+
+  // 渲染聊天统计
+  function renderChatStats() {
+    const stats = statsData.chatStats;
+    
+    // 对话概况
+    document.getElementById('chatStatCount').textContent = stats.totalMessages;
+    document.getElementById('userMsgCount').textContent = stats.userMessages;
+    document.getElementById('charMsgCount').textContent = stats.charMessages;
+    
+    // 计算对话天数
+    if (stats.firstChatDate) {
+      const firstDate = new Date(stats.firstChatDate);
+      const today = new Date();
+      const days = Math.ceil((today - firstDate) / (1000 * 60 * 60 * 24)) + 1;
+      document.getElementById('chatStatDays').textContent = days;
+      document.getElementById('chatStatStartDate').textContent = stats.firstChatDate;
+    } else {
+      document.getElementById('chatStatDays').textContent = '0';
+      document.getElementById('chatStatStartDate').textContent = '-';
+    }
+    
+    // 热力图（使用当前选中月份）
+    initHeatmapMonth();
+    renderHeatmap(stats.dailyMessages, currentHeatmapYear, currentHeatmapMonth);
+    
+    // 词排行
+    renderWordRanking();
+  }
+  
+  // 热力图月份状态
+  let currentHeatmapYear = new Date().getFullYear();
+  let currentHeatmapMonth = new Date().getMonth() + 1;
+  
+  function initHeatmapMonth() {
+    const monthDisplay = document.getElementById('heatmapCurrentMonth');
+    if (monthDisplay) {
+      monthDisplay.textContent = `${currentHeatmapYear}年${currentHeatmapMonth}月`;
+      monthDisplay.style.cursor = 'pointer';
+      monthDisplay.onclick = () => showMonthPicker();
+    }
+    
+    // 绑定导航按钮
+    const prevBtn = document.getElementById('heatmapPrevMonth');
+    const nextBtn = document.getElementById('heatmapNextMonth');
+    if (prevBtn) {
+      prevBtn.onclick = () => {
+        if (currentHeatmapMonth === 1) {
+          currentHeatmapMonth = 12;
+          currentHeatmapYear--;
+        } else {
+          currentHeatmapMonth--;
+        }
+        renderHeatmap(statsData.chatStats.dailyMessages, currentHeatmapYear, currentHeatmapMonth);
+        const monthDisplay = document.getElementById('heatmapCurrentMonth');
+        if (monthDisplay) monthDisplay.textContent = `${currentHeatmapYear}年${currentHeatmapMonth}月`;
+      };
+    }
+    if (nextBtn) {
+      nextBtn.onclick = () => {
+        const now = new Date();
+        const currTotal = currentHeatmapYear * 12 + currentHeatmapMonth;
+        const nowTotal = now.getFullYear() * 12 + now.getMonth() + 1;
+        if (currTotal >= nowTotal) return; // 不能超过当前月份
+        if (currentHeatmapMonth === 12) {
+          currentHeatmapMonth = 1;
+          currentHeatmapYear++;
+        } else {
+          currentHeatmapMonth++;
+        }
+        renderHeatmap(statsData.chatStats.dailyMessages, currentHeatmapYear, currentHeatmapMonth);
+        const monthDisplay = document.getElementById('heatmapCurrentMonth');
+        if (monthDisplay) monthDisplay.textContent = `${currentHeatmapYear}年${currentHeatmapMonth}月`;
+      };
+    }
+  }
+  
+  function showMonthPicker() {
+    // 创建月份选择器
+    const months = [];
+    const now = new Date();
+    const nowYear = now.getFullYear();
+    const nowMonth = now.getMonth() + 1;
+    
+    // 生成最近12个月
+    for (let i = 0; i < 12; i++) {
+      let m = nowMonth - i;
+      let y = nowYear;
+      while (m <= 0) {
+        m += 12;
+        y--;
+      }
+      months.push({ year: y, month: m });
+    }
+    
+    let pickerHtml = '<div class="month-picker-grid">';
+    months.forEach(m => {
+      const isSelected = m.year === currentHeatmapYear && m.month === currentHeatmapMonth;
+      pickerHtml += `<button class="month-picker-item ${isSelected ? 'selected' : ''}" data-year="${m.year}" data-month="${m.month}">${m.year}年${m.month}月</button>`;
+    });
+    pickerHtml += '</div>';
+    
+    showCommonDialog({
+      title: '选择月份',
+      customBody: pickerHtml,
+      showCancel: true,
+      confirmText: '取消',
+      onConfirm: null,
+      onCancel: null
+    });
+    
+    // 绑定点击事件
+    setTimeout(() => {
+      document.querySelectorAll('.month-picker-item').forEach(btn => {
+        btn.onclick = () => {
+          currentHeatmapYear = parseInt(btn.dataset.year);
+          currentHeatmapMonth = parseInt(btn.dataset.month);
+          closeCommonDialog();
+          renderHeatmap(statsData.chatStats.dailyMessages, currentHeatmapYear, currentHeatmapMonth);
+          const monthDisplay = document.getElementById('heatmapCurrentMonth');
+          if (monthDisplay) monthDisplay.textContent = `${currentHeatmapYear}年${currentHeatmapMonth}月`;
+        };
+      });
+    }, 100);
+  }
+
+  // 渲染热力图（指定年月）
+  function renderHeatmap(dailyMessages, year, month) {
+    const container = document.getElementById('heatmapGrid');
+    if (!container) return;
+    
+    const firstDay = new Date(year, month - 1, 1);
+    const lastDay = new Date(year, month, 0);
+    const startWeekday = firstDay.getDay(); // 0=周日
+    const totalDays = lastDay.getDate();
+    
+    let html = '<div class="heatmap-week-header">';
+    ['日','一','二','三','四','五','六'].forEach(d => {
+      html += `<span class="heatmap-weekday">${d}</span>`;
+    });
+    html += '</div>';
+    
+    html += '<div class="heatmap-days-grid">';
+    
+    // 填充空白
+    for (let i = 0; i < startWeekday; i++) {
+      html += '<div class="heatmap-day-cell empty"></div>';
+    }
+    
+    // 填充日期
+    for (let day = 1; day <= totalDays; day++) {
+      const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      const count = dailyMessages[dateStr] || 0;
+      
+      let level = 'level-0';
+      if (count > 0 && count <= 5) level = 'level-1';
+      else if (count <= 15) level = 'level-2';
+      else if (count <= 30) level = 'level-3';
+      else if (count > 30) level = 'level-4';
+      
+      html += `<div class="heatmap-day-cell ${level}" title="${dateStr}: ${count}条消息">${day}</div>`;
+    }
+    
+    html += '</div>';
+    container.innerHTML = html;
+  }
+
+  // 渲染词排行
+  function renderWordRanking() {
+    const container = document.getElementById('wordRankingList');
+    if (!container) return;
+    
+    const topWords = getTopWords(10);
+    if (topWords.length === 0) {
+      container.innerHTML = `<div class="word-ranking-empty"><i class="fas fa-list opacity-5"></i><p>暂无数据</p></div>`;
+      return;
+    }
+    
+    let html = '';
+    topWords.forEach((item, index) => {
+      html += `
+        <div class="word-ranking-item">
+          <div class="word-ranking-rank">${index + 1}</div>
+          <div class="word-ranking-word">${item.word}</div>
+          <div class="word-ranking-count">${item.count}次</div>
+        </div>`;
+    });
+    
+    container.innerHTML = html;
+  }
+
+  // 渲染专注统计
+  function renderFocusStats() {
+    const records = statsData.focusRecords;
+    
+    // 计算总时长
+    let userSec = 0, charSec = 0;
+    records.forEach(r => {
+      if (r.owner === 'user') userSec += r.durationSec;
+      else charSec += r.durationSec;
+    });
+    
+    // 共同专注时长 = 双方同时专注的时间总和
+    const overlapSec = statsData.totalOverlapSec || 0;
+    
+    const formatHours = (sec) => {
+      const h = Math.floor(sec / 3600);
+      const m = Math.round((sec % 3600) / 60);
+      return h > 0 ? `${h}h${m}m` : `${m}m`;
+    };
+    
+    document.getElementById('totalFocusHours').textContent = formatHours(overlapSec);
+    document.getElementById('userFocusHours').textContent = formatHours(userSec);
+    document.getElementById('charFocusHours').textContent = formatHours(charSec);
+    
+    // 专注记录列表
+    const container = document.getElementById('focusRecordsList');
+    if (records.length === 0) {
+      container.innerHTML = `
+        <div class="focus-record-empty">
+          <i class="fas fa-hourglass-half opacity-5"></i>
+          <p>暂无专注记录</p>
+          <p class="fs-12 text-secondary">正计时超过5分钟、倒计时正常结束的专注会被记录</p>
+        </div>`;
+      return;
+    }
+    
+    // 按时间倒序排序（最新在最上面）
+    const sortedRecords = [...records].sort((a, b) => {
+      const dateCompare = b.date.localeCompare(a.date);
+      if (dateCompare !== 0) return dateCompare;
+      return b.time.localeCompare(a.time);
+    });
+    
+    // 分页：每页5条
+    const pageSize = 5;
+    let currentPage = window.focusRecordsPage || 1;
+    const totalPages = Math.ceil(sortedRecords.length / pageSize);
+    const startIdx = (currentPage - 1) * pageSize;
+    const pageRecords = sortedRecords.slice(startIdx, startIdx + pageSize);
+    
+    // 格式化日期显示
+    const formatDate = (dateStr) => {
+      const d = new Date(dateStr);
+      const month = (d.getMonth() + 1).toString().padStart(2, '0');
+      const day = d.getDate().toString().padStart(2, '0');
+      return `${month}月${day}日`;
+    };
+    
+    let html = '';
+    pageRecords.forEach(record => {
+      const minutes = Math.round(record.durationSec / 60);
+      const dateDisplay = formatDate(record.date);
+      html += `
+        <div class="focus-record-item">
+          <div class="focus-record-time">${dateDisplay} ${record.time}</div>
+          <div class="focus-record-dot ${record.owner === 'user' ? 'user-dot' : 'char-dot'}"></div>
+          <div class="focus-record-info">
+            <div class="focus-record-owner">${record.owner === 'user' ? '我的专注' : '角色专注'}</div>
+            <div class="focus-record-activity">${record.activity}</div>
+          </div>
+          <div class="focus-record-duration">${minutes}分钟</div>
+        </div>`;
+    });
+    
+    // 添加分页控件
+    if (totalPages > 1) {
+      html += `
+        <div class="focus-records-pagination">
+          <span class="focus-records-info">${startIdx + 1}-${Math.min(startIdx + pageSize, sortedRecords.length)} / 共${sortedRecords.length}条</span>
+          <div class="focus-records-btns">
+            <button class="focus-page-btn" onclick="goToFocusPage(${currentPage - 1})" ${currentPage <= 1 ? 'disabled' : ''}>
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <span class="focus-page-num">${currentPage} / ${totalPages}</span>
+            <button class="focus-page-btn" onclick="goToFocusPage(${currentPage + 1})" ${currentPage >= totalPages ? 'disabled' : ''}>
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>`;
+    }
+    
+    container.innerHTML = html;
+  }
+  
+  // 专注记录分页函数
+  window.goToFocusPage = function(page) {
+    const totalRecords = statsData.focusRecords.length;
+    const totalPages = Math.ceil(totalRecords / 5);
+    if (page < 1 || page > totalPages) return;
+    window.focusRecordsPage = page;
+    renderFocusStats();
+  };
+  
+  // 渲染历史专注记录抽屉
+  function renderFocusHistoryDrawer() {
+    const container = document.getElementById('focusHistoryList');
+    const records = statsData.focusRecords;
+    
+    if (records.length === 0) {
+      container.innerHTML = `
+        <div class="focus-history-empty">
+          <i class="fas fa-hourglass-half opacity-5" style="font-size: 32px; display: block; margin-bottom: 12px;"></i>
+          <p>暂无专注记录</p>
+        </div>`;
+      return;
+    }
+    
+    // 按时间倒序排序
+    const sortedRecords = [...records].sort((a, b) => {
+      const dateCompare = b.date.localeCompare(a.date);
+      if (dateCompare !== 0) return dateCompare;
+      return b.time.localeCompare(a.time);
+    });
+    
+    // 格式化日期显示
+    const formatDate = (dateStr) => {
+      const d = new Date(dateStr);
+      const month = (d.getMonth() + 1).toString().padStart(2, '0');
+      const day = d.getDate().toString().padStart(2, '0');
+      return `${month}月${day}日`;
+    };
+    
+    let html = '';
+    sortedRecords.slice(0, 50).forEach(record => {
+      const minutes = Math.round(record.durationSec / 60);
+      const dateDisplay = formatDate(record.date);
+      html += `
+        <div class="focus-history-item">
+          <div class="focus-history-time">${dateDisplay} ${record.time}</div>
+          <div class="focus-history-dot ${record.owner === 'user' ? 'user-dot' : 'char-dot'}"></div>
+          <div class="focus-history-info">
+            <div class="focus-history-owner">${record.owner === 'user' ? '我的专注' : '角色专注'}</div>
+            <div class="focus-history-activity">${record.activity}</div>
+          </div>
+          <div class="focus-history-duration">${minutes}分钟</div>
+        </div>`;
+    });
+    
+    container.innerHTML = html;
+  }
+  
+  // 打开/关闭历史专注抽屉
+  function openFocusHistoryDrawer() {
+    renderFocusHistoryDrawer();
+    document.getElementById('focusHistoryDrawer')?.classList.add('open');
+    document.getElementById('focusHistoryOverlay')?.classList.add('show');
+  }
+  
+  function closeFocusHistoryDrawer() {
+    document.getElementById('focusHistoryDrawer')?.classList.remove('open');
+    document.getElementById('focusHistoryOverlay')?.classList.remove('show');
+  }
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    // 历史专注记录按钮
+    document.getElementById('focusHistoryBtn')?.addEventListener('click', openFocusHistoryDrawer);
+    // 关闭按钮
+    document.getElementById('closeFocusHistoryBtn')?.addEventListener('click', closeFocusHistoryDrawer);
+    // 点击遮罩关闭
+    document.getElementById('focusHistoryOverlay')?.addEventListener('click', closeFocusHistoryDrawer);
+  });
+
+  // 统计栏目切换
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.stats-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const tabName = tab.dataset.tab;
+        
+        // 切换tab按钮样式
+        document.querySelectorAll('.stats-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        // 切换内容
+        document.querySelectorAll('.stats-content').forEach(content => content.classList.remove('active'));
+        document.getElementById(`stats${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Content`)?.classList.add('active');
+      });
+    });
+  });
+
+  // 添加日程弹窗
+  document.addEventListener('DOMContentLoaded', () => {
+    const addScheduleBtn = document.getElementById('addScheduleBtn');
+    addScheduleBtn?.addEventListener('click', () => {
+      showAddScheduleDialog();
+    });
+  });
+
+  // 预设日程活动列表
+  const presetActivities = [
+    { name: '晨跑', icon: 'fa-running', color: '#0f9960' },
+    { name: '阅读', icon: 'fa-book', color: '#3498db' },
+    { name: '写作', icon: 'fa-pen', color: '#e74c3c' },
+    { name: '冥想', icon: 'fa-spa', color: '#9b59b6' },
+    { name: '学习', icon: 'fa-graduation-cap', color: '#f39c12' },
+    { name: '锻炼', icon: 'fa-dumbbell', color: '#e67e22' },
+    { name: '休息', icon: 'fa-bed', color: '#95a5a6' },
+    { name: '工作', icon: 'fa-briefcase', color: '#34495e' }
+  ];
+
+  function showAddScheduleDialog() {
+    const currentTime = new Date().toTimeString().slice(0, 5);
+    
+    // 生成预设卡片HTML
+    const presetCardsHtml = presetActivities.map((act, index) => `
+      <div class="schedule-preset-card" data-activity="${act.name}" data-icon="${act.icon}" data-color="${act.color}" style="--card-color: ${act.color}">
+        <i class="fas ${act.icon}"></i>
+        <span>${act.name}</span>
+      </div>
+    `).join('');
+    
+    const formHtml = `
+      <div class="schedule-dialog-container">
+        <!-- 添加对象选择 -->
+        <div class="schedule-form-group">
+          <label>添加对象</label>
+          <div class="schedule-owner-toggle">
+            <button class="schedule-owner-btn active" data-owner="user" type="button">我的日程</button>
+            <button class="schedule-owner-btn char-btn" data-owner="char" type="button">角色日程</button>
+          </div>
+        </div>
+        
+        <!-- 预设活动卡片 -->
+        <div class="schedule-preset-section">
+          <label>选择活动</label>
+          <div class="schedule-preset-grid">
+            ${presetCardsHtml}
+          </div>
+          <button class="schedule-custom-btn" id="showCustomForm">
+            <i class="fas fa-plus"></i> 自定义活动
+          </button>
+        </div>
+        
+        <!-- 自定义活动表单（默认隐藏） -->
+        <div class="schedule-custom-form" id="customFormSection" style="display: none;">
+          <div class="schedule-form-row">
+            <div class="schedule-form-group">
+              <label>活动名称</label>
+              <input type="text" id="scheduleActivityInput" placeholder="例如：瑜伽、编程...">
+            </div>
+          </div>
+          <div class="schedule-form-row">
+            <div class="schedule-form-group">
+              <label>备注（可选）</label>
+              <input type="text" id="scheduleNoteInput" placeholder="例如：30分钟后休息">
+            </div>
+          </div>
+        </div>
+        
+        <!-- 时间选择 -->
+        <div class="schedule-form-group">
+          <label>时间</label>
+          <input type="time" id="scheduleTimeInput" value="${currentTime}">
+        </div>
+      </div>
+    `;
+    
+    showCommonDialog({
+      title: '添加日程',
+      message: '',
+      customBody: formHtml,
+      showCancel: true,
+      confirmText: '添加',
+      cancelText: '取消',
+      onConfirm: () => {
+        const activityInput = document.getElementById('scheduleActivityInput');
+        const activity = activityInput?.value.trim() || '';
+        const note = document.getElementById('scheduleNoteInput')?.value.trim() || '';
+        const time = document.getElementById('scheduleTimeInput').value;
+        const ownerBtn = document.querySelector('.schedule-owner-btn.active');
+        const owner = ownerBtn?.dataset.owner || 'user';
+        
+        if (!activity) {
+          showToast('请选择或输入活动');
+          return;
+        }
+        
+        // 如果有备注，附加到活动名称
+        const finalActivity = note ? `${activity}（${note}）` : activity;
+        addSchedule(owner, finalActivity, time);
+        renderTodaySchedule();
+        showToast('日程已添加');
+      }
+    });
+    
+    // 切换日程对象按钮
+    setTimeout(() => {
+      document.querySelectorAll('.schedule-owner-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.schedule-owner-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        });
+      });
+      
+      // 预设卡片点击
+      document.querySelectorAll('.schedule-preset-card').forEach(card => {
+        card.addEventListener('click', () => {
+          // 移除其他卡片的选中状态
+          document.querySelectorAll('.schedule-preset-card').forEach(c => c.classList.remove('selected'));
+          // 选中当前卡片
+          card.classList.add('selected');
+          // 填充到输入框
+          const activityInput = document.getElementById('scheduleActivityInput');
+          if (activityInput) {
+            activityInput.value = card.dataset.activity;
+          }
+          // 隐藏自定义表单
+          const customForm = document.getElementById('customFormSection');
+          if (customForm) customForm.style.display = 'none';
+        });
+      });
+      
+      // 自定义按钮
+      document.getElementById('showCustomForm')?.addEventListener('click', () => {
+        const customForm = document.getElementById('customFormSection');
+        if (customForm) {
+          customForm.style.display = customForm.style.display === 'none' ? 'block' : 'none';
+        }
+        // 取消预设卡片选中
+        document.querySelectorAll('.schedule-preset-card').forEach(c => c.classList.remove('selected'));
+        // 清空输入框并聚焦
+        const activityInput = document.getElementById('scheduleActivityInput');
+        if (activityInput) {
+          activityInput.value = '';
+          activityInput.focus();
+        }
+      });
+    }, 0);
   }
 
   function formatCountdown(totalSeconds) {
@@ -1467,6 +2654,9 @@
     }
     if (editAiFocusBtn) editAiFocusBtn.style.display = (focusState.ai.enabled && !focusState.ai.locked) ? 'inline-flex' : 'none';
     if (endAiFocusBtn) endAiFocusBtn.style.display = (focusState.ai.enabled && focusState.ai.running) ? 'inline-flex' : 'none';
+    // 专注页面内的结束AI专注按钮
+    const endAiFocusBtn2 = document.getElementById('endAiFocusBtn2');
+    if (endAiFocusBtn2) endAiFocusBtn2.style.display = (focusState.ai.enabled && focusState.ai.running) ? 'flex' : 'none';
     if (focusAiTimerDisplay) focusAiTimerDisplay.textContent = formatCountdown(computeTimerSeconds(focusState.ai));
     if (focusAiActivityDisplay) focusAiActivityDisplay.textContent = focusState.ai.activity || '专注';
 
@@ -1480,6 +2670,13 @@
         const userRunning = !!focusState.user.running;
         const aiRunning = !!(focusState.ai.enabled && focusState.ai.running);
 
+        // 共同专注时间追踪：每秒滴答时检查是否双方都在专注
+        if (userRunning && aiRunning) {
+          // 双方都在专注，累计重叠时间
+          statsData.totalOverlapSec++;
+          saveStatsData();
+        }
+
         // 只要还有一个在运行，就继续滴答
         if (!userRunning && !aiRunning) {
             clearInterval(focusTickerId);
@@ -1492,23 +2689,49 @@
       if (focusState.user.running && focusState.user.mode !== 'up') {
         const uRem = computeDownRemaining(focusState.user);
         if (uRem <= 0) {
+          // 倒计时归零，自动结束并记录
           focusState.user.running = false;
           focusState.user.remainingSec = 0;
           focusState.user.lastStartTs = 0;
           focusState.user.startRemainingSec = 0;
+          // 触发结束专注流程
+          const elapsed = focusState.user.durationSec || 0;
+          const activity = focusState.user.activity || '专注';
+          addFocusRecord('user', activity, elapsed, 'down');
+          resetUserOnly();
+          // 显示专注结束弹窗
+          const elapsedMin = Math.round(elapsed / 60);
+          const durationMin = Math.round(focusState.user.durationSec / 60);
+          const timeStr = elapsedMin > 0 ? `${elapsedMin}分钟` : `${durationMin}分钟`;
+          showCommonDialog({
+            title: '⭐专注结束',
+            message: `${activity} · ${timeStr}`,
+            showCancel: false,
+            confirmText: '好的',
+            onConfirm: null
+          });
         }
       }
 
       if (focusState.ai.enabled && focusState.ai.running && focusState.ai.mode !== 'up') {
         const aRem = computeDownRemaining(focusState.ai);
         if (aRem <= 0) {
+            // 计算AI专注时长并记录
+            const elapsed = focusState.ai.durationSec || 0;
+            const activity = focusState.ai.activity || '专注';
+            addFocusRecord('char', activity, elapsed, 'down');
+            
             focusState.ai.running = false;
             focusState.ai.remainingSec = 0;
             focusState.ai.lastStartTs = 0;
             focusState.ai.startRemainingSec = 0;
-            // 对方自主结束，发送消息
+            // 对方专注结束，发送消息
             sendFocusEndMessage();
+            // 倒计时归零，自动退出邀请（需用户重新邀请）
+            focusState.ai.enabled = false;
+            focusState.ai.locked = false;
             saveFocusState();
+            syncFocusUI();
         }
       }
 
@@ -1609,15 +2832,66 @@
       ? focusState.user.elapsedSec
       : (focusState.user.startRemainingSec - focusState.user.remainingSec);
     const duration = focusState.user.durationSec || 0;
+    const activity = focusState.user.activity || '专注';
+    
+    const MINute = 60;
+    const FIVE_MINUTES = 5 * 60;
+    
+    // 判断是否需要确认弹窗
+    if (focusState.user.mode === 'up') {
+      // 正计时模式
+      if (elapsed < MINute) {
+        // 小于1分钟：不记录
+        resetUserOnly();
+        showToast('专注时长不足1分钟，不计入记录');
+        return;
+      }
+      if (elapsed < FIVE_MINUTES) {
+        // 大于等于1分钟但小于5分钟：需要确认
+        showCommonDialog({
+          title: '⚠️ 确认结束',
+          message: '此次专注未满五分钟将不会被计入专注统计，是否确认结束？',
+          showCancel: true,
+          confirmText: '确认结束',
+          cancelText: '继续专注',
+          onConfirm: () => {
+            resetUserOnly();
+            showToast('本次专注不计入记录');
+          }
+        });
+        return;
+      }
+      // 大于等于5分钟：正常记录
+    } else {
+      // 倒计时模式：提前结束需要确认
+      const remaining = focusState.user.remainingSec || 0;
+      if (remaining > 0) {
+        showCommonDialog({
+          title: '⚠️ 确认结束',
+          message: '提前结束专注将不会计入专注统计，是否确认结束？',
+          showCancel: true,
+          confirmText: '确认结束',
+          cancelText: '继续专注',
+          onConfirm: () => {
+            resetUserOnly();
+            showToast('本次专注不计入记录');
+          }
+        });
+        return;
+      }
+      // 正常结束：正常记录
+    }
+    
+    // 正常结束，记录并显示弹窗
     const elapsedMin = Math.round(elapsed / 60);
     const durationMin = Math.round(duration / 60);
-    const activity = focusState.user.activity || '专注';
-
     const timeStr = elapsedMin > 0 ? `${elapsedMin}分钟` : `${durationMin}分钟`;
     const message = `${activity} · ${timeStr}`;
-
+    
+    // 记录到统计数据
+    addFocusRecord('user', activity, elapsed, focusState.user.mode);
+    
     resetUserOnly();
-    // 显示专注结束弹窗
     showCommonDialog({
       title: '⭐专注结束',
       message: message,
@@ -1644,6 +2918,15 @@
 
   function endAiFocus() {
     if (!focusState.ai.enabled) return;
+    
+    // 计算AI专注时长并记录
+    const elapsed = Math.round(computeUpElapsed(focusState.ai));
+    const activity = focusState.ai.activity || '专注';
+    // AI专注也记录（和用户专注一样判断条件）
+    if (elapsed >= 5 * 60 || (focusState.ai.mode === 'down' && elapsed > 0)) {
+      addFocusRecord('char', activity, elapsed, focusState.ai.mode);
+    }
+    
     focusState.ai.running = false;
     focusState.ai.lastStartTs = 0;
     // 重置计时（无论是否运行，直接归零）
@@ -2086,10 +3369,13 @@
     loadProfile();
     loadUserImages();
     loadFocusState();
+    loadStatsData();  // 加载统计数据
     await loadFocusAnimData();   // IndexedDB 异步读取
     normalizeFocusAfterLoad();
     renderMessages();
     buildChatPreferencesUI();
+    loadProactiveMsgPrefs();
+    buildProactiveMsgUI();
     renderLearnedTraits();
     syncFocusUI();
     if (focusState.user.running || (focusState.ai.enabled && focusState.ai.running)) ensureFocusTicker();
@@ -2154,6 +3440,7 @@
     userAvatarBtn.addEventListener('click', ()=>setActiveView('profile'));
     focusIcon?.addEventListener('click', ()=>setActiveView('focus'));
     characterIcon.addEventListener('click', ()=>setActiveView('character'));
+    statsIcon?.addEventListener('click', ()=>setActiveView('stats'));
     dataManagerIcon.addEventListener('click', ()=>setActiveView('data'));
 
     focusSettingsBtn?.addEventListener('click', openFocusSettingsDialog);
@@ -2172,6 +3459,11 @@
     focusResetBtn?.addEventListener('click', endUserFocus);
     // 结束对方专注
     endAiFocusBtn?.addEventListener('click', () => {
+      endAiFocus();
+    });
+    // 专注页面内的结束对方专注按钮
+    const endAiFocusBtn2 = document.getElementById('endAiFocusBtn2');
+    endAiFocusBtn2?.addEventListener('click', () => {
       endAiFocus();
     });
     inviteToggleMain?.addEventListener('click', () => {
