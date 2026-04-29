@@ -308,6 +308,33 @@
     saveStatsData();
   }
 
+  // 从历史消息重建聊天统计（确保历史记录都被统计）
+  function rebuildChatStatsFromHistory() {
+    const realMsgs = messages.filter(m => (m.role === 'user' || m.role === 'assistant') && !m.isReset && m.timestamp);
+    if (realMsgs.length === 0) return;
+
+    // 重置统计数据
+    let userCount = 0, charCount = 0;
+    const daily = {};
+    let firstDate = null;
+
+    realMsgs.forEach(m => {
+      const d = new Date(m.timestamp);
+      const dateStr = d.toISOString().split('T')[0];
+      daily[dateStr] = (daily[dateStr] || 0) + 1;
+      if (!firstDate || dateStr < firstDate) firstDate = dateStr;
+      if (m.role === 'user') userCount++;
+      else charCount++;
+    });
+
+    statsData.chatStats.totalMessages = userCount + charCount;
+    statsData.chatStats.userMessages = userCount;
+    statsData.chatStats.charMessages = charCount;
+    statsData.chatStats.dailyMessages = daily;
+    statsData.chatStats.firstChatDate = firstDate;
+    saveStatsData();
+  }
+
   // 获取高频词
   function getTopWords(count = 20) {
     const wordCount = {};
@@ -619,12 +646,21 @@
   function startProactiveTicker() {
     if (proactiveTickerId) clearInterval(proactiveTickerId);
     proactiveLastCheckTs = Date.now();
-    proactiveTickerId = setInterval(checkProactiveMessage, 60 * 1000); // 每分钟检查一次
+    proactiveTickerId = setInterval(() => {
+      checkProactiveMessage();
+      checkProactiveFollowUp();
+    }, 60 * 1000); // 每分钟检查一次
   }
 
   function stopProactiveTicker() {
     if (proactiveTickerId) { clearInterval(proactiveTickerId); proactiveTickerId = null; }
   }
+
+  // 主动消息追问：记录上次主动消息发出时间 & 是否已等待催问
+  let proactiveLastSentTs = 0;     // 上次主动消息发出时间
+  let proactiveFollowUpSent = false; // 本轮是否已发过催消息
+  // 无回复多少分钟后催问（固定15分钟）
+  const PROACTIVE_FOLLOWUP_MINUTES = 15;
 
   /** 检查是否应该主动发消息 */
   async function checkProactiveMessage() {
@@ -637,11 +673,89 @@
     const roll = Math.random() * 100;
     if (roll > proactiveMsgPrefs.probability) return;
 
+    // 检查：最后一条消息是否是 assistant（避免 AI 主动发消息后没人理又立刻再发）
+    const lastMsg = messages.filter(m => m.role === 'user' || m.role === 'assistant').slice(-1)[0];
+    if (lastMsg && lastMsg.role === 'assistant') return; // 上条是AI发的，跳过
+
     // 触发主动消息
-    const triggerMsg = await callAI('请以角色的口吻说一句话来主动开启对话（只有一条消息，简洁自然，符合角色设定）。', '你是一个辅助助手，只需输出一句话用于开启对话，不要多余内容。');
-    if (triggerMsg && triggerMsg.trim()) {
-      addMessage('assistant', triggerMsg.trim());
-      triggerNotification('青绿 发来一条消息', triggerMsg.trim());
+    isGenerating = true;
+    try {
+      // 只用少量历史（5条），避免 AI 接续自己发的消息导致自问自答
+      const shortHistory = messages.filter(m => m.role === 'user' || m.role === 'assistant').slice(-5)
+        .map(m => ({ role: m.role, content: m.content }));
+      const systemMsg = {
+        role: 'system',
+        content: `你是角色${charNameInput ? charNameInput.value || '角色' : '角色'}，现在你主动联系对方说一句话。要求：只输出一句话，简洁自然，符合你的角色设定，不要其他内容。`
+      };
+      const res = await fetch(config.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.apiKey}` },
+        body: JSON.stringify({ model: config.model, messages: [systemMsg, ...shortHistory], temperature: 0.9 })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const triggerMsg = data?.choices?.[0]?.message?.content;
+      if (triggerMsg && triggerMsg.trim()) {
+        const cleaned = cleanParentheses(triggerMsg.trim());
+        addMessage('assistant', cleaned);
+        triggerNotification((charNameInput?.value || '角色') + ' 发来消息', cleaned);
+        proactiveLastSentTs = Date.now();
+        proactiveFollowUpSent = false; // 重置催问状态
+      }
+    } catch(e) {
+      console.warn('主动消息生成失败:', e);
+    } finally {
+      isGenerating = false;
+    }
+  }
+
+  /** 检查是否需要发催消息（主动消息发出后长时间无回复） */
+  async function checkProactiveFollowUp() {
+    if (!proactiveMsgPrefs.enabled || isGenerating) return;
+    if (!proactiveLastSentTs || proactiveFollowUpSent) return;
+
+    // 检查距离主动消息发出是否超过阈值
+    const waitedMin = (Date.now() - proactiveLastSentTs) / 1000 / 60;
+    if (waitedMin < PROACTIVE_FOLLOWUP_MINUTES) return;
+
+    // 检查：最后一条消息是否还是 assistant（用户仍未回复）
+    const lastMsg = messages.filter(m => m.role === 'user' || m.role === 'assistant').slice(-1)[0];
+    if (!lastMsg || lastMsg.role !== 'assistant') {
+      // 用户已回复，重置
+      proactiveLastSentTs = 0;
+      proactiveFollowUpSent = false;
+      return;
+    }
+
+    proactiveFollowUpSent = true; // 标记已发，不重复催
+    isGenerating = true;
+    try {
+      const charName = charNameInput?.value || '角色';
+      // 取最近5条上下文（不含刚发的那条，避免再接自己话题）
+      const shortHistory = messages.filter(m => m.role === 'user' || m.role === 'assistant').slice(-5)
+        .map(m => ({ role: m.role, content: m.content }));
+      const systemMsg = {
+        role: 'system',
+        content: `你是角色${charName}。你之前发了消息但对方一直没有回复，现在你想问问对方为什么不回你，语气和表达方式要符合你的角色设定，只输出一句话，自然且不刻意。`
+      };
+      const res = await fetch(config.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.apiKey}` },
+        body: JSON.stringify({ model: config.model, messages: [systemMsg, ...shortHistory], temperature: 0.9 })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const followUpMsg = data?.choices?.[0]?.message?.content;
+      if (followUpMsg && followUpMsg.trim()) {
+        const cleaned = cleanParentheses(followUpMsg.trim());
+        addMessage('assistant', cleaned);
+        triggerNotification(charName + ' 发来消息', cleaned);
+        proactiveLastSentTs = 0; // 重置，避免再次触发
+      }
+    } catch(e) {
+      console.warn('催消息生成失败:', e);
+    } finally {
+      isGenerating = false;
     }
   }
 
@@ -782,7 +896,19 @@
   // ---------- 消息渲染 ----------
   function formatTime(ts) {
     const d = new Date(ts);
-    return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+    const hhmm = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const msgDay = new Date(d);
+    msgDay.setHours(0, 0, 0, 0);
+    const diffDays = Math.round((today - msgDay) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return hhmm;
+    if (diffDays === 1) return `昨天 ${hhmm}`;
+    if (diffDays === 2) return `前天 ${hhmm}`;
+    if (diffDays < 30) return `${diffDays}天前 ${hhmm}`;
+    return `${d.getMonth()+1}/${d.getDate()} ${hhmm}`;
   }
 
   function escapeHtml(text) {
@@ -1553,6 +1679,10 @@ ${existingMemories || '暂无'}
     isGenerating = true;
     sendBtn.disabled = true;
 
+    // 用户发消息：重置主动消息催问状态
+    proactiveLastSentTs = 0;
+    proactiveFollowUpSent = false;
+
     resolvePendingUnreads();
 
     // 先把用户的所有消息都发出来
@@ -1975,151 +2105,10 @@ ${existingMemories || '暂无'}
       document.getElementById('chatStatStartDate').textContent = '-';
     }
     
-    // 热力图（使用当前选中月份）
-    initHeatmapMonth();
-    renderHeatmap(stats.dailyMessages, currentHeatmapYear, currentHeatmapMonth);
-    
     // 词排行
     renderWordRanking();
   }
   
-  // 热力图月份状态
-  let currentHeatmapYear = new Date().getFullYear();
-  let currentHeatmapMonth = new Date().getMonth() + 1;
-  
-  function initHeatmapMonth() {
-    const monthDisplay = document.getElementById('heatmapCurrentMonth');
-    if (monthDisplay) {
-      monthDisplay.textContent = `${currentHeatmapYear}年${currentHeatmapMonth}月`;
-      monthDisplay.style.cursor = 'pointer';
-      monthDisplay.onclick = () => showMonthPicker();
-    }
-    
-    // 绑定导航按钮
-    const prevBtn = document.getElementById('heatmapPrevMonth');
-    const nextBtn = document.getElementById('heatmapNextMonth');
-    if (prevBtn) {
-      prevBtn.onclick = () => {
-        if (currentHeatmapMonth === 1) {
-          currentHeatmapMonth = 12;
-          currentHeatmapYear--;
-        } else {
-          currentHeatmapMonth--;
-        }
-        renderHeatmap(statsData.chatStats.dailyMessages, currentHeatmapYear, currentHeatmapMonth);
-        const monthDisplay = document.getElementById('heatmapCurrentMonth');
-        if (monthDisplay) monthDisplay.textContent = `${currentHeatmapYear}年${currentHeatmapMonth}月`;
-      };
-    }
-    if (nextBtn) {
-      nextBtn.onclick = () => {
-        const now = new Date();
-        const currTotal = currentHeatmapYear * 12 + currentHeatmapMonth;
-        const nowTotal = now.getFullYear() * 12 + now.getMonth() + 1;
-        if (currTotal >= nowTotal) return; // 不能超过当前月份
-        if (currentHeatmapMonth === 12) {
-          currentHeatmapMonth = 1;
-          currentHeatmapYear++;
-        } else {
-          currentHeatmapMonth++;
-        }
-        renderHeatmap(statsData.chatStats.dailyMessages, currentHeatmapYear, currentHeatmapMonth);
-        const monthDisplay = document.getElementById('heatmapCurrentMonth');
-        if (monthDisplay) monthDisplay.textContent = `${currentHeatmapYear}年${currentHeatmapMonth}月`;
-      };
-    }
-  }
-  
-  function showMonthPicker() {
-    // 创建月份选择器
-    const months = [];
-    const now = new Date();
-    const nowYear = now.getFullYear();
-    const nowMonth = now.getMonth() + 1;
-    
-    // 生成最近12个月
-    for (let i = 0; i < 12; i++) {
-      let m = nowMonth - i;
-      let y = nowYear;
-      while (m <= 0) {
-        m += 12;
-        y--;
-      }
-      months.push({ year: y, month: m });
-    }
-    
-    let pickerHtml = '<div class="month-picker-grid">';
-    months.forEach(m => {
-      const isSelected = m.year === currentHeatmapYear && m.month === currentHeatmapMonth;
-      pickerHtml += `<button class="month-picker-item ${isSelected ? 'selected' : ''}" data-year="${m.year}" data-month="${m.month}">${m.year}年${m.month}月</button>`;
-    });
-    pickerHtml += '</div>';
-    
-    showCommonDialog({
-      title: '选择月份',
-      customBody: pickerHtml,
-      showCancel: true,
-      confirmText: '取消',
-      onConfirm: null,
-      onCancel: null
-    });
-    
-    // 绑定点击事件
-    setTimeout(() => {
-      document.querySelectorAll('.month-picker-item').forEach(btn => {
-        btn.onclick = () => {
-          currentHeatmapYear = parseInt(btn.dataset.year);
-          currentHeatmapMonth = parseInt(btn.dataset.month);
-          closeCommonDialog();
-          renderHeatmap(statsData.chatStats.dailyMessages, currentHeatmapYear, currentHeatmapMonth);
-          const monthDisplay = document.getElementById('heatmapCurrentMonth');
-          if (monthDisplay) monthDisplay.textContent = `${currentHeatmapYear}年${currentHeatmapMonth}月`;
-        };
-      });
-    }, 100);
-  }
-
-  // 渲染热力图（指定年月）
-  function renderHeatmap(dailyMessages, year, month) {
-    const container = document.getElementById('heatmapGrid');
-    if (!container) return;
-    
-    const firstDay = new Date(year, month - 1, 1);
-    const lastDay = new Date(year, month, 0);
-    const startWeekday = firstDay.getDay(); // 0=周日
-    const totalDays = lastDay.getDate();
-    
-    let html = '<div class="heatmap-week-header">';
-    ['日','一','二','三','四','五','六'].forEach(d => {
-      html += `<span class="heatmap-weekday">${d}</span>`;
-    });
-    html += '</div>';
-    
-    html += '<div class="heatmap-days-grid">';
-    
-    // 填充空白
-    for (let i = 0; i < startWeekday; i++) {
-      html += '<div class="heatmap-day-cell empty"></div>';
-    }
-    
-    // 填充日期
-    for (let day = 1; day <= totalDays; day++) {
-      const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-      const count = dailyMessages[dateStr] || 0;
-      
-      let level = 'level-0';
-      if (count > 0 && count <= 5) level = 'level-1';
-      else if (count <= 15) level = 'level-2';
-      else if (count <= 30) level = 'level-3';
-      else if (count > 30) level = 'level-4';
-      
-      html += `<div class="heatmap-day-cell ${level}" title="${dateStr}: ${count}条消息">${day}</div>`;
-    }
-    
-    html += '</div>';
-    container.innerHTML = html;
-  }
-
   // 渲染词排行
   function renderWordRanking() {
     const container = document.getElementById('wordRankingList');
@@ -3360,6 +3349,152 @@ ${existingMemories || '暂无'}
     reader.readAsText(file);
   }
 
+  // ---------- 分模块导入导出 ----------
+  function downloadJSON(filename, obj) {
+    const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function readJSONFile(file, callback) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try { callback(JSON.parse(e.target.result)); }
+      catch(err) { showToast('文件解析失败：' + err.message); }
+    };
+    reader.readAsText(file);
+  }
+
+  // 聊天数据 + 控制中心配置
+  function exportChatData() {
+    const obj = {
+      chat_messages: localStorage.getItem('chat_messages'),
+      chat_preferences: localStorage.getItem('chat_preferences'),
+      chat_roleplay_config_v2: localStorage.getItem('chat_roleplay_config_v2'),
+      proactive_msg_prefs: localStorage.getItem('proactive_msg_prefs'),
+      notification_prefs: localStorage.getItem('notification_prefs'),
+      learned_traits: localStorage.getItem('learned_traits'),
+    };
+    downloadJSON(`corner_chat_${new Date().toISOString().slice(0,10)}.json`, obj);
+  }
+
+  function importChatData(file) {
+    readJSONFile(file, data => {
+      showCommonDialog({
+        title: '导入聊天数据',
+        message: '将覆盖当前聊天记录和控制中心配置，确定继续？',
+        confirmText: '确定导入',
+        onConfirm: () => {
+          const keys = ['chat_messages','chat_preferences','chat_roleplay_config_v2','proactive_msg_prefs','notification_prefs','learned_traits'];
+          keys.forEach(k => { if (data[k] != null) localStorage.setItem(k, data[k]); });
+          showToast('导入成功，页面即将刷新');
+          setTimeout(() => location.reload(), 800);
+        }
+      });
+    });
+  }
+
+  // 人物设定
+  function exportCharacterData() {
+    const obj = {
+      character_data: localStorage.getItem('character_data'),
+    };
+    downloadJSON(`corner_character_${new Date().toISOString().slice(0,10)}.json`, obj);
+  }
+
+  function importCharacterData(file) {
+    readJSONFile(file, data => {
+      showCommonDialog({
+        title: '导入人物设定',
+        message: '将覆盖当前人物设定，确定继续？',
+        confirmText: '确定导入',
+        onConfirm: () => {
+          if (data.character_data != null) localStorage.setItem('character_data', data.character_data);
+          showToast('导入成功，页面即将刷新');
+          setTimeout(() => location.reload(), 800);
+        }
+      });
+    });
+  }
+
+  // 用户个人资料
+  function exportProfileData() {
+    const obj = {
+      profile_name: localStorage.getItem('profile_name'),
+      profile_bio: localStorage.getItem('profile_bio'),
+      user_avatar: localStorage.getItem('user_avatar'),
+      user_cover: localStorage.getItem('user_cover'),
+    };
+    downloadJSON(`corner_profile_${new Date().toISOString().slice(0,10)}.json`, obj);
+  }
+
+  function importProfileData(file) {
+    readJSONFile(file, data => {
+      showCommonDialog({
+        title: '导入个人资料',
+        message: '将覆盖当前个人资料，确定继续？',
+        confirmText: '确定导入',
+        onConfirm: () => {
+          ['profile_name','profile_bio','user_avatar','user_cover'].forEach(k => {
+            if (data[k] != null) localStorage.setItem(k, data[k]);
+          });
+          showToast('导入成功，页面即将刷新');
+          setTimeout(() => location.reload(), 800);
+        }
+      });
+    });
+  }
+
+  // 统计数据
+  function exportStatsData() {
+    const obj = { stats_data: localStorage.getItem('stats_data') };
+    downloadJSON(`corner_stats_${new Date().toISOString().slice(0,10)}.json`, obj);
+  }
+
+  function importStatsData(file) {
+    readJSONFile(file, data => {
+      showCommonDialog({
+        title: '导入统计数据',
+        message: '将覆盖当前统计数据，确定继续？',
+        confirmText: '确定导入',
+        onConfirm: () => {
+          if (data.stats_data != null) localStorage.setItem('stats_data', data.stats_data);
+          showToast('导入成功，页面即将刷新');
+          setTimeout(() => location.reload(), 800);
+        }
+      });
+    });
+  }
+
+  // 设置界面数据（主题、API配置）
+  function exportSettingsData() {
+    const obj = {
+      chat_theme: localStorage.getItem('chat_theme'),
+      chat_roleplay_config_v2: localStorage.getItem('chat_roleplay_config_v2'),
+    };
+    downloadJSON(`corner_settings_${new Date().toISOString().slice(0,10)}.json`, obj);
+  }
+
+  function importSettingsData(file) {
+    readJSONFile(file, data => {
+      showCommonDialog({
+        title: '导入设置',
+        message: '将覆盖当前设置，确定继续？',
+        confirmText: '确定导入',
+        onConfirm: () => {
+          ['chat_theme','chat_roleplay_config_v2'].forEach(k => {
+            if (data[k] != null) localStorage.setItem(k, data[k]);
+          });
+          showToast('导入成功，页面即将刷新');
+          setTimeout(() => location.reload(), 800);
+        }
+      });
+    });
+  }
+
   // ---------- 初始化 ----------
   async function init() {
     loadTheme();
@@ -3370,6 +3505,7 @@ ${existingMemories || '暂无'}
     loadUserImages();
     loadFocusState();
     loadStatsData();  // 加载统计数据
+    rebuildChatStatsFromHistory(); // 根据历史消息重建聊天统计（防止遗漏）
     await loadFocusAnimData();   // IndexedDB 异步读取
     normalizeFocusAfterLoad();
     renderMessages();
@@ -3496,6 +3632,33 @@ ${existingMemories || '暂无'}
     });
 
     saveCharacterBtn.addEventListener('click', saveCharacterToStorage);
+
+    // ---------- 分模块导入导出按钮绑定 ----------
+    // 控制中心：聊天数据
+    document.getElementById('chatDataExportBtn')?.addEventListener('click', exportChatData);
+    document.getElementById('chatDataImportBtn')?.addEventListener('click', () => document.getElementById('chatDataImportInput').click());
+    document.getElementById('chatDataImportInput')?.addEventListener('change', e => { if(e.target.files[0]) { importChatData(e.target.files[0]); e.target.value=''; } });
+
+    // 人物设定
+    document.getElementById('characterExportBtn')?.addEventListener('click', exportCharacterData);
+    document.getElementById('characterImportBtn')?.addEventListener('click', () => document.getElementById('characterImportInput').click());
+    document.getElementById('characterImportInput')?.addEventListener('change', e => { if(e.target.files[0]) { importCharacterData(e.target.files[0]); e.target.value=''; } });
+
+    // 个人资料
+    document.getElementById('profileExportBtn')?.addEventListener('click', exportProfileData);
+    document.getElementById('profileImportBtn')?.addEventListener('click', () => document.getElementById('profileImportInput').click());
+    document.getElementById('profileImportInput')?.addEventListener('change', e => { if(e.target.files[0]) { importProfileData(e.target.files[0]); e.target.value=''; } });
+
+    // 统计数据
+    document.getElementById('statsExportBtn')?.addEventListener('click', exportStatsData);
+    document.getElementById('statsImportBtn')?.addEventListener('click', () => document.getElementById('statsImportInput').click());
+    document.getElementById('statsImportInput')?.addEventListener('change', e => { if(e.target.files[0]) { importStatsData(e.target.files[0]); e.target.value=''; } });
+
+    // 设置界面
+    document.getElementById('settingsExportBtn')?.addEventListener('click', exportSettingsData);
+    document.getElementById('settingsImportBtn')?.addEventListener('click', () => document.getElementById('settingsImportInput').click());
+    document.getElementById('settingsImportInput')?.addEventListener('change', e => { if(e.target.files[0]) { importSettingsData(e.target.files[0]); e.target.value=''; } });
+
     resetCharacterBtn.addEventListener('click', ()=>{
       showCommonDialog({
         title: '重置设定',
