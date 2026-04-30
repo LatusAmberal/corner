@@ -185,9 +185,11 @@
         <div class="profile-view" id="profileView">
             <div class="profile-banner">
                 <div class="profile-banner-content">
-                    <div class="profile-avatar-large" id="profileAvatarLarge"><i class="fas fa-user"></i></div>
+                    <div class="profile-avatar-large" id="profileAvatarLarge">
+                        <i class="fas fa-user"></i>
+                    </div>
                     <div class="profile-info">
-                        <h2 id="profileDisplayName">用户</h2>
+                        <h2 id="profileDisplayName">用户<span class="online-status-text" id="profileOnlineIndicator"><span class="online-status-dot"></span><span class="online-status-label">在线</span></span></h2>
                         <p id="profileBioDisplay"><i class="fas fa-quote-left mr-8"></i>在一隅，遇见自己。</p>
                     </div>
                 </div>
@@ -247,7 +249,7 @@
                         <div class="flex-between mt-12 align-center">
                             <div class="invite-label-wrap">
                                 <span class="theme-toggle-label"><i class="fas fa-user-friends"></i> 邀请对方一起</span>
-                                <span class="focus-mode-hint" id="focusModeHint">正计时模式下AI自行决定完成专注/活动所需的时间并且会自主停止计时(也可以手动结束计时)</span>
+                                <span class="focus-mode-hint" id="focusModeHint">正计时模式下对方将自行决定完成专注(也可以手动结束计时)</span>
                             </div>
                             <div class="flex-align-center gap-8">
                                 <button class="ai-focus-end-btn" id="endAiFocusBtn2" title="结束对方专注" style="display:none;"><i class="fas fa-stop-circle"></i></button>
@@ -468,6 +470,29 @@
             <div class="preview-header">
                 <span class="fs-16 fw-500 text-primary"><i class="fas fa-image mr-8"></i>角色卡片预览</span>
             </div>
+
+            <!-- 角色主页信息折叠卡 -->
+            <div class="settings-card char-info-collapse-card" id="charProfileInfoCard">
+                <div class="char-info-collapse-header" id="charProfileInfoHeader">
+                    <span><i class="fas fa-address-card"></i> 角色主页信息</span>
+                    <i class="fas fa-chevron-down char-info-collapse-arrow" id="charProfileInfoArrow"></i>
+                </div>
+                <div class="char-info-collapse-body" id="charProfileInfoBody">
+                    <div class="config-group">
+                        <label>CID</label>
+                        <input type="text" id="charCidInput" placeholder="角色的 一隅 账号id，如@Dima22018" class="w-full">
+                    </div>
+                    <div class="config-group">
+                        <label>地区</label>
+                        <input type="text" id="charRegionInput" placeholder="例如：德国 弗莱堡" class="w-full">
+                    </div>
+                    <div class="config-group">
+                        <label>自我介绍</label>
+                        <textarea id="charSelfIntroInput" rows="2" placeholder="角色的自我介绍，Ta会用什么方式介绍自己..." style="resize:vertical;"></textarea>
+                    </div>
+                </div>
+            </div>
+
             <div class="character-preview-card" id="characterPreviewCard">
                 <div class="character-preview-bg" id="characterPreviewBg"></div>
                 <div class="character-preview-content">
@@ -651,6 +676,18 @@
                     <input type="text" id="editProfileBioInput" placeholder="写点什么..." value="在一隅，遇见自己。">
                 </div>
                 <div class="config-group">
+                    <label>CID</label>
+                    <input type="text" id="editProfileCidInput" placeholder="例如：@Yulia3303" value="">
+                </div>
+                <div class="config-group">
+                    <label>地区</label>
+                    <input type="text" id="editProfileRegionInput" placeholder="例如：俄罗斯 圣彼得堡" value="">
+                </div>
+                <div class="config-group">
+                    <label>自我介绍</label>
+                    <textarea id="editProfileSelfIntroInput" rows="2" placeholder="简单介绍一下自己..." style="resize:vertical;"></textarea>
+                </div>
+                <div class="config-group">
                     <label>头像</label>
                     <div class="flex-center flex-gap-12">
                         <button class="btn btn-secondary flex-1" id="editUploadAvatarBtn"><i class="fas fa-camera"></i> 上传头像</button>
@@ -680,6 +717,20 @@
             <button class="close-drawer" id="closeDrawerBtn"><i class="fas fa-times"></i></button>
         </div>
         <div class="drawer-content">
+            <!-- 备注与描述区域（控制中心第一个板块） -->
+            <div class="char-note-section" id="charNoteSection">
+                <div class="char-note-label">
+                    <i class="fas fa-sticky-note"></i> 角色备注
+                </div>
+                <input type="text" id="charNoteInput" class="char-note-input" placeholder="输入备注，将显示在标题栏">
+                <div class="char-note-label" style="margin-top:12px;">
+                    <i class="fas fa-align-left"></i> 角色描述
+                </div>
+                <textarea id="charDescInput" class="char-note-input" rows="2" placeholder="输入描述，显示在角色卡片中"></textarea>
+                <div class="char-note-hint">
+                    <i class="fas fa-info-circle"></i> 备注和描述不会被读取
+                </div>
+            </div>
             <div class="mt-20">
                 <button class="btn btn-warning w-full" id="clearChatBtn"><i class="fas fa-trash-alt"></i> 清空对话记录</button>
             </div>
@@ -716,8 +767,77 @@
     </div>
 
     <!-- 外部脚本 -->
+
     <!-- 隐藏的示例对话输入框（数据存储用，不在界面显示） -->
     <textarea id="charExamplesInput" style="display:none;" rows="4" placeholder="用户：你好呀&#10;角色：……你是谁？有什么事吗？"></textarea>
+
+    <!-- 用户主页弹窗（点击用户头像弹出） -->
+    <div class="user-profile-popup" id="userProfilePopup">
+        <div class="cpp-cover" id="upCover"></div>
+        <div class="cpp-top">
+            <div class="cpp-avatar" id="upAvatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="cpp-namerow">
+                <span class="cpp-name" id="upName">用户</span>
+                <span class="online-status-text" id="upOnlineIndicator"><span class="online-status-dot"></span><span class="online-status-label">在线</span></span>
+            </div>
+            <div class="cpp-bio" id="upBio">暂无个性签名</div>
+        </div>
+        <div class="cpp-divider"></div>
+        <div class="cpp-meta">
+            <div class="cpp-meta-item">
+                <span class="cpp-meta-label">CID</span>
+                <span class="cpp-meta-val" id="upCid">—</span>
+            </div>
+            <div class="cpp-meta-item">
+                <span class="cpp-meta-label">地区</span>
+                <span class="cpp-meta-val" id="upRegion">—</span>
+            </div>
+            <div class="cpp-meta-item">
+                <span class="cpp-meta-label">自我介绍</span>
+                <span class="cpp-meta-val" id="upSelfIntro">—</span>
+            </div>
+        </div>
+        <div class="cpp-footer">
+            <button class="btn btn-primary w-full" id="upViewBtn" style="font-size:13px;padding:7px 0;"><i class="fas fa-home"></i> 进入个人主页</button>
+        </div>
+    </div>
+
+    <!-- 角色主页弹窗（点击AI头像弹出） -->
+    <div class="char-profile-popup" id="charProfilePopup">
+        <div class="cpp-cover" id="cppCover"></div>
+        <div class="cpp-top">
+            <div class="cpp-avatar" id="cppAvatar"><i class="fas fa-user-astronaut"></i></div>
+            <div class="cpp-namerow">
+                <span class="cpp-name" id="cppName">角色名称</span>
+                <span class="online-status-text" id="cppOnlineIndicator"><span class="online-status-dot"></span><span class="online-status-label">在线</span></span>
+            </div>
+            <div class="cpp-bio" id="cppBio">暂无个性签名</div>
+        </div>
+        <div class="cpp-divider"></div>
+        <div class="cpp-meta">
+            <div class="cpp-meta-item">
+                <span class="cpp-meta-label">CID</span>
+                <span class="cpp-meta-val" id="cppCid">—</span>
+            </div>
+            <div class="cpp-meta-item">
+                <span class="cpp-meta-label">地区</span>
+                <span class="cpp-meta-val" id="cppRegion">—</span>
+            </div>
+            <div class="cpp-meta-item">
+                <span class="cpp-meta-label">自我介绍</span>
+                <span class="cpp-meta-val" id="cppNote">—</span>
+            </div>
+            <div class="cpp-meta-item">
+                <span class="cpp-meta-label">描述</span>
+                <span class="cpp-meta-val" id="cppDesc">—</span>
+            </div>
+        </div>
+        <div class="cpp-footer">
+            <button class="btn btn-primary w-full" id="cppViewBtn" style="font-size:13px;padding:7px 0;"><i class="fas fa-home"></i> 进入角色主页</button>
+        </div>
+    </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script src="js/script.js"></script>
 </body>
