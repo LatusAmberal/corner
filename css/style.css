@@ -1697,6 +1697,9 @@ body.light-theme .profile-banner::before {
     color: #ffffff;
     text-shadow: 0 2px 8px rgba(0,0,0,0.6);
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0;
 }
 .profile-info p {
     font-size: 15px;
@@ -3347,4 +3350,273 @@ body.light-theme .character-preview-content .btn-secondary:hover {
     .message-stats-grid {
         grid-template-columns: 1fr;
     }
+}
+
+/* ===== 角色主页弹窗 ===== */
+/* 样式已在上方统一声明 */
+
+/* 封面背景 */
+.cpp-cover {
+    height: 72px;
+    background: linear-gradient(135deg, var(--accent-color, #4f6ef7) 0%, #2d1f6e 100%);
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+.cpp-cover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.45) 100%);
+}
+
+/* 顶部信息区 */
+.cpp-top {
+    padding: 0 14px 10px;
+    background: var(--bg-secondary, #1e1f22);
+}
+.cpp-avatar {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    border: 3px solid var(--bg-secondary, #1e1f22);
+    background: var(--bg-tertiary, #2b2d31);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    color: var(--text-secondary, rgba(255,255,255,0.5));
+    overflow: hidden;
+    margin-top: -28px;
+    position: relative;
+    z-index: 1;
+}
+/* 深色主题下弹窗背景 */
+body:not(.light-theme) .cpp-avatar {
+    background: var(--bg-header, #1e2328);
+}
+.cpp-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.cpp-namerow { display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+.cpp-name {
+    font-size: 15px; font-weight: 700;
+    color: var(--text-primary, #fff);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cpp-bio {
+    font-size: 12px;
+    color: var(--text-secondary, rgba(255,255,255,0.55));
+    margin-top: 3px; line-height: 1.5;
+    display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* 分割线 */
+.cpp-divider { height: 1px; background: rgba(255,255,255,0.07); }
+
+/* 元数据区 */
+.cpp-meta {
+    padding: 10px 14px 6px;
+    display: flex; flex-direction: column;
+}
+.cpp-meta-item {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.cpp-meta-item:last-child { border-bottom: none; }
+.cpp-meta-label {
+    font-size: 11px; font-weight: 700;
+    color: var(--text-secondary, rgba(255,255,255,0.4));
+    text-transform: uppercase; letter-spacing: 0.05em;
+    flex-shrink: 0; width: 44px; padding-top: 1px;
+}
+.cpp-meta-val {
+    font-size: 12px;
+    color: var(--text-primary, rgba(255,255,255,0.82));
+    flex: 1; word-break: break-word; line-height: 1.5;
+}
+
+/* 底部按钮 */
+.cpp-footer {
+    padding: 8px 14px 12px;
+    border-top: 1px solid rgba(255,255,255,0.07);
+}
+
+/* ===== 角色主页信息折叠卡 ===== */
+.char-info-collapse-card { overflow: hidden; }
+.char-info-collapse-header {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    cursor: pointer; user-select: none;
+}
+.char-info-collapse-header span {
+    font-size: 14px; font-weight: 600;
+    color: var(--text-primary);
+    display: flex; align-items: center; gap: 6px;
+}
+.char-info-collapse-header span i { color: var(--accent-color); }
+.char-info-collapse-arrow {
+    font-size: 11px; color: var(--text-secondary);
+    transition: transform 0.2s ease; flex-shrink: 0;
+}
+.char-info-collapse-card.open .char-info-collapse-arrow { transform: rotate(180deg); }
+.char-info-collapse-body { display: none; margin-top: 14px; }
+.char-info-collapse-card.open .char-info-collapse-body { display: block; }
+
+/* ===== 抽屉内备注与描述区域 ===== */
+.char-note-section {
+    background: var(--bg-header);
+    border-radius: 12px;
+    padding: 14px 14px 12px;
+    border: 1px solid var(--border-light);
+    margin-bottom: 4px;
+}
+.char-note-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.char-note-label i {
+    color: var(--accent);
+    font-size: 11px;
+}
+.char-note-input {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    padding: 8px 10px;
+    color: var(--text-primary);
+    font-size: 13px;
+    outline: none;
+    resize: vertical;
+    transition: border-color 0.15s;
+    box-sizing: border-box;
+}
+.char-note-input:focus {
+    border-color: var(--accent);
+}
+.char-note-input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.6;
+}
+.char-note-hint {
+    font-size: 10px;
+    color: var(--text-secondary);
+    opacity: 0.6;
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* 在线状态切换行 */
+.online-status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+}
+.online-status-label {
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+/* ===== 用户主页弹窗 ===== */
+.user-profile-popup {
+    display: none;
+    position: fixed;
+    z-index: 99999;
+    width: 268px;
+    background: var(--bg-secondary, #1e1f22);
+    border-radius: 10px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06);
+    overflow: hidden;
+    color: var(--text-primary, #fff);
+    pointer-events: auto;
+    font-size: 13px;
+}
+.user-profile-popup.visible {
+    display: block;
+    animation: profile-popup-enter 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ===== 角色主页弹窗动画 ===== */
+.char-profile-popup {
+    display: none;
+    position: fixed;
+    z-index: 99999;
+    width: 268px;
+    background: var(--bg-secondary, #1e1f22);
+    border-radius: 10px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06);
+    overflow: hidden;
+    color: var(--text-primary, #fff);
+    pointer-events: auto;
+    font-size: 13px;
+    animation: profile-popup-enter 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.char-profile-popup.visible { display: block; }
+
+/* 弹窗进入动画 */
+@keyframes profile-popup-enter {
+    0% {
+        opacity: 0;
+        transform: scale(0.88) translateY(-6px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* 弹窗关闭动画 */
+.char-profile-popup.closing,
+.user-profile-popup.closing {
+    animation: profile-popup-exit 0.15s ease-out forwards;
+}
+@keyframes profile-popup-exit {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.92);
+    }
+}
+
+/* ===== 在线状态文字标志 ===== */
+/* 替换旧的在线小绿点，改用文字样式 */
+.online-status-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+.online-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.online-status-text.online .online-status-dot {
+    background: #4ade80;
+}
+.online-status-text.online .online-status-label {
+    color: #4ade80;
+}
+.online-status-text.offline .online-status-dot {
+    background: #9ca3af;
+}
+.online-status-text.offline .online-status-label {
+    color: #9ca3af;
+}
+.online-status-text .online-status-label {
+    font-weight: 500;
 }
