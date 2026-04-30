@@ -37,6 +37,9 @@
   const profileBioDisplay = document.getElementById('profileBioDisplay');
   const editProfileNameInput = document.getElementById('editProfileNameInput');
   const editProfileBioInput = document.getElementById('editProfileBioInput');
+  const editProfileCidInput = document.getElementById('editProfileCidInput');
+  const editProfileRegionInput = document.getElementById('editProfileRegionInput');
+  const editProfileSelfIntroInput = document.getElementById('editProfileSelfIntroInput');
   const worldBookInput = document.getElementById('worldBookInput');
   const charNameInput = document.getElementById('charNameInput');
   const charAgeInput = document.getElementById('charAgeInput');
@@ -50,6 +53,9 @@
   const saveCharacterBtn = document.getElementById('saveCharacterBtn');
   const resetCharacterBtn = document.getElementById('resetCharacterBtn');
   const characterBioInput = document.getElementById('characterBioInput');
+  const charCidInput = document.getElementById('charCidInput');
+  const charRegionInput = document.getElementById('charRegionInput');
+  const charSelfIntroInput = document.getElementById('charSelfIntroInput');
   const characterPreviewBg = document.getElementById('characterPreviewBg');
   const characterPreviewAvatar = document.getElementById('characterPreviewAvatar');
   const characterPreviewName = document.getElementById('characterPreviewName');
@@ -106,7 +112,7 @@
   let isGenerating = false;
   let currentTypingMessageId = null;
   let currentTheme = 'dark';
-  
+
   // ---------- 核心记忆自动提取状态 ----------
   let messagesSinceLastMemoryCheck = 0;
   const MEMORY_CHECK_THRESHOLD = 20; // 多少条用户+AI消息后触发一次检查
@@ -121,6 +127,142 @@
     enableLongUnread: false,
     longUnreadProbability: 5
   };
+
+  // ---------- 在线状态管理 ----------
+  let onlineStatus = true;  // 用户显示的在线状态
+  let aiRealOfflineEnabled = false;  // 真实不在线状态开关
+  let aiRealOfflineProb = 5;  // 不在线触发概率（百分比）
+  let aiRealOfflineStatus = false;  // AI当前是否处于不在线状态
+  let aiRealOfflineTickerId = null;  // 2小时刷新定时器
+  let aiOfflineBoosted = false;  // 是否已触发概率提高（AI说了关键词后）
+
+  function loadOnlineStatus() {
+    try {
+      const saved = localStorage.getItem('user_online_status');
+      if (saved !== null) {
+        onlineStatus = saved === 'true';
+      }
+    } catch(e) {}
+    updateAllOnlineIndicators();
+    const toggle = document.getElementById('onlineStatusToggle');
+    if (toggle) toggle.classList.toggle('active', onlineStatus);
+  }
+
+  function saveOnlineStatus() {
+    try { localStorage.setItem('user_online_status', String(onlineStatus)); } catch(e) {}
+    updateAllOnlineIndicators();
+  }
+
+  function updateAllOnlineIndicators() {
+    // 获取组合状态：用户的真实在线状态
+    // 如果开启了"真实不在线状态"且AI处于不在线状态，则显示离线
+    const showOffline = aiRealOfflineStatus;
+    const statusClass = showOffline ? 'offline' : (onlineStatus ? 'online' : 'offline');
+    const statusText = showOffline ? '离线' : (onlineStatus ? '在线' : '离线');
+
+    const indicators = [
+      document.getElementById('upOnlineIndicator'),
+      document.getElementById('profileOnlineIndicator'),
+      document.getElementById('cppOnlineIndicator')
+    ];
+
+    indicators.forEach(ind => {
+      if (ind) {
+        ind.className = 'online-status-text ' + statusClass;
+        const label = ind.querySelector('.online-status-label');
+        if (label) {
+          label.textContent = statusText;
+        }
+      }
+    });
+  }
+
+  function initOnlineStatusToggle() {
+    const toggle = document.getElementById('onlineStatusToggle');
+    if (!toggle) return;
+
+    loadOnlineStatus();
+
+    toggle.addEventListener('click', () => {
+      onlineStatus = !onlineStatus;
+      toggle.classList.toggle('active', onlineStatus);
+      saveOnlineStatus();
+    });
+  }
+
+  // ---------- 真实不在线状态管理 ----------
+  function loadAiRealOfflinePrefs() {
+    try {
+      const saved = localStorage.getItem('ai_real_offline_prefs');
+      if (saved) {
+        const prefs = JSON.parse(saved);
+        aiRealOfflineEnabled = prefs.enabled || false;
+        aiRealOfflineProb = prefs.probability || 5;
+      }
+    } catch(e) {}
+  }
+
+  function saveAiRealOfflinePrefs() {
+    try {
+      localStorage.setItem('ai_real_offline_prefs', JSON.stringify({
+        enabled: aiRealOfflineEnabled,
+        probability: aiRealOfflineProb
+      }));
+    } catch(e) {}
+  }
+
+  // 触发AI不在线状态检查
+  function checkAiRealOffline() {
+    if (!aiRealOfflineEnabled) return;
+
+    // 判断触发概率：如果已触发过概率提高，使用更高概率
+    const effectiveProb = aiOfflineBoosted ? Math.min(90, aiRealOfflineProb * 5) : aiRealOfflineProb;
+    const roll = Math.random() * 100;
+
+    if (roll < effectiveProb) {
+      aiRealOfflineStatus = true;
+    } else {
+      aiRealOfflineStatus = false;
+    }
+    updateAllOnlineIndicators();
+  }
+
+  // 重置AI不在线状态（每2小时调用一次）
+  function resetAiRealOffline() {
+    aiRealOfflineStatus = false;
+    aiOfflineBoosted = false;
+    updateAllOnlineIndicators();
+  }
+
+  // 启动AI不在线状态刷新定时器（每2小时）
+  function startAiOfflineTicker() {
+    if (aiRealOfflineTickerId) clearInterval(aiRealOfflineTickerId);
+    // 立即检查一次
+    checkAiRealOffline();
+    // 每2小时刷新
+    aiRealOfflineTickerId = setInterval(() => {
+      resetAiRealOffline();
+      checkAiRealOffline();
+    }, 2 * 60 * 60 * 1000);
+  }
+
+  // 检测AI回复中是否包含"离开"关键词，提高不在线概率
+  function detectAiOfflineKeywords(message) {
+    if (!aiRealOfflineEnabled) return;
+    const offlineKeywords = [
+      '待会再聊', '有点事', '先走了', '回头聊', '晚点聊',
+      '等会再聊', '有事要先', '先不聊了', '先撤了', '待会',
+      '等下再', '晚点再', '先忙', '待会儿', '等会儿'
+    ];
+    for (const keyword of offlineKeywords) {
+      if (message.includes(keyword)) {
+        aiOfflineBoosted = true;
+        // 立即检查一次（使用提高后的概率）
+        setTimeout(() => checkAiRealOffline(), 100);
+        break;
+      }
+    }
+  }
 
   // 主动发消息状态
   let proactiveMsgPrefs = {
@@ -149,7 +291,12 @@
     backstory: '',
     memories: '',
     style: '',
-    examples: ''
+    examples: '',
+    cid: '',
+    region: '',
+    selfIntro: '',
+    charNote: '',   // 用户添加的备注（显示在标题，不被AI读取）
+    charDesc: ''    // 用户添加的描述（显示在弹窗，不被AI读取）
   };
 
   let focusState = {
@@ -203,20 +350,20 @@
     const now = new Date();
     const dateStr = now.toISOString().split('T')[0];
     const timeStr = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
-    
+
     // 判断是否应该记录
     // 规则：1. 任何专注小于1分钟不计入 2. 用户正计时小于5分钟不计入
     // 3. 倒计时提前结束不计入 4. 角色倒计时正常结束计入，角色正计时>=1分钟计入
-    
+
     const MINute = 60;  // 1分钟
     const FIVE_MINUTES = 5 * 60;  // 5分钟
-    
+
     // 规则1：小于1分钟不计入
     if (durationSec < MINute) {
       showToast('专注时长不足1分钟，不计入记录');
       return false;
     }
-    
+
     if (mode === 'up') {
       // 正计时模式
       if (owner === 'user') {
@@ -251,7 +398,7 @@
       return true;
     }
   }
-  
+
   // 确认提前结束专注（用户点击确认后调用）
   function confirmEarlyEndFocus() {
     const elapsed = focusState.user.mode === 'up'
@@ -259,7 +406,7 @@
       : (focusState.user.startRemainingSec - focusState.user.remainingSec);
     const duration = focusState.user.durationSec || 0;
     const activity = focusState.user.activity || '专注';
-    
+
     // 直接结束，不记录
     resetUserOnly();
     showToast('本次专注不计入记录');
@@ -269,7 +416,7 @@
   function addSchedule(owner, activity, time) {
     const now = new Date();
     const dateStr = now.toISOString().split('T')[0];
-    
+
     statsData.schedules.push({
       owner: owner,
       activity: activity,
@@ -291,20 +438,20 @@
   function updateChatStats(role) {
     const now = new Date();
     const dateStr = now.toISOString().split('T')[0];
-    
+
     if (!statsData.chatStats.firstChatDate) {
       statsData.chatStats.firstChatDate = dateStr;
     }
-    
+
     statsData.chatStats.totalMessages++;
     statsData.chatStats.dailyMessages[dateStr] = (statsData.chatStats.dailyMessages[dateStr] || 0) + 1;
-    
+
     if (role === 'user') {
       statsData.chatStats.userMessages++;
     } else {
       statsData.chatStats.charMessages++;
     }
-    
+
     saveStatsData();
   }
 
@@ -339,7 +486,7 @@
   function getTopWords(count = 20) {
     const wordCount = {};
     const stopWords = new Set(['的', '了', '在', '是', '我', '你', '他', '她', '它', '们', '这', '那', '有', '和', '与', '也', '都', '就', '不', '很', '要', '会', '可以', '一个', '什么', '怎么', '为什么', '没有', '什么', '这个', '那个', '但是', '如果', '因为', '所以', '虽然', '然后', '还是', '或者', '而且', '不过', '已经', '可能', '应该', '自己', '现在', '这里', '那里', '知道', '觉得', '想', '能', '啊', '呢', '吧', '吗', '呀', '哦', '嗯', '哈哈', '...', '……', '。', '，', '？', '！', ':', ';', '...']);
-    
+
     messages.forEach(msg => {
       // 跳过时间戳消息（isReset类型）
       if (msg.isReset) return;
@@ -352,7 +499,7 @@
         });
       }
     });
-    
+
     return Object.entries(wordCount)
       .sort((a, b) => b[1] - a[1])
       .slice(0, count)
@@ -418,6 +565,54 @@
         <i class="fas fa-sliders-h"></i> 聊天偏好
       </h4>
 
+      <!-- 真实不在线状态 -->
+      <div class="chat-prefs-row">
+        <label><i class="fas fa-moon"></i> 真实不在线</label>
+        <div class="apple-toggle" id="aiRealOfflineToggle"></div>
+      </div>
+      <div id="aiRealOfflineControls" style="display:none;">
+        <div class="probability-bar">
+          <label class="probability-label"><i class="fas fa-percentage"></i> 触发概率</label>
+          <input type="range" min="1" max="100" value="${aiRealOfflineProb}" class="apple-slider" id="aiRealOfflineProbSlider">
+          <span id="aiRealOfflineProbVal" class="probability-value">${aiRealOfflineProb}%</span>
+        </div>
+        <div class="chat-prefs-info">
+          开启后，对方有一定概率显示为"不在线"。<br>
+          对方说出"待会再聊，有点事"等离开理由后，不在线概率会提高。<br>
+        </div>
+      </div>
+
+      <div class="drawer-divider-label" style="margin-top:16px;">主动发消息</div>
+      <div class="chat-prefs-row">
+        <label><i class="fas fa-bolt"></i> 主动发消息</label>
+        <div class="apple-toggle" id="proactiveMsgToggle"></div>
+      </div>
+      <div class="proactive-controls" id="proactiveControls" style="display:none;">
+        <div class="probability-bar">
+          <label class="probability-label"><i class="fas fa-clock"></i> 间隔时间</label>
+          <input type="range" min="10" max="240" value="${proactiveMsgPrefs.intervalMinutes}" class="apple-slider" id="proactiveIntervalSlider">
+          <span id="proactiveIntervalVal" class="probability-value">${proactiveMsgPrefs.intervalMinutes}分钟</span>
+        </div>
+        <div class="probability-bar">
+          <label class="probability-label"><i class="fas fa-percentage"></i> 触发概率</label>
+          <input type="range" min="5" max="100" value="${proactiveMsgPrefs.probability}" class="apple-slider" id="proactiveProbSlider">
+          <span id="proactiveProbVal" class="probability-value">${proactiveMsgPrefs.probability}%</span>
+        </div>
+        <div class="chat-prefs-info">
+          AI 将在间隔时间后，以概率触发主动发消息
+        </div>
+      </div>
+
+      <div class="drawer-divider-label" style="margin-top:16px;">通知</div>
+      <div class="chat-prefs-row">
+        <label><i class="fas fa-bell"></i> 通知</label>
+        <div class="apple-toggle" id="notifyToggle"></div>
+      </div>
+      <div class="chat-prefs-info" id="notifyStatusInfo">
+        开启后，对方回复时将发送通知
+      </div>
+
+      <div class="drawer-divider-label" style="margin-top:16px;">已读状态模拟</div>
       <div class="chat-prefs-row">
         <label><i class="fas fa-eye-slash"></i> 已读不回</label>
         <div class="apple-toggle" id="readIgnoreToggle"></div>
@@ -438,16 +633,39 @@
         <span id="longUnreadProbVal" class="probability-value">${chatPreferences.longUnreadProbability}%</span>
       </div>
       <div class="chat-prefs-info">
-        已读不回：已读后 AI 可能不回复（晚安等类似场景更易触发）。<br>
-        长时间未读：AI 可能在说出"稍等"等理由后暂时不读你的消息。
+        已读不回：已读后 对方 可能不回复（晚安等类似场景更易触发）。<br>
+        长时间未读：对方 可能在说出"稍等"等理由后暂时不读你的消息。
       </div>
     `;
-    const clearBtnContainer = document.querySelector('.drawer-content > div:first-child');
-    if (clearBtnContainer) {
-      clearBtnContainer.before(prefSection);
+
+    // 找到角色备注板块，在其后插入聊天偏好
+    const charNoteSection = document.getElementById('charNoteSection');
+    if (charNoteSection) {
+      charNoteSection.after(prefSection);
     } else {
-      drawerContent.prepend(prefSection);
+      const clearBtnContainer = document.querySelector('.drawer-content > div:first-child');
+      if (clearBtnContainer) {
+        clearBtnContainer.before(prefSection);
+      } else {
+        drawerContent.prepend(prefSection);
+      }
     }
+
+    // 初始化UI状态
+    const aiRealOfflineToggle = document.getElementById('aiRealOfflineToggle');
+    const aiRealOfflineControls = document.getElementById('aiRealOfflineControls');
+    const aiRealOfflineProbSlider = document.getElementById('aiRealOfflineProbSlider');
+    const aiRealOfflineProbVal = document.getElementById('aiRealOfflineProbVal');
+
+    const proactiveMsgToggle = document.getElementById('proactiveMsgToggle');
+    const proactiveControls = document.getElementById('proactiveControls');
+    const proactiveIntervalSlider = document.getElementById('proactiveIntervalSlider');
+    const proactiveProbSlider = document.getElementById('proactiveProbSlider');
+    const proactiveIntervalVal = document.getElementById('proactiveIntervalVal');
+    const proactiveProbVal = document.getElementById('proactiveProbVal');
+
+    const notifyToggle = document.getElementById('notifyToggle');
+    const notifyInfo = document.getElementById('notifyStatusInfo');
 
     const readIgnoreToggle = document.getElementById('readIgnoreToggle');
     const longUnreadToggle = document.getElementById('longUnreadToggle');
@@ -456,17 +674,7 @@
     const readIgnoreProbVal = document.getElementById('readIgnoreProbVal');
     const longUnreadProbVal = document.getElementById('longUnreadProbVal');
 
-    readIgnoreToggle?.addEventListener('click', () => {
-      chatPreferences.enableReadIgnore = !chatPreferences.enableReadIgnore;
-      readIgnoreToggle.classList.toggle('active', chatPreferences.enableReadIgnore);
-      saveChatPreferences();
-    });
-    longUnreadToggle?.addEventListener('click', () => {
-      chatPreferences.enableLongUnread = !chatPreferences.enableLongUnread;
-      longUnreadToggle.classList.toggle('active', chatPreferences.enableLongUnread);
-      saveChatPreferences();
-    });
-    // 滑动条填充色动态更新
+    // 统一的填充色函数
     function updateSliderFill(slider) {
       if (!slider) return;
       const min = Number(slider.min) || 0;
@@ -476,12 +684,128 @@
       slider.style.background = `linear-gradient(to right, var(--accent) ${pct}%, var(--border-strong) ${pct}%)`;
     }
 
+    // 初始化真实不在线状态
+    aiRealOfflineToggle.classList.toggle('active', aiRealOfflineEnabled);
+    aiRealOfflineControls.style.display = aiRealOfflineEnabled ? '' : 'none';
+    if (aiRealOfflineProbSlider) aiRealOfflineProbSlider.value = aiRealOfflineProb;
+    if (aiRealOfflineProbVal) aiRealOfflineProbVal.textContent = aiRealOfflineProb + '%';
+    updateSliderFill(aiRealOfflineProbSlider);
+
+    // 真实不在线状态开关事件
+    aiRealOfflineToggle.addEventListener('click', () => {
+      aiRealOfflineEnabled = !aiRealOfflineEnabled;
+      aiRealOfflineToggle.classList.toggle('active', aiRealOfflineEnabled);
+      aiRealOfflineControls.style.display = aiRealOfflineEnabled ? '' : 'none';
+      saveAiRealOfflinePrefs();
+      if (aiRealOfflineEnabled) {
+        startAiOfflineTicker();
+      } else {
+        if (aiRealOfflineTickerId) {
+          clearInterval(aiRealOfflineTickerId);
+          aiRealOfflineTickerId = null;
+        }
+        aiRealOfflineStatus = false;
+      }
+      updateAllOnlineIndicators();
+    });
+
+    // 真实不在线概率滑块
+    aiRealOfflineProbSlider?.addEventListener('input', (e) => {
+      aiRealOfflineProb = parseInt(e.target.value);
+      aiRealOfflineProbVal.textContent = aiRealOfflineProb + '%';
+      updateSliderFill(e.target);
+      saveAiRealOfflinePrefs();
+    });
+
+    // 初始化主动发消息
+    proactiveMsgToggle.classList.toggle('active', proactiveMsgPrefs.enabled);
+    proactiveControls.style.display = proactiveMsgPrefs.enabled ? '' : 'none';
+    if (proactiveIntervalSlider) proactiveIntervalSlider.value = proactiveMsgPrefs.intervalMinutes;
+    if (proactiveIntervalVal) proactiveIntervalVal.textContent = proactiveMsgPrefs.intervalMinutes + '分钟';
+    if (proactiveProbSlider) proactiveProbSlider.value = proactiveMsgPrefs.probability;
+    if (proactiveProbVal) proactiveProbVal.textContent = proactiveMsgPrefs.probability + '%';
+    updateSliderFill(proactiveIntervalSlider);
+    updateSliderFill(proactiveProbSlider);
+
+    // 主动发消息开关事件
+    proactiveMsgToggle.addEventListener('click', () => {
+      proactiveMsgPrefs.enabled = !proactiveMsgPrefs.enabled;
+      proactiveMsgToggle.classList.toggle('active', proactiveMsgPrefs.enabled);
+      proactiveControls.style.display = proactiveMsgPrefs.enabled ? '' : 'none';
+      saveProactiveMsgPrefs();
+      if (proactiveMsgPrefs.enabled) startProactiveTicker();
+      else stopProactiveTicker();
+    });
+
+    // 主动发消息间隔滑块
+    proactiveIntervalSlider?.addEventListener('input', (e) => {
+      proactiveMsgPrefs.intervalMinutes = parseInt(e.target.value);
+      proactiveIntervalVal.textContent = proactiveMsgPrefs.intervalMinutes + '分钟';
+      updateSliderFill(e.target);
+      saveProactiveMsgPrefs();
+    });
+
+    // 主动发消息概率滑块
+    proactiveProbSlider?.addEventListener('input', (e) => {
+      proactiveMsgPrefs.probability = parseInt(e.target.value);
+      proactiveProbVal.textContent = proactiveMsgPrefs.probability + '%';
+      updateSliderFill(e.target);
+      saveProactiveMsgPrefs();
+    });
+
+    // 初始化通知
+    notifyToggle.classList.toggle('active', notificationPrefs.enabled);
+    if (notificationPrefs.enabled) {
+      notifyInfo.textContent = '通知已开启 ✓';
+    }
+
+    // 通知开关事件
+    notifyToggle.addEventListener('click', async () => {
+      if (!notificationPrefs.enabled) {
+        if (!('Notification' in window)) {
+          showCommonDialog({ title: '不支持通知', message: '当前浏览器不支持通知功能' });
+          return;
+        }
+        const perm = await Notification.requestPermission();
+        if (perm === 'granted') {
+          notificationPrefs.enabled = true;
+          notifyToggle.classList.add('active');
+          notifyInfo.textContent = '通知已开启 ✓';
+          saveNotificationPrefs();
+        } else {
+          showCommonDialog({ title: '权限被拒绝', message: '请在浏览器设置中允许通知权限' });
+        }
+      } else {
+        notificationPrefs.enabled = false;
+        notifyToggle.classList.remove('active');
+        notifyInfo.textContent = '开启后，对方 回复时将发送通知';
+        saveNotificationPrefs();
+      }
+    });
+
+    // 已读不回开关
+    readIgnoreToggle?.addEventListener('click', () => {
+      chatPreferences.enableReadIgnore = !chatPreferences.enableReadIgnore;
+      readIgnoreToggle.classList.toggle('active', chatPreferences.enableReadIgnore);
+      saveChatPreferences();
+    });
+
+    // 长时间未读开关
+    longUnreadToggle?.addEventListener('click', () => {
+      chatPreferences.enableLongUnread = !chatPreferences.enableLongUnread;
+      longUnreadToggle.classList.toggle('active', chatPreferences.enableLongUnread);
+      saveChatPreferences();
+    });
+
+    // 已读不回概率滑块
     readIgnoreProbSlider?.addEventListener('input', (e) => {
       chatPreferences.readIgnoreProbability = parseInt(e.target.value);
       readIgnoreProbVal.textContent = chatPreferences.readIgnoreProbability + '%';
       updateSliderFill(e.target);
       saveChatPreferences();
     });
+
+    // 长时间未读概率滑块
     longUnreadProbSlider?.addEventListener('input', (e) => {
       chatPreferences.longUnreadProbability = parseInt(e.target.value);
       longUnreadProbVal.textContent = chatPreferences.longUnreadProbability + '%';
@@ -489,11 +813,10 @@
       saveChatPreferences();
     });
 
-    loadChatPreferences();
-    // 初始化填充色
+    // 初始化滑块填充色
     setTimeout(() => {
-      updateSliderFill(document.getElementById('readIgnoreProbSlider'));
-      updateSliderFill(document.getElementById('longUnreadProbSlider'));
+      updateSliderFill(readIgnoreProbSlider);
+      updateSliderFill(longUnreadProbSlider);
     }, 0);
   }
 
@@ -515,131 +838,6 @@
 
   function saveNotificationPrefs() {
     try { localStorage.setItem('notification_prefs', JSON.stringify(notificationPrefs)); } catch(e) {}
-  }
-
-  function buildProactiveMsgUI() {
-    const drawerContent = document.querySelector('.drawer-content');
-    if (!drawerContent) return;
-
-    // 在聊天偏好上方插入
-    const prefsSection = document.querySelector('.chat-prefs-section');
-    if (!prefsSection) return;
-
-    // --- 主动发消息功能 ---
-    const proactiveSection = document.createElement('div');
-    proactiveSection.id = 'proactiveMsgSection';
-    proactiveSection.innerHTML = `
-      <div class="drawer-divider-label">主动发消息</div>
-      <div class="chat-prefs-row">
-        <label><i class="fas fa-bolt"></i> 主动发消息</label>
-        <div class="apple-toggle" id="proactiveMsgToggle"></div>
-      </div>
-      <div class="proactive-controls" id="proactiveControls" style="display:none;">
-        <div class="probability-bar">
-          <label class="probability-label"><i class="fas fa-clock"></i> 间隔时间</label>
-          <input type="range" min="10" max="240" value="${proactiveMsgPrefs.intervalMinutes}" class="apple-slider" id="proactiveIntervalSlider">
-          <span id="proactiveIntervalVal" class="probability-value">${proactiveMsgPrefs.intervalMinutes}分钟</span>
-        </div>
-        <div class="probability-bar">
-          <label class="probability-label"><i class="fas fa-percentage"></i> 触发概率</label>
-          <input type="range" min="5" max="100" value="${proactiveMsgPrefs.probability}" class="apple-slider" id="proactiveProbSlider">
-          <span id="proactiveProbVal" class="probability-value">${proactiveMsgPrefs.probability}%</span>
-        </div>
-        <div class="chat-prefs-info">
-          AI 将在间隔时间后，以概率触发主动发消息
-        </div>
-      </div>
-    `;
-    prefsSection.before(proactiveSection);
-
-    // --- 通知功能 ---
-    const notifySection = document.createElement('div');
-    notifySection.id = 'notifySection';
-    notifySection.innerHTML = `
-      <div class="drawer-divider-label">通知</div>
-      <div class="chat-prefs-row">
-        <label><i class="fas fa-bell"></i> 通知</label>
-        <div class="apple-toggle" id="notifyToggle"></div>
-      </div>
-      <div class="chat-prefs-info" id="notifyStatusInfo">
-        开启后，AI 回复时将发送通知
-      </div>
-    `;
-    proactiveSection.after(notifySection);
-
-    // 绑定事件
-    const toggleEl = document.getElementById('proactiveMsgToggle');
-    const controlsEl = document.getElementById('proactiveControls');
-    const intervalSlider = document.getElementById('proactiveIntervalSlider');
-    const probSlider = document.getElementById('proactiveProbSlider');
-    const intervalVal = document.getElementById('proactiveIntervalVal');
-    const probVal = document.getElementById('proactiveProbVal');
-    const notifyToggle = document.getElementById('notifyToggle');
-    const notifyInfo = document.getElementById('notifyStatusInfo');
-
-    function updateSliderFill2(slider) {
-      if (!slider) return;
-      const min = Number(slider.min), max = Number(slider.max), val = Number(slider.value);
-      const pct = ((val - min) / (max - min)) * 100;
-      slider.style.background = `linear-gradient(to right, var(--accent) ${pct}%, var(--border-strong) ${pct}%)`;
-    }
-
-    // 初始化状态
-    toggleEl.classList.toggle('active', proactiveMsgPrefs.enabled);
-    controlsEl.style.display = proactiveMsgPrefs.enabled ? '' : 'none';
-    notifyToggle.classList.toggle('active', notificationPrefs.enabled);
-    updateSliderFill2(intervalSlider);
-    updateSliderFill2(probSlider);
-
-    toggleEl.addEventListener('click', () => {
-      proactiveMsgPrefs.enabled = !proactiveMsgPrefs.enabled;
-      toggleEl.classList.toggle('active', proactiveMsgPrefs.enabled);
-      controlsEl.style.display = proactiveMsgPrefs.enabled ? '' : 'none';
-      saveProactiveMsgPrefs();
-      if (proactiveMsgPrefs.enabled) startProactiveTicker();
-      else stopProactiveTicker();
-    });
-
-    intervalSlider.addEventListener('input', (e) => {
-      proactiveMsgPrefs.intervalMinutes = parseInt(e.target.value);
-      intervalVal.textContent = proactiveMsgPrefs.intervalMinutes + '分钟';
-      updateSliderFill2(e.target);
-      saveProactiveMsgPrefs();
-    });
-
-    probSlider.addEventListener('input', (e) => {
-      proactiveMsgPrefs.probability = parseInt(e.target.value);
-      probVal.textContent = proactiveMsgPrefs.probability + '%';
-      updateSliderFill2(e.target);
-      saveProactiveMsgPrefs();
-    });
-
-    notifyToggle.addEventListener('click', async () => {
-      if (!notificationPrefs.enabled) {
-        // 请求通知权限
-        if (!('Notification' in window)) {
-          showCommonDialog({ title: '不支持通知', message: '当前浏览器不支持通知功能' });
-          return;
-        }
-        const perm = await Notification.requestPermission();
-        if (perm === 'granted') {
-          notificationPrefs.enabled = true;
-          notifyToggle.classList.add('active');
-          notifyInfo.textContent = '通知已开启 ✓';
-          saveNotificationPrefs();
-        } else {
-          showCommonDialog({ title: '权限被拒绝', message: '请在浏览器设置中允许通知权限' });
-        }
-      } else {
-        notificationPrefs.enabled = false;
-        notifyToggle.classList.remove('active');
-        notifyInfo.textContent = '开启后，AI 回复时将发送通知';
-        saveNotificationPrefs();
-      }
-    });
-
-    // 如果已开启，启动 ticker
-    if (proactiveMsgPrefs.enabled) startProactiveTicker();
   }
 
   /** 主动发消息计时器 */
@@ -698,6 +896,7 @@
       if (triggerMsg && triggerMsg.trim()) {
         const cleaned = cleanParentheses(triggerMsg.trim());
         addMessage('assistant', cleaned);
+        detectAiOfflineKeywords(cleaned);
         triggerNotification((charNameInput?.value || '角色') + ' 发来消息', cleaned);
         proactiveLastSentTs = Date.now();
         proactiveFollowUpSent = false; // 重置催问状态
@@ -749,6 +948,7 @@
       if (followUpMsg && followUpMsg.trim()) {
         const cleaned = cleanParentheses(followUpMsg.trim());
         addMessage('assistant', cleaned);
+        detectAiOfflineKeywords(cleaned);
         triggerNotification(charName + ' 发来消息', cleaned);
         proactiveLastSentTs = 0; // 重置，避免再次触发
       }
@@ -829,10 +1029,41 @@
     try { localStorage.setItem('chat_roleplay_config_v2', JSON.stringify(config)); } catch(e) {}
   }
 
+  // ---------- 角色备注与描述 ----------
+  // 注意：备注和描述不被读取
+  function loadCharNoteAndDesc() {
+    try {
+      const note = localStorage.getItem('char_note') || '';
+      const desc = localStorage.getItem('char_desc') || '';
+      const noteInput = document.getElementById('charNoteInput');
+      const descInput = document.getElementById('charDescInput');
+      if (noteInput) noteInput.value = note;
+      if (descInput) descInput.value = desc;
+      // 同步到 characterData（仅用于弹窗显示）
+      characterData.charNote = note;
+      characterData.charDesc = desc;
+    } catch(e) {}
+  }
+
+  function saveCharNote() {
+    const note = document.getElementById('charNoteInput')?.value.trim() || '';
+    const desc = document.getElementById('charDescInput')?.value.trim() || '';
+    localStorage.setItem('char_note', note);
+    localStorage.setItem('char_desc', desc);
+    characterData.charNote = note;
+    characterData.charDesc = desc;
+    updateChatTitle();
+  }
+
   function updateChatTitle() {
     const namePart1 = charNameInput.value.trim();
     const fullName = namePart1 || '青绿';
-    chatTitleDisplay.textContent = fullName;
+    const note = characterData.charNote || '';
+    if (note) {
+      chatTitleDisplay.textContent = `"${note}" ${fullName}`;
+    } else {
+      chatTitleDisplay.textContent = fullName;
+    }
   }
 
   function updateApiStatusBadge() {
@@ -897,13 +1128,13 @@
   function formatTime(ts) {
     const d = new Date(ts);
     const hhmm = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-    
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const msgDay = new Date(d);
     msgDay.setHours(0, 0, 0, 0);
     const diffDays = Math.round((today - msgDay) / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) return hhmm;
     if (diffDays === 1) return `昨天 ${hhmm}`;
     if (diffDays === 2) return `前天 ${hhmm}`;
@@ -934,9 +1165,12 @@
     const getAssistantAvatarUrl = () => characterData?.avatar || '';
     const buildAvatarHtml = (role) => {
       const url = role === 'user' ? getUserAvatarUrl() : getAssistantAvatarUrl();
-      if (url) return `<div class="message-avatar ${role}"><img src="${url}" alt=""></div>`;
+      const clickAttr = role === 'assistant'
+        ? `onclick="showCharProfilePopup(event)" style="cursor:pointer;"`
+        : (role === 'user' ? `onclick="showUserProfilePopup(event)" style="cursor:pointer;"` : '');
+      if (url) return `<div class="message-avatar ${role}" ${clickAttr}><img src="${url}" alt=""></div>`;
       const icon = role === 'user' ? 'fa-user' : 'fa-user-astronaut';
-      return `<div class="message-avatar ${role}"><i class="fas ${icon}"></i></div>`;
+      return `<div class="message-avatar ${role}" ${clickAttr}><i class="fas ${icon}"></i></div>`;
     };
 
     let html = '';
@@ -973,8 +1207,8 @@
       const safe = escapeHtml(msg.content).replace(/\n/g, '<br>');
 
       // 已读未读状态，放在气泡外部底部（用户气泡的左下角外侧）
-      const readStatusHtml = (msg.role === 'user' && msg.readStatus) 
-        ? `<span class="read-status-outside ${msg.readStatus === 'read' ? 'read' : 'unread'}">${msg.readStatus === 'read' ? '已读' : '未读'}</span>` 
+      const readStatusHtml = (msg.role === 'user' && msg.readStatus)
+        ? `<span class="read-status-outside ${msg.readStatus === 'read' ? 'read' : 'unread'}">${msg.readStatus === 'read' ? '已读' : '未读'}</span>`
         : '';
 
       let bubble = `
@@ -1037,6 +1271,156 @@
   document.addEventListener('click', (e) => {
     if (!e.target.closest('.bubble-actions')) {
       document.querySelectorAll('.bubble-actions.show').forEach(el => el.classList.remove('show'));
+    }
+  });
+
+  // 角色主页弹窗
+  window.showCharProfilePopup = function(e) {
+    e.stopPropagation();
+    const popup = document.getElementById('charProfilePopup');
+    if (!popup) return;
+
+    // 向上找到头像元素（内联onclick中currentTarget为null）
+    const avatarEl = e.target.closest('.message-avatar') || e.target;
+
+    // 填充数据
+    const name = charNameInput?.value || characterData.name || '角色名称';
+    const bio  = characterData.bio || '';
+    const cid  = characterData.cid || '—';
+    const region = characterData.region || '—';
+    // 自我介绍取角色设置中的 selfIntro
+    const note  = characterData.selfIntro || '—';
+    // 描述取用户在控制中心添加的描述（charDesc）
+    const charDesc = characterData.charDesc || '—';
+
+    // 头像
+    const cppAvatar = document.getElementById('cppAvatar');
+    cppAvatar.innerHTML = characterData.avatar
+      ? `<img src="${characterData.avatar}" alt="">`
+      : '<i class="fas fa-user-astronaut"></i>';
+
+    // 封面背景
+    const cppCover = document.getElementById('cppCover');
+    if (characterData.cover) {
+      cppCover.style.backgroundImage = `url(${characterData.cover})`;
+      cppCover.style.backgroundSize = 'cover';
+      cppCover.style.backgroundPosition = 'center';
+    } else {
+      cppCover.style.backgroundImage = '';
+    }
+
+    document.getElementById('cppName').textContent = name;
+    document.getElementById('cppBio').textContent = bio || '暂无个性签名';
+    document.getElementById('cppCid').textContent = cid;
+    document.getElementById('cppRegion').textContent = region;
+    document.getElementById('cppNote').textContent = note;
+    document.getElementById('cppDesc').textContent = charDesc;
+
+    // 定位（position:fixed，相对于视口）
+    popup.classList.add('visible');
+    const rect = avatarEl.getBoundingClientRect();
+    const POP_W = 268, POP_H = popup.offsetHeight || 340;
+
+    let left = rect.right + 10;
+    let top  = rect.top;
+
+    // 右侧放不下 → 放左侧
+    if (left + POP_W > window.innerWidth - 8) left = rect.left - POP_W - 10;
+    if (left < 8) left = 8;
+    // 下方放不下 → 上移
+    if (top + POP_H > window.innerHeight - 8) top = window.innerHeight - POP_H - 8;
+    if (top < 8) top = 8;
+
+    popup.style.left = left + 'px';
+    popup.style.top  = top  + 'px';
+
+    // 点击弹窗外部关闭
+    const closeHandler = function(ev) {
+      // 只在点击弹窗外部时关闭
+      if (!popup.contains(ev.target)) {
+        popup.classList.remove('visible');
+        document.removeEventListener('click', closeHandler);
+      }
+    };
+    // 延迟添加事件监听器，避免立即触发
+    setTimeout(() => document.addEventListener('click', closeHandler), 0);
+  };
+
+  // 用户主页弹窗
+  window.showUserProfilePopup = function(e) {
+    e.stopPropagation();
+    const popup = document.getElementById('userProfilePopup');
+    if (!popup) return;
+
+    const avatarEl = e.target.closest('.message-avatar') || e.target;
+
+    // 填充用户数据
+    const userName = localStorage.getItem('profile_name') || '用户';
+    const userBio = localStorage.getItem('profile_bio') || '';
+    const userCid = localStorage.getItem('profile_cid') || '—';
+    const userRegion = localStorage.getItem('profile_region') || '—';
+    const userSelfIntro = localStorage.getItem('profile_self_intro') || '—';
+
+    // 头像
+    const upAvatar = document.getElementById('upAvatar');
+    const userAvatar = localStorage.getItem('user_avatar') || '';
+    if (userAvatar) {
+      upAvatar.innerHTML = `<img src="${userAvatar}" alt="">`;
+    } else {
+      upAvatar.innerHTML = '<i class="fas fa-user"></i>';
+    }
+
+    // 封面
+    const upCover = document.getElementById('upCover');
+    const userCover = localStorage.getItem('user_cover') || '';
+    if (userCover) {
+      upCover.style.backgroundImage = `url(${userCover})`;
+      upCover.style.backgroundSize = 'cover';
+      upCover.style.backgroundPosition = 'center';
+    } else {
+      upCover.style.backgroundImage = '';
+    }
+
+    document.getElementById('upName').textContent = userName;
+    document.getElementById('upBio').textContent = userBio || '暂无个性签名';
+    document.getElementById('upCid').textContent = userCid;
+    document.getElementById('upRegion').textContent = userRegion;
+    document.getElementById('upSelfIntro').textContent = userSelfIntro;
+
+    // 定位
+    popup.classList.add('visible');
+    const rect = avatarEl.getBoundingClientRect();
+    const POP_W = 268, POP_H = popup.offsetHeight || 300;
+
+    let left = rect.right + 10;
+    let top = rect.top;
+
+    if (left + POP_W > window.innerWidth - 8) left = rect.left - POP_W - 10;
+    if (left < 8) left = 8;
+    if (top + POP_H > window.innerHeight - 8) top = window.innerHeight - POP_H - 8;
+    if (top < 8) top = 8;
+
+    popup.style.left = left + 'px';
+    popup.style.top = top + 'px';
+
+    // 点击弹窗外部关闭
+    const closeHandler = function(ev) {
+      // 只在点击弹窗外部时关闭
+      if (!popup.contains(ev.target)) {
+        popup.classList.remove('visible');
+        document.removeEventListener('click', closeHandler);
+      }
+    };
+    // 延迟添加事件监听器，避免立即触发
+    setTimeout(() => document.addEventListener('click', closeHandler), 0);
+  };
+
+  // 进入个人主页按钮
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('#upViewBtn')) {
+      const popup = document.getElementById('userProfilePopup');
+      if (popup) popup.classList.remove('visible');
+      setActiveView('profile');
     }
   });
 
@@ -1143,28 +1527,28 @@
     if (now - lastMemoryCheckTime < MEMORY_CHECK_COOLDOWN) return;
     if (memorySuggestionPending) return;
     if (!config.apiKey) return;
-    
+
     lastMemoryCheckTime = now;
     memorySuggestionPending = true;
-    
+
     try {
       // 收集最近30条对话（不含系统消息和重置标记）
       const recentMsgs = messages.slice(-60)
         .filter(m => (m.role === 'user' || m.role === 'assistant') && !m.isReset)
         .slice(-30);
-      
+
       if (recentMsgs.length < 5) {
         memorySuggestionPending = false;
         return; // 对话太少，不需要检查
       }
-      
-      const chatHistory = recentMsgs.map(m => 
+
+      const chatHistory = recentMsgs.map(m =>
         `[${m.role === 'user' ? '用户' : '角色'}] ${m.content}`
       ).join('\n\n');
-      
+
       // 获取当前已有记忆，避免重复
       const existingMemories = charMemoriesInput ? charMemoriesInput.value.trim() : '';
-      
+
       const prompt = `【对话记录】
 ${chatHistory}
 
@@ -1182,26 +1566,26 @@ ${existingMemories || '暂无'}
 
 请严格判断，只有"确实值得记录"的内容才输出。如果对话中没有值得记录的内容，请只输出"[无建议]"。
 输出格式：每条记忆一行，格式为"主题：具体内容"。最多输出3条，不要过度提取。`;
-      
+
       const suggestion = await callAI(prompt, "你是记忆分析助手，帮助用户管理重要的对话记忆。");
-      
+
       if (!suggestion || suggestion.trim() === '[无建议]' || suggestion.trim() === '') {
         memorySuggestionPending = false;
         return;
       }
-      
+
       // 解析建议的记忆
       const lines = suggestion.split('\n')
         .map(l => l.trim())
         .filter(l => l && !l.startsWith('[') && (l.includes('：') || l.includes(':')));
-      
+
       if (lines.length === 0) {
         memorySuggestionPending = false;
         return;
       }
-      
+
       // 显示建议弹窗
-      const suggestionsHtml = lines.map((line, i) => 
+      const suggestionsHtml = lines.map((line, i) =>
         `<div class="memory-suggestion-item">
           <label class="memory-suggestion-label">
             <input type="checkbox" class="memory-suggestion-checkbox" data-idx="${i}" checked>
@@ -1209,7 +1593,7 @@ ${existingMemories || '暂无'}
           </label>
         </div>`
       ).join('');
-      
+
       showCommonDialog({
         title: '✨ 发现可记录的内容',
         customBody: `
@@ -1224,10 +1608,10 @@ ${existingMemories || '暂无'}
         onConfirm: () => {
           const checkboxes = document.querySelectorAll('.memory-suggestion-checkbox:checked');
           if (checkboxes.length === 0) return;
-          
+
           let currentMemories = charMemoriesInput ? charMemoriesInput.value.trim() : '';
           let newMemories = [];
-          
+
           checkboxes.forEach(cb => {
             const idx = parseInt(cb.dataset.idx);
             const text = lines[idx];
@@ -1235,7 +1619,7 @@ ${existingMemories || '暂无'}
               newMemories.push(text);
             }
           });
-          
+
           if (newMemories.length > 0) {
             const prefix = currentMemories ? '\n' : '';
             charMemoriesInput.value = currentMemories + prefix + newMemories.map(m => `- ${m}`).join('\n');
@@ -1244,19 +1628,19 @@ ${existingMemories || '暂无'}
             saveCharacterToStorage();
             // 更新卡片显示
             updateMemoriesCards();
-            
+
             showToast(`已添加 ${newMemories.length} 条记忆`);
           }
         }
       });
-      
+
     } catch(e) {
       console.error('Memory suggestion error:', e);
     } finally {
       memorySuggestionPending = false;
     }
   }
-  
+
   // 更新消息计数并触发检查
   function trackMessageForMemoryCheck() {
     messagesSinceLastMemoryCheck++;
@@ -1342,6 +1726,9 @@ ${existingMemories || '暂无'}
     setVal(charStyleInput, characterData.style || '');
     setVal(charExamplesInput, characterData.examples || '');
     setVal(characterBioInput, characterData.bio || '温柔而冷静的陪伴');
+    setVal(charCidInput, characterData.cid || '');
+    setVal(charRegionInput, characterData.region || '');
+    setVal(charSelfIntroInput, characterData.selfIntro || '');
 
     updateCharacterPreview();
     updateMemoriesCards();
@@ -1517,7 +1904,10 @@ ${existingMemories || '暂无'}
       examples: getVal(charExamplesInput),
       avatar: characterData.avatar,
       cover: characterData.cover,
-      bio: getVal(characterBioInput)
+      bio: getVal(characterBioInput),
+      cid: getVal(charCidInput),
+      region: getVal(charRegionInput),
+      selfIntro: getVal(charSelfIntroInput)
     };
     try {
       localStorage.setItem('character_data', JSON.stringify(characterData));
@@ -1568,6 +1958,9 @@ ${existingMemories || '暂无'}
     姓名：${getVal(charNameInput)}
     年龄：${getVal(charAgeInput)}
     性别：${getVal(charGenderInput)}
+    CID：${getVal(charCidInput) || '无'}
+    地区：${getVal(charRegionInput) || '未知'}
+    自我介绍：${getVal(charSelfIntroInput) || '无'}
     外貌：${getVal(charAppearanceInput)}
     性格：${getVal(charPersonalityInput)}
     经历：${getVal(charBackstoryInput)}
@@ -1577,10 +1970,22 @@ ${existingMemories || '暂无'}
     ${getVal(charExamplesInput)}
     `.trim();
 
+        // 用户资料（AI可读取，但不应主动询问）
+        const userInfo = `
+    【关于用户】
+    用户昵称：${localStorage.getItem('profile_name') || '用户'}
+    个性签名：${localStorage.getItem('profile_bio') || '无'}
+    CID：${localStorage.getItem('profile_cid') || '无'}
+    地区：${localStorage.getItem('profile_region') || '未知'}
+    自我介绍：${localStorage.getItem('profile_self_intro') || '无'}
+    `.trim();
+
         const systemMsg = {
             role: 'system',
             content: customSystemPrompt || `
     ${getVal(systemPromptInput) || '你是一个冷静又带点青涩的助手，说话简洁但偶尔流露出温柔。请用中文交流，保持角色。'}
+
+    ${userInfo}
 
     ${charInfo}
 
@@ -1752,6 +2157,8 @@ ${existingMemories || '暂无'}
           await new Promise(resolve => setTimeout(resolve, Math.max(0, typingDelay)));
           removeTypingIndicator();
           addMessage('assistant', sentence);
+          // 检测AI回复中的"离开"关键词，提高不在线概率
+          detectAiOfflineKeywords(sentence);
           // AI 回复时触发通知
           triggerNotification(charNameInput.value + ' 发来消息', sentence);
         }
@@ -1780,10 +2187,10 @@ ${existingMemories || '暂无'}
 
   // ---------- 抽屉 ----------
   let drawerClickHandler = null;
-  function openDrawer() { 
-    drawer.classList.add('open'); 
-    overlay.classList.add('show'); 
-    
+  function openDrawer() {
+    drawer.classList.add('open');
+    overlay.classList.add('show');
+
     // 延迟添加点击监听，避免触发当前点击事件
     setTimeout(() => {
       drawerClickHandler = (e) => {
@@ -1796,9 +2203,9 @@ ${existingMemories || '暂无'}
       document.addEventListener('click', drawerClickHandler);
     }, 0);
   }
-  function closeDrawer() { 
-    drawer.classList.remove('open'); 
-    overlay.classList.remove('show'); 
+  function closeDrawer() {
+    drawer.classList.remove('open');
+    overlay.classList.remove('show');
     // 移除点击监听
     if (drawerClickHandler) {
       document.removeEventListener('click', drawerClickHandler);
@@ -1898,19 +2305,81 @@ ${existingMemories || '暂无'}
       else characterData.cover = dataURL;
       updateCharacterPreview();
     } else {
+      // 保存前获取旧数据，用于判断是否有变化
+      const oldAvatar = localStorage.getItem('user_avatar') || '';
+      const oldCover = localStorage.getItem('user_cover') || '';
+
       if (currentCropType === 'avatar') {
         const userAvatarBtn = document.getElementById('userAvatarBtn');
         const profileAvatarLarge = document.getElementById('profileAvatarLarge');
         if (userAvatarBtn) userAvatarBtn.innerHTML = `<img src="${dataURL}" class="avatar-img-full">`;
         if (profileAvatarLarge) profileAvatarLarge.innerHTML = `<img src="${dataURL}" class="avatar-img-full">`;
         try { localStorage.setItem('user_avatar', dataURL); } catch(e) {}
+        // 检测头像是否有变化
+        if (oldAvatar && oldAvatar !== dataURL) {
+          handleUserAvatarChange();
+        }
       } else {
         document.documentElement.style.setProperty('--profile-bg-image', `url(${dataURL})`);
         try { localStorage.setItem('user_cover', dataURL); } catch(e) {}
+        // 检测背景是否有变化
+        if (oldCover && oldCover !== dataURL) {
+          handleUserCoverChange();
+        }
       }
     }
     closeCropModalFunc();
     window._cropTarget = null;
+  }
+
+  // AI询问头像变化
+  async function handleUserAvatarChange() {
+    if (!config.apiKey || isGenerating) return;
+    try {
+      const charName = charNameInput?.value || 'AI';
+      const prompt = `你是角色${charName}。用户刚刚更换了头像，这让你注意到了。你应该用符合角色性格的方式，自然地提及这个变化，语气要自然，不能太刻意。要求：只输出一句话，简洁自然，符合你的角色设定，不要其他内容。`;
+
+      const res = await fetch(config.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.apiKey}` },
+        body: JSON.stringify({ model: config.model, messages: [{role:'system',content:prompt}], temperature: 0.8, max_tokens: 100 })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const reply = data?.choices?.[0]?.message?.content;
+      if (reply && reply.trim()) {
+        const cleaned = reply.trim().replace(/[（(][^）)]*?[）)]/g, '').trim();
+        addMessage('assistant', cleaned);
+        detectAiOfflineKeywords(cleaned);
+      }
+    } catch(e) {
+      console.warn('AI询问头像变化失败:', e);
+    }
+  }
+
+  // AI询问背景变化
+  async function handleUserCoverChange() {
+    if (!config.apiKey || isGenerating) return;
+    try {
+      const charName = charNameInput?.value || 'AI';
+      const prompt = `你是角色${charName}。用户刚刚更换了主页背景图，这让你注意到了。你应该用符合角色性格的方式，自然地提及这个变化，语气要自然，不能太刻意。要求：只输出一句话，简洁自然，符合你的角色设定，不要其他内容。`;
+
+      const res = await fetch(config.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.apiKey}` },
+        body: JSON.stringify({ model: config.model, messages: [{role:'system',content:prompt}], temperature: 0.8, max_tokens: 100 })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const reply = data?.choices?.[0]?.message?.content;
+      if (reply && reply.trim()) {
+        const cleaned = reply.trim().replace(/[（(][^）)]*?[）)]/g, '').trim();
+        addMessage('assistant', cleaned);
+        detectAiOfflineKeywords(cleaned);
+      }
+    } catch(e) {
+      console.warn('AI询问背景变化失败:', e);
+    }
   }
 
   function initUploadButtons() {
@@ -1953,6 +2422,9 @@ ${existingMemories || '暂无'}
       profileBioDisplay.innerHTML = `<i class="fas fa-quote-left mr-8"></i>${savedBio}`;
       editProfileNameInput.value = savedName;
       editProfileBioInput.value = savedBio;
+      if (editProfileCidInput) editProfileCidInput.value = localStorage.getItem('profile_cid') || '';
+      if (editProfileRegionInput) editProfileRegionInput.value = localStorage.getItem('profile_region') || '';
+      if (editProfileSelfIntroInput) editProfileSelfIntroInput.value = localStorage.getItem('profile_self_intro') || '';
     } catch(e) {}
   }
 
@@ -1981,9 +2453,9 @@ ${existingMemories || '暂无'}
     else if (view === 'profile') { chatMain.classList.add('profile-hidden'); userAvatarBtn.classList.add('active'); }
     else if (view === 'character') { chatMain.classList.add('character-hidden'); characterIcon.classList.add('active'); }
     else if (view === 'focus') { chatMain.classList.add('focus-hidden'); focusIcon?.classList.add('active'); }
-    else if (view === 'stats') { 
-      chatMain.classList.add('stats-hidden'); 
-      statsIcon?.classList.add('active'); 
+    else if (view === 'stats') {
+      chatMain.classList.add('stats-hidden');
+      statsIcon?.classList.add('active');
       // 打开统计视图时默认显示今日统计tab
       document.querySelectorAll('.stats-tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.stats-content').forEach(c => c.classList.remove('active'));
@@ -2003,7 +2475,7 @@ ${existingMemories || '暂无'}
     // 设置当前日期
     const now = new Date();
     document.getElementById('scheduleDateDisplay').textContent = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 ${['周日','周一','周二','周三','周四','周五','周六'][now.getDay()]}`;
-    
+
     // 刷新各统计内容
     renderTodaySchedule();
     renderChatStats();
@@ -2015,27 +2487,27 @@ ${existingMemories || '暂无'}
     const todayStr = new Date().toISOString().split('T')[0];
     const todaySchedules = statsData.schedules.filter(s => s.date === todayStr);
     const todayRecords = statsData.focusRecords.filter(r => r.date === todayStr);
-    
+
     const container = document.getElementById('scheduleTimeline');
     if (todaySchedules.length === 0 && todayRecords.length === 0) {
       container.innerHTML = `<div class="schedule-empty"><i class="fas fa-clock opacity-5"></i><p>暂无日程安排</p></div>`;
       return;
     }
-    
+
     // 合并所有项目，按时间排序
     const allItems = [
       ...todaySchedules.map(s => ({ type: 'schedule', ...s })),
       ...todayRecords.map(r => ({ type: 'focus', ...r }))
     ].sort((a, b) => a.time.localeCompare(b.time));
-    
+
     if (allItems.length === 0) {
       container.innerHTML = `<div class="schedule-empty"><i class="fas fa-clock opacity-5"></i><p>暂无日程安排</p></div>`;
       return;
     }
-    
+
     // 生成时间线HTML
     let html = '<div class="timeline-container">';
-    
+
     allItems.forEach((item, index) => {
       const isLast = index === allItems.length - 1;
       if (item.type === 'schedule') {
@@ -2073,7 +2545,7 @@ ${existingMemories || '暂无'}
           </div>`;
       }
     });
-    
+
     html += '</div>';
     container.innerHTML = html;
   }
@@ -2087,12 +2559,12 @@ ${existingMemories || '暂无'}
   // 渲染聊天统计
   function renderChatStats() {
     const stats = statsData.chatStats;
-    
+
     // 对话概况
     document.getElementById('chatStatCount').textContent = stats.totalMessages;
     document.getElementById('userMsgCount').textContent = stats.userMessages;
     document.getElementById('charMsgCount').textContent = stats.charMessages;
-    
+
     // 计算对话天数
     if (stats.firstChatDate) {
       const firstDate = new Date(stats.firstChatDate);
@@ -2104,22 +2576,22 @@ ${existingMemories || '暂无'}
       document.getElementById('chatStatDays').textContent = '0';
       document.getElementById('chatStatStartDate').textContent = '-';
     }
-    
+
     // 词排行
     renderWordRanking();
   }
-  
+
   // 渲染词排行
   function renderWordRanking() {
     const container = document.getElementById('wordRankingList');
     if (!container) return;
-    
+
     const topWords = getTopWords(10);
     if (topWords.length === 0) {
       container.innerHTML = `<div class="word-ranking-empty"><i class="fas fa-list opacity-5"></i><p>暂无数据</p></div>`;
       return;
     }
-    
+
     let html = '';
     topWords.forEach((item, index) => {
       html += `
@@ -2129,34 +2601,34 @@ ${existingMemories || '暂无'}
           <div class="word-ranking-count">${item.count}次</div>
         </div>`;
     });
-    
+
     container.innerHTML = html;
   }
 
   // 渲染专注统计
   function renderFocusStats() {
     const records = statsData.focusRecords;
-    
+
     // 计算总时长
     let userSec = 0, charSec = 0;
     records.forEach(r => {
       if (r.owner === 'user') userSec += r.durationSec;
       else charSec += r.durationSec;
     });
-    
+
     // 共同专注时长 = 双方同时专注的时间总和
     const overlapSec = statsData.totalOverlapSec || 0;
-    
+
     const formatHours = (sec) => {
       const h = Math.floor(sec / 3600);
       const m = Math.round((sec % 3600) / 60);
       return h > 0 ? `${h}h${m}m` : `${m}m`;
     };
-    
+
     document.getElementById('totalFocusHours').textContent = formatHours(overlapSec);
     document.getElementById('userFocusHours').textContent = formatHours(userSec);
     document.getElementById('charFocusHours').textContent = formatHours(charSec);
-    
+
     // 专注记录列表
     const container = document.getElementById('focusRecordsList');
     if (records.length === 0) {
@@ -2168,21 +2640,21 @@ ${existingMemories || '暂无'}
         </div>`;
       return;
     }
-    
+
     // 按时间倒序排序（最新在最上面）
     const sortedRecords = [...records].sort((a, b) => {
       const dateCompare = b.date.localeCompare(a.date);
       if (dateCompare !== 0) return dateCompare;
       return b.time.localeCompare(a.time);
     });
-    
+
     // 分页：每页5条
     const pageSize = 5;
     let currentPage = window.focusRecordsPage || 1;
     const totalPages = Math.ceil(sortedRecords.length / pageSize);
     const startIdx = (currentPage - 1) * pageSize;
     const pageRecords = sortedRecords.slice(startIdx, startIdx + pageSize);
-    
+
     // 格式化日期显示
     const formatDate = (dateStr) => {
       const d = new Date(dateStr);
@@ -2190,7 +2662,7 @@ ${existingMemories || '暂无'}
       const day = d.getDate().toString().padStart(2, '0');
       return `${month}月${day}日`;
     };
-    
+
     let html = '';
     pageRecords.forEach(record => {
       const minutes = Math.round(record.durationSec / 60);
@@ -2206,7 +2678,7 @@ ${existingMemories || '暂无'}
           <div class="focus-record-duration">${minutes}分钟</div>
         </div>`;
     });
-    
+
     // 添加分页控件
     if (totalPages > 1) {
       html += `
@@ -2223,10 +2695,10 @@ ${existingMemories || '暂无'}
           </div>
         </div>`;
     }
-    
+
     container.innerHTML = html;
   }
-  
+
   // 专注记录分页函数
   window.goToFocusPage = function(page) {
     const totalRecords = statsData.focusRecords.length;
@@ -2235,12 +2707,12 @@ ${existingMemories || '暂无'}
     window.focusRecordsPage = page;
     renderFocusStats();
   };
-  
+
   // 渲染历史专注记录抽屉
   function renderFocusHistoryDrawer() {
     const container = document.getElementById('focusHistoryList');
     const records = statsData.focusRecords;
-    
+
     if (records.length === 0) {
       container.innerHTML = `
         <div class="focus-history-empty">
@@ -2249,14 +2721,14 @@ ${existingMemories || '暂无'}
         </div>`;
       return;
     }
-    
+
     // 按时间倒序排序
     const sortedRecords = [...records].sort((a, b) => {
       const dateCompare = b.date.localeCompare(a.date);
       if (dateCompare !== 0) return dateCompare;
       return b.time.localeCompare(a.time);
     });
-    
+
     // 格式化日期显示
     const formatDate = (dateStr) => {
       const d = new Date(dateStr);
@@ -2264,7 +2736,7 @@ ${existingMemories || '暂无'}
       const day = d.getDate().toString().padStart(2, '0');
       return `${month}月${day}日`;
     };
-    
+
     let html = '';
     sortedRecords.slice(0, 50).forEach(record => {
       const minutes = Math.round(record.durationSec / 60);
@@ -2280,22 +2752,22 @@ ${existingMemories || '暂无'}
           <div class="focus-history-duration">${minutes}分钟</div>
         </div>`;
     });
-    
+
     container.innerHTML = html;
   }
-  
+
   // 打开/关闭历史专注抽屉
   function openFocusHistoryDrawer() {
     renderFocusHistoryDrawer();
     document.getElementById('focusHistoryDrawer')?.classList.add('open');
     document.getElementById('focusHistoryOverlay')?.classList.add('show');
   }
-  
+
   function closeFocusHistoryDrawer() {
     document.getElementById('focusHistoryDrawer')?.classList.remove('open');
     document.getElementById('focusHistoryOverlay')?.classList.remove('show');
   }
-  
+
   document.addEventListener('DOMContentLoaded', () => {
     // 历史专注记录按钮
     document.getElementById('focusHistoryBtn')?.addEventListener('click', openFocusHistoryDrawer);
@@ -2310,11 +2782,11 @@ ${existingMemories || '暂无'}
     document.querySelectorAll('.stats-tab').forEach(tab => {
       tab.addEventListener('click', () => {
         const tabName = tab.dataset.tab;
-        
+
         // 切换tab按钮样式
         document.querySelectorAll('.stats-tab').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
-        
+
         // 切换内容
         document.querySelectorAll('.stats-content').forEach(content => content.classList.remove('active'));
         document.getElementById(`stats${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Content`)?.classList.add('active');
@@ -2344,7 +2816,7 @@ ${existingMemories || '暂无'}
 
   function showAddScheduleDialog() {
     const currentTime = new Date().toTimeString().slice(0, 5);
-    
+
     // 生成预设卡片HTML
     const presetCardsHtml = presetActivities.map((act, index) => `
       <div class="schedule-preset-card" data-activity="${act.name}" data-icon="${act.icon}" data-color="${act.color}" style="--card-color: ${act.color}">
@@ -2352,7 +2824,7 @@ ${existingMemories || '暂无'}
         <span>${act.name}</span>
       </div>
     `).join('');
-    
+
     const formHtml = `
       <div class="schedule-dialog-container">
         <!-- 添加对象选择 -->
@@ -2363,7 +2835,7 @@ ${existingMemories || '暂无'}
             <button class="schedule-owner-btn char-btn" data-owner="char" type="button">角色日程</button>
           </div>
         </div>
-        
+
         <!-- 预设活动卡片 -->
         <div class="schedule-preset-section">
           <label>选择活动</label>
@@ -2374,7 +2846,7 @@ ${existingMemories || '暂无'}
             <i class="fas fa-plus"></i> 自定义活动
           </button>
         </div>
-        
+
         <!-- 自定义活动表单（默认隐藏） -->
         <div class="schedule-custom-form" id="customFormSection" style="display: none;">
           <div class="schedule-form-row">
@@ -2390,7 +2862,7 @@ ${existingMemories || '暂无'}
             </div>
           </div>
         </div>
-        
+
         <!-- 时间选择 -->
         <div class="schedule-form-group">
           <label>时间</label>
@@ -2398,7 +2870,7 @@ ${existingMemories || '暂无'}
         </div>
       </div>
     `;
-    
+
     showCommonDialog({
       title: '添加日程',
       message: '',
@@ -2413,12 +2885,12 @@ ${existingMemories || '暂无'}
         const time = document.getElementById('scheduleTimeInput').value;
         const ownerBtn = document.querySelector('.schedule-owner-btn.active');
         const owner = ownerBtn?.dataset.owner || 'user';
-        
+
         if (!activity) {
           showToast('请选择或输入活动');
           return;
         }
-        
+
         // 如果有备注，附加到活动名称
         const finalActivity = note ? `${activity}（${note}）` : activity;
         addSchedule(owner, finalActivity, time);
@@ -2426,7 +2898,7 @@ ${existingMemories || '暂无'}
         showToast('日程已添加');
       }
     });
-    
+
     // 切换日程对象按钮
     setTimeout(() => {
       document.querySelectorAll('.schedule-owner-btn').forEach(btn => {
@@ -2435,7 +2907,7 @@ ${existingMemories || '暂无'}
           btn.classList.add('active');
         });
       });
-      
+
       // 预设卡片点击
       document.querySelectorAll('.schedule-preset-card').forEach(card => {
         card.addEventListener('click', () => {
@@ -2453,7 +2925,7 @@ ${existingMemories || '暂无'}
           if (customForm) customForm.style.display = 'none';
         });
       });
-      
+
       // 自定义按钮
       document.getElementById('showCustomForm')?.addEventListener('click', () => {
         const customForm = document.getElementById('customFormSection');
@@ -2709,7 +3181,7 @@ ${existingMemories || '暂无'}
             const elapsed = focusState.ai.durationSec || 0;
             const activity = focusState.ai.activity || '专注';
             addFocusRecord('char', activity, elapsed, 'down');
-            
+
             focusState.ai.running = false;
             focusState.ai.remainingSec = 0;
             focusState.ai.lastStartTs = 0;
@@ -2822,10 +3294,10 @@ ${existingMemories || '暂无'}
       : (focusState.user.startRemainingSec - focusState.user.remainingSec);
     const duration = focusState.user.durationSec || 0;
     const activity = focusState.user.activity || '专注';
-    
+
     const MINute = 60;
     const FIVE_MINUTES = 5 * 60;
-    
+
     // 判断是否需要确认弹窗
     if (focusState.user.mode === 'up') {
       // 正计时模式
@@ -2870,16 +3342,16 @@ ${existingMemories || '暂无'}
       }
       // 正常结束：正常记录
     }
-    
+
     // 正常结束，记录并显示弹窗
     const elapsedMin = Math.round(elapsed / 60);
     const durationMin = Math.round(duration / 60);
     const timeStr = elapsedMin > 0 ? `${elapsedMin}分钟` : `${durationMin}分钟`;
     const message = `${activity} · ${timeStr}`;
-    
+
     // 记录到统计数据
     addFocusRecord('user', activity, elapsed, focusState.user.mode);
-    
+
     resetUserOnly();
     showCommonDialog({
       title: '⭐专注结束',
@@ -2907,7 +3379,7 @@ ${existingMemories || '暂无'}
 
   function endAiFocus() {
     if (!focusState.ai.enabled) return;
-    
+
     // 计算AI专注时长并记录
     const elapsed = Math.round(computeUpElapsed(focusState.ai));
     const activity = focusState.ai.activity || '专注';
@@ -2915,7 +3387,7 @@ ${existingMemories || '暂无'}
     if (elapsed >= 5 * 60 || (focusState.ai.mode === 'down' && elapsed > 0)) {
       addFocusRecord('char', activity, elapsed, focusState.ai.mode);
     }
-    
+
     focusState.ai.running = false;
     focusState.ai.lastStartTs = 0;
     // 重置计时（无论是否运行，直接归零）
@@ -3425,6 +3897,9 @@ ${existingMemories || '暂无'}
     const obj = {
       profile_name: localStorage.getItem('profile_name'),
       profile_bio: localStorage.getItem('profile_bio'),
+      profile_cid: localStorage.getItem('profile_cid'),
+      profile_region: localStorage.getItem('profile_region'),
+      profile_self_intro: localStorage.getItem('profile_self_intro'),
       user_avatar: localStorage.getItem('user_avatar'),
       user_cover: localStorage.getItem('user_cover'),
     };
@@ -3438,7 +3913,7 @@ ${existingMemories || '暂无'}
         message: '将覆盖当前个人资料，确定继续？',
         confirmText: '确定导入',
         onConfirm: () => {
-          ['profile_name','profile_bio','user_avatar','user_cover'].forEach(k => {
+          ['profile_name','profile_bio','profile_cid','profile_region','profile_self_intro','user_avatar','user_cover'].forEach(k => {
             if (data[k] != null) localStorage.setItem(k, data[k]);
           });
           showToast('导入成功，页面即将刷新');
@@ -3502,6 +3977,7 @@ ${existingMemories || '暂无'}
     loadCharacterFromStorage();
     loadLearnedTraits();
     loadProfile();
+    loadCharNoteAndDesc(); // 加载备注和描述
     loadUserImages();
     loadFocusState();
     loadStatsData();  // 加载统计数据
@@ -3510,8 +3986,10 @@ ${existingMemories || '暂无'}
     normalizeFocusAfterLoad();
     renderMessages();
     buildChatPreferencesUI();
+    initOnlineStatusToggle(); // 初始化在线状态
     loadProactiveMsgPrefs();
-    buildProactiveMsgUI();
+    loadAiRealOfflinePrefs();  // 加载真实不在线状态设置
+    if (aiRealOfflineEnabled) startAiOfflineTicker();  // 如果已开启，启动刷新定时器
     renderLearnedTraits();
     syncFocusUI();
     if (focusState.user.running || (focusState.ai.enabled && focusState.ai.running)) ensureFocusTicker();
@@ -3530,6 +4008,21 @@ ${existingMemories || '暂无'}
       const avatar = e.target.closest('#userAvatarBtn');
       if (icon || avatar) closeSidebar();
     });
+
+    // ===== 备注与描述输入框事件 =====
+    const charNoteInput = document.getElementById('charNoteInput');
+    const charDescInput = document.getElementById('charDescInput');
+    charNoteInput?.addEventListener('input', saveCharNote);
+    charDescInput?.addEventListener('input', saveCharNote);
+
+    // ===== 角色主页信息折叠卡 =====
+    const charProfileInfoHeader = document.getElementById('charProfileInfoHeader');
+    const charProfileInfoCard = document.getElementById('charProfileInfoCard');
+    if (charProfileInfoHeader && charProfileInfoCard) {
+      charProfileInfoHeader.addEventListener('click', () => {
+        charProfileInfoCard.classList.toggle('open');
+      });
+    }
 
     // ===== 快速回到底部按钮 =====
     const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
@@ -3667,9 +4160,12 @@ ${existingMemories || '暂无'}
         onConfirm: () => {
           localStorage.removeItem('character_data');
           localStorage.removeItem('learned_traits');
-          characterData = { worldBook:'',name:'',avatar:'',cover:'',bio:'',age:'',gender:'',appearance:'',personality:'',backstory:'',memories:'',style:'',examples:'' };
+          localStorage.removeItem('char_note');
+          localStorage.removeItem('char_desc');
+          characterData = { worldBook:'',name:'',avatar:'',cover:'',bio:'',age:'',gender:'',appearance:'',personality:'',backstory:'',memories:'',style:'',examples:'',cid:'',region:'',selfIntro:'',charNote:'',charDesc:'' };
           learnedTraits = [];
           loadCharacterFromStorage();
+          loadCharNoteAndDesc();
           renderLearnedTraits();
         }
       });
@@ -3707,8 +4203,14 @@ ${existingMemories || '暂无'}
     saveEditProfileBtn?.addEventListener('click', ()=>{
       const name = editProfileNameInput.value.trim()||'用户';
       const bio = editProfileBioInput.value.trim()||'在一隅，遇见自己。';
+      const cid = editProfileCidInput?.value.trim()||'';
+      const region = editProfileRegionInput?.value.trim()||'';
+      const selfIntro = editProfileSelfIntroInput?.value.trim()||'';
       localStorage.setItem('profile_name', name);
       localStorage.setItem('profile_bio', bio);
+      localStorage.setItem('profile_cid', cid);
+      localStorage.setItem('profile_region', region);
+      localStorage.setItem('profile_self_intro', selfIntro);
       profileDisplayName.textContent = name;
       profileBioDisplay.innerHTML = `<i class="fas fa-quote-left mr-8"></i>${bio}`;
       closeEditModal();
@@ -3768,7 +4270,7 @@ ${existingMemories || '暂无'}
   // ===== IndexedDB 动画存储系统 =====
   // 替代 localStorage，突破 5MB 限制，支持存储更大文件
   // ============================================================
-  
+
   const DB_NAME = 'focus_anim_db';
   const DB_VERSION = 1;
   const STORE_NAME = 'anims';
