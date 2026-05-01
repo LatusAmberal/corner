@@ -722,14 +722,15 @@
                 <div class="char-note-label">
                     <i class="fas fa-sticky-note"></i> 角色备注
                 </div>
-                <input type="text" id="charNoteInput" class="char-note-input" placeholder="输入备注，将显示在标题栏">
+                <input type="text" id="charNoteInput" class="char-note-input" placeholder="输入备注，将直接替换标题栏昵称">
                 <div class="char-note-label" style="margin-top:12px;">
                     <i class="fas fa-align-left"></i> 角色描述
                 </div>
                 <textarea id="charDescInput" class="char-note-input" rows="2" placeholder="输入描述，显示在角色卡片中"></textarea>
                 <div class="char-note-hint">
-                    <i class="fas fa-info-circle"></i> 备注和描述不会被读取
+                    <i class="fas fa-info-circle"></i> 备注和描述不会被AI读取
                 </div>
+                <button class="btn btn-primary w-full mt-10" id="saveCharNoteBtn" style="margin-top:10px;"><i class="fas fa-save mr-6"></i> 保存备注和描述</button>
             </div>
             <div class="mt-20">
                 <button class="btn btn-warning w-full" id="clearChatBtn"><i class="fas fa-trash-alt"></i> 清空对话记录</button>
