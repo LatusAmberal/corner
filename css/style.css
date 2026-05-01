@@ -1652,7 +1652,7 @@ body.light-theme .profile-banner::before {
     z-index: 2;
     padding: 0 32px 20px;
     display: flex;
-    justify-content: flex-start;
+    justify-content: center;
 }
 
 /* 角色卡片操作按钮（移到卡片内容下方） */
@@ -1661,7 +1661,7 @@ body.light-theme .profile-banner::before {
     z-index: 2;
     padding: 0 24px 16px;
     display: flex;
-    justify-content: flex-start;
+    justify-content: center;
 }
 
 /* 大头像：圆形 + 描边 + 阴影，更醒目 */
@@ -1933,21 +1933,29 @@ body.light-theme .character-preview-info p {
     backdrop-filter: blur(4px);
     border: 1px solid rgba(255,255,255,0.2);
     color: white;
+    font-weight: 500;
+    padding: 10px 18px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
 
 .character-preview-content .btn-secondary:hover {
     background: var(--accent);
     border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
 }
 
 body.light-theme .character-preview-content .btn-secondary {
     background: rgba(255,255,255,0.6);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(0,0,0,0.1);
     color: #1e2b34;
 }
 
 body.light-theme .character-preview-content .btn-secondary:hover {
     background: var(--accent);
     color: white;
+    border-color: var(--accent);
 }
 .character-view.active {
     display: block;
@@ -2131,10 +2139,10 @@ body.light-theme .character-preview-content .btn-secondary:hover {
     color: white;
 }
 .learned-trait-tag .trait-text {
-    max-width: 200px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    /* 自动换行，不省略显示 */
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
 }
 .learned-trait-tag .trait-remove {
     font-size: 14px;
@@ -2232,7 +2240,7 @@ body.light-theme .character-preview-content .btn-secondary:hover {
 }
 .focus-anim-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
     gap: 10px;
     min-height: 80px;
     max-height: 320px;
@@ -2295,10 +2303,9 @@ body.light-theme .character-preview-content .btn-secondary:hover {
     cursor: pointer;
     background: var(--bg-header);
     transition: border-color 0.15s, transform 0.15s;
-    aspect-ratio: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    /* 使用 padding-bottom 保持正方形比例 */
+    width: 100%;
+    padding-bottom: 100%;
 }
 .focus-anim-item:hover {
     transform: translateY(-2px);
@@ -2309,9 +2316,13 @@ body.light-theme .character-preview-content .btn-secondary:hover {
     box-shadow: 0 0 0 2px var(--accent);
 }
 .focus-anim-item img {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
 }
 .focus-anim-item-del {
     position: absolute;
@@ -3373,24 +3384,20 @@ body.light-theme .character-preview-content .btn-secondary:hover {
 /* 顶部信息区 */
 .cpp-top {
     padding: 0 14px 10px;
-    background: var(--bg-secondary, #1e1f22);
+    background: var(--bg-chat-main);
 }
 .cpp-avatar {
     width: 56px; height: 56px;
     border-radius: 50%;
-    border: 3px solid var(--bg-secondary, #1e1f22);
-    background: var(--bg-tertiary, #2b2d31);
+    border: 3px solid var(--bg-chat-main);
+    background: var(--bg-header);
     display: flex; align-items: center; justify-content: center;
     font-size: 22px;
-    color: var(--text-secondary, rgba(255,255,255,0.5));
+    color: var(--text-secondary);
     overflow: hidden;
     margin-top: -28px;
     position: relative;
     z-index: 1;
-}
-/* 深色主题下弹窗背景 */
-body:not(.light-theme) .cpp-avatar {
-    background: var(--bg-header, #1e2328);
 }
 .cpp-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .cpp-namerow { display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
@@ -3408,35 +3415,37 @@ body:not(.light-theme) .cpp-avatar {
 }
 
 /* 分割线 */
-.cpp-divider { height: 1px; background: rgba(255,255,255,0.07); }
+.cpp-divider { height: 1px; background: var(--border-light); }
 
 /* 元数据区 */
 .cpp-meta {
     padding: 10px 14px 6px;
     display: flex; flex-direction: column;
+    background: var(--bg-chat-main);
 }
 .cpp-meta-item {
     display: flex; align-items: flex-start; gap: 8px;
     padding: 5px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid var(--border-light);
 }
 .cpp-meta-item:last-child { border-bottom: none; }
 .cpp-meta-label {
     font-size: 11px; font-weight: 700;
-    color: var(--text-secondary, rgba(255,255,255,0.4));
+    color: var(--text-secondary);
     text-transform: uppercase; letter-spacing: 0.05em;
     flex-shrink: 0; width: 44px; padding-top: 1px;
 }
 .cpp-meta-val {
     font-size: 12px;
-    color: var(--text-primary, rgba(255,255,255,0.82));
+    color: var(--text-primary);
     flex: 1; word-break: break-word; line-height: 1.5;
 }
 
 /* 底部按钮 */
 .cpp-footer {
     padding: 8px 14px 12px;
-    border-top: 1px solid rgba(255,255,255,0.07);
+    border-top: 1px solid var(--border-light);
+    background: var(--bg-chat-main);
 }
 
 /* ===== 角色主页信息折叠卡 ===== */
@@ -3531,11 +3540,11 @@ body:not(.light-theme) .cpp-avatar {
     position: fixed;
     z-index: 99999;
     width: 268px;
-    background: var(--bg-secondary, #1e1f22);
+    background: var(--bg-chat-main);
     border-radius: 10px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06);
+    box-shadow: 0 8px 32px var(--shadow), 0 0 0 1px var(--border-light);
     overflow: hidden;
-    color: var(--text-primary, #fff);
+    color: var(--text-primary);
     pointer-events: auto;
     font-size: 13px;
 }
@@ -3550,11 +3559,11 @@ body:not(.light-theme) .cpp-avatar {
     position: fixed;
     z-index: 99999;
     width: 268px;
-    background: var(--bg-secondary, #1e1f22);
+    background: var(--bg-chat-main);
     border-radius: 10px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06);
+    box-shadow: 0 8px 32px var(--shadow), 0 0 0 1px var(--border-light);
     overflow: hidden;
-    color: var(--text-primary, #fff);
+    color: var(--text-primary);
     pointer-events: auto;
     font-size: 13px;
     animation: profile-popup-enter 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
