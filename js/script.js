@@ -961,7 +961,9 @@
 
   /** 触发浏览器通知 */
   function triggerNotification(title, body) {
+    // 只在页面处于后台时才发送浏览器通知
     if (!notificationPrefs.enabled || Notification.permission !== 'granted') return;
+    if (!document.hidden) return;
     try {
       const n = new Notification(title, { body, icon: 'logos/icon.png', silent: false });
       n.onclick = () => { window.focus(); n.close(); };
@@ -1059,11 +1061,8 @@
     const namePart1 = charNameInput.value.trim();
     const fullName = namePart1 || '青绿';
     const note = characterData.charNote || '';
-    if (note) {
-      chatTitleDisplay.textContent = `"${note}" ${fullName}`;
-    } else {
-      chatTitleDisplay.textContent = fullName;
-    }
+    // 设置了备注则直接用备注替换标题，其他地方角色昵称不变
+    chatTitleDisplay.textContent = note || fullName;
   }
 
   function updateApiStatusBadge() {
@@ -1274,11 +1273,33 @@
     }
   });
 
+  // 关闭所有弹窗的通用函数
+  function closeAllProfilePopups(except) {
+    const charPopup = document.getElementById('charProfilePopup');
+    const userPopup = document.getElementById('userProfilePopup');
+    if (charPopup && except !== charPopup) {
+      charPopup.classList.add('closing');
+      setTimeout(() => { charPopup.classList.remove('visible', 'closing'); }, 150);
+    }
+    if (userPopup && except !== userPopup) {
+      userPopup.classList.add('closing');
+      setTimeout(() => { userPopup.classList.remove('visible', 'closing'); }, 150);
+    }
+  }
+
   // 角色主页弹窗
   window.showCharProfilePopup = function(e) {
     e.stopPropagation();
     const popup = document.getElementById('charProfilePopup');
     if (!popup) return;
+    // 若已打开则关闭（切换行为）
+    if (popup.classList.contains('visible')) {
+      popup.classList.add('closing');
+      setTimeout(() => popup.classList.remove('visible', 'closing'), 150);
+      return;
+    }
+    // 关闭其他所有弹窗
+    closeAllProfilePopups(popup);
 
     // 向上找到头像元素（内联onclick中currentTarget为null）
     const avatarEl = e.target.closest('.message-avatar') || e.target;
@@ -1351,6 +1372,14 @@
     e.stopPropagation();
     const popup = document.getElementById('userProfilePopup');
     if (!popup) return;
+    // 若已打开则关闭（切换行为）
+    if (popup.classList.contains('visible')) {
+      popup.classList.add('closing');
+      setTimeout(() => popup.classList.remove('visible', 'closing'), 150);
+      return;
+    }
+    // 关闭其他所有弹窗
+    closeAllProfilePopups(popup);
 
     const avatarEl = e.target.closest('.message-avatar') || e.target;
 
@@ -2137,8 +2166,14 @@ ${existingMemories || '暂无'}
     async function generateAiReply() {
       try {
         showTypingIndicator();
-        // 传入最后一条消息作为触发
-        const lastUserContent = messages[userMsgIndices[userMsgIndices.length - 1]].content;
+        // 获取最后一条用户消息（不直接依赖 userMsgIndices，防止其为空）
+        const lastUserMsg = [...messages].reverse().find(m => m.role === 'user' && !m.isReset);
+        if (!lastUserMsg) {
+          removeTypingIndicator();
+          isGenerating = false;
+          return;
+        }
+        const lastUserContent = lastUserMsg.content;
         const reply = await callAI(lastUserContent);
         const cleaned = cleanParentheses(reply);
 
@@ -2164,7 +2199,14 @@ ${existingMemories || '暂无'}
         }
       } catch(e) {
         removeTypingIndicator();
-        addMessage('assistant', `❌ 错误: ${e.message}`);
+        isGenerating = false;
+        sendBtn.disabled = false;
+        showCommonDialog({
+          title: '⚠️ 请求失败',
+          message: `${e.message}`,
+          showCancel: false,
+          confirmText: '好的'
+        });
       }
     }
   }
@@ -2188,6 +2230,8 @@ ${existingMemories || '暂无'}
   // ---------- 抽屉 ----------
   let drawerClickHandler = null;
   function openDrawer() {
+    // 每次打开时重新加载已保存的备注/描述，确保显示已保存值
+    loadCharNoteAndDesc();
     drawer.classList.add('open');
     overlay.classList.add('show');
 
@@ -3288,10 +3332,10 @@ ${existingMemories || '暂无'}
   }
 
   function endUserFocus() {
-    // 计算专注时长
+    // 计算专注时长（使用实时计算值，而不是存储值）
     const elapsed = focusState.user.mode === 'up'
-      ? focusState.user.elapsedSec
-      : (focusState.user.startRemainingSec - focusState.user.remainingSec);
+      ? Math.round(computeUpElapsed(focusState.user))
+      : Math.round(focusState.user.startRemainingSec - computeDownRemaining(focusState.user));
     const duration = focusState.user.durationSec || 0;
     const activity = focusState.user.activity || '专注';
 
@@ -4009,11 +4053,12 @@ ${existingMemories || '暂无'}
       if (icon || avatar) closeSidebar();
     });
 
-    // ===== 备注与描述输入框事件 =====
-    const charNoteInput = document.getElementById('charNoteInput');
-    const charDescInput = document.getElementById('charDescInput');
-    charNoteInput?.addEventListener('input', saveCharNote);
-    charDescInput?.addEventListener('input', saveCharNote);
+    // ===== 备注与描述输入框事件 - 手动保存 =====
+    const saveCharNoteBtn = document.getElementById('saveCharNoteBtn');
+    saveCharNoteBtn?.addEventListener('click', () => {
+      saveCharNote();
+      showToast('备注和描述已保存');
+    });
 
     // ===== 角色主页信息折叠卡 =====
     const charProfileInfoHeader = document.getElementById('charProfileInfoHeader');
@@ -4232,29 +4277,75 @@ ${existingMemories || '暂无'}
     updateCharacterPreview();
     updateModelVisibility();
 
-    // 批量发送相关
-    const closeBatchModal = () => { batchSendModalOverlay.classList.remove('show'); };
-    const handleBatchSend = () => {
-      const content = batchMessageInput.value.trim();
+    // 批量发送相关（使用事件委托，确保切换视图后仍可用）
+    function closeBatchModal() {
+      const overlay = document.getElementById('batchSendModalOverlay');
+      if (overlay) overlay.classList.remove('show');
+    }
+
+    function openBatchModal() {
+      const overlay = document.getElementById('batchSendModalOverlay');
+      const input = document.getElementById('batchMessageInput');
+      const msgInput = document.getElementById('messageInput');
+      if (!overlay || !input) return;
+      // 如果输入框有内容，剪切到批量发送
+      if (msgInput && msgInput.value.trim()) {
+        input.value = msgInput.value;
+        msgInput.value = '';
+        msgInput.style.height = 'auto';
+        // 保存原内容供取消还原
+        overlay.dataset.prevContent = input.value;
+      } else {
+        overlay.dataset.prevContent = '';
+      }
+      overlay.classList.add('show');
+      setTimeout(() => input.focus(), 100);
+    }
+
+    function handleBatchSend() {
+      const input = document.getElementById('batchMessageInput');
+      if (!input) return;
+      const content = input.value.trim();
       if (!content) return;
       const lines = content.split('\n').map(l => l.trim()).filter(l => l !== '');
       if (lines.length > 0) {
         handleSendMessage(lines);
-        batchMessageInput.value = '';
+        input.value = '';
         closeBatchModal();
       }
-    };
+    }
 
-    batchSendBtn?.addEventListener('click', () => {
-      batchSendModalOverlay.classList.add('show');
-      batchMessageInput.focus();
+    function handleBatchCancel() {
+      const overlay = document.getElementById('batchSendModalOverlay');
+      const input = document.getElementById('batchMessageInput');
+      const msgInput = document.getElementById('messageInput');
+      // 如果有暂存内容，还原到输入框
+      if (overlay && overlay.dataset.prevContent && msgInput) {
+        msgInput.value = overlay.dataset.prevContent;
+        // 触发auto-resize
+        msgInput.dispatchEvent(new Event('input'));
+      }
+      if (input) input.value = '';
+      closeBatchModal();
+    }
+
+    // 使用事件委托确保切换视图后仍可用
+    document.addEventListener('click', (e) => {
+      const batchBtn = e.target.closest('#batchSendBtn');
+      const closeBtn = e.target.closest('#closeBatchSendModal');
+      const cancelBtn = e.target.closest('#cancelBatchSendBtn');
+      const confirmBtn = e.target.closest('#confirmBatchSendBtn');
+      const overlay = document.getElementById('batchSendModalOverlay');
+
+      if (batchBtn) { openBatchModal(); return; }
+      if (closeBtn) { handleBatchCancel(); return; }
+      if (cancelBtn) { handleBatchCancel(); return; }
+      if (confirmBtn) { handleBatchSend(); return; }
+      // 点击遮罩外部关闭
+      if (overlay && e.target === overlay && overlay.classList.contains('show')) {
+        handleBatchCancel();
+      }
     });
-    closeBatchSendModal?.addEventListener('click', closeBatchModal);
-    cancelBatchSendBtn?.addEventListener('click', closeBatchModal);
-    batchSendModalOverlay?.addEventListener('click', (e) => {
-      if(e.target === batchSendModalOverlay) closeBatchModal();
-    });
-    confirmBatchSendBtn?.addEventListener('click', handleBatchSend);
 
     // ===== 专注动画自定义按钮 =====
     document.getElementById('focusAnimCustomizeBtn')?.addEventListener('click', openFocusAnimManager);
@@ -4439,20 +4530,19 @@ ${traitsText}
 
       const result = await callAI(prompt, "你是一个对话风格分析助手。");
       if (result && result.trim()) {
-        // 清空词条
+        const summary = result.trim();
+        // 直接追加到对话风格结尾（不保留在AI学习词条中）
+        if (charStyleInput) {
+          const current = charStyleInput.value.trim();
+          charStyleInput.value = current + (current ? '\n' : '') + summary;
+        }
+        // 清空学习词条（从AI学习词条框里消失）
         learnedTraits = [];
         saveLearnedTraits();
         renderLearnedTraits();
-        // 添加总结结果
-        learnedTraits.push({
-          id: 'trait_' + Date.now(),
-          text: result.trim(),
-          selected: true,
-          timestamp: Date.now()
-        });
-        saveLearnedTraits();
-        renderLearnedTraits();
-        updateStyleFromTraits();
+        // 保存到角色数据
+        saveCharacterToStorage();
+        showToast('已自动总结并保存到对话风格');
       }
     } catch(e) {
       console.error('Summarize traits error:', e);
