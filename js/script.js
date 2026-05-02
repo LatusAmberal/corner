@@ -1517,15 +1517,17 @@
 
   async function analyzeAndLearn(oldVal, newVal) {
     try {
-      const prompt = `用户修改了你的回复：
-原回复：${oldVal}
-新回复：${newVal}
+      const prompt = `用户将你的回复从：
+"${oldVal}"
+修改为：
+"${newVal}"
 
-请分析用户修改的意图，并根据新回复总结出一种对话风格规则。
+请仔细分析用户偏好的说话风格，总结为1条风格规则。
 要求：
-1. 总结简洁，直接以指令形式输出。
-2. 比较原回复和新回复，找出差异点。
-3. 输出格式：只输出风格指令，不要其他文字`;
+1. 专注于表达方式（如：更简洁、更口语化、更正式、喜欢用表情符号、用问句结尾等）
+2. 不要描述具体说什么内容，只描述怎么说
+3. 直接输出一条风格指令即可，不要解释
+4. 长度控制在20字以内`;
 
       const learningResult = await callAI(prompt, "你是一个对话风格分析助手。");
       if (learningResult && learningResult.trim()) {
@@ -2208,6 +2210,50 @@ ${existingMemories || '暂无'}
           confirmText: '好的'
         });
       }
+    }
+  }
+
+  // ---------- 继续说 ----------
+  async function handleContinueReply() {
+    if (isGenerating) return;
+    const continueBtn = document.getElementById('continueBtn');
+    if (continueBtn) continueBtn.disabled = true;
+
+    try {
+      showTypingIndicator();
+      // 构造让 AI 继续说的 prompt
+      const lastAssistantMsg = [...messages].reverse().find(m => m.role === 'assistant' && !m.isReset);
+      const contextHint = lastAssistantMsg ? `对方刚刚说：「${lastAssistantMsg.content.slice(0, 200)}」\n\n请继续这个话题，再说1-2句话。` : '请主动说1-2句话，开启或延续话题。';
+      const reply = await callAI(contextHint);
+      const cleaned = cleanParentheses(reply);
+      const sentences = cleaned.split(/(?<=[。\.！？!?\n])/g)
+                               .map(s => s.trim())
+                               .filter(s => s.length > 0);
+      removeTypingIndicator();
+      for (const sentence of sentences.slice(0, 2)) {
+        showTypingIndicator();
+        const charCount = sentence.length;
+        let typingDelay = Math.min(6000, Math.max(1000, charCount * 60));
+        typingDelay += (Math.random() * 400 - 200);
+        await new Promise(resolve => setTimeout(resolve, Math.max(0, typingDelay)));
+        removeTypingIndicator();
+        addMessage('assistant', sentence);
+        detectAiOfflineKeywords(sentence);
+        triggerNotification(charNameInput.value + ' 发来消息', sentence);
+      }
+    } catch(e) {
+      removeTypingIndicator();
+      showCommonDialog({
+        title: '⚠️ 请求失败',
+        message: `${e.message}`,
+        showCancel: false,
+        confirmText: '好的'
+      });
+    } finally {
+      isGenerating = false;
+      const sendBtn = document.getElementById('sendBtn');
+      if (sendBtn) sendBtn.disabled = false;
+      if (continueBtn) continueBtn.disabled = false;
     }
   }
 
@@ -3865,6 +3911,254 @@ ${existingMemories || '暂无'}
     reader.readAsText(file);
   }
 
+  // ---------- Supabase 云端备份 ----------
+  let supabaseClient = null;
+  let supabaseConnected = false;
+
+  function getSupabaseConfig() {
+    return {
+      url: localStorage.getItem('supabase_url') || '',
+      key: localStorage.getItem('supabase_key') || '',
+      lastBackup: localStorage.getItem('supabase_last_backup') || ''
+    };
+  }
+
+  function saveSupabaseConfig(url, key) {
+    if (url) localStorage.setItem('supabase_url', url.trim());
+    if (key) localStorage.setItem('supabase_key', key.trim());
+  }
+
+  function removeSupabaseConfig() {
+    localStorage.removeItem('supabase_url');
+    localStorage.removeItem('supabase_key');
+    localStorage.removeItem('supabase_last_backup');
+  }
+
+  function updateCloudUI(connected, lastBackup) {
+    const connectBtn = document.getElementById('cloudConnectBtn');
+    const disconnectBtn = document.getElementById('cloudDisconnectBtn');
+    const uploadBtn = document.getElementById('cloudUploadBtn');
+    const downloadBtn = document.getElementById('cloudDownloadBtn');
+    const refreshBtn = document.getElementById('cloudRefreshBtn');
+    const statusText = document.getElementById('cloudStatusText');
+    const lastBackupText = document.getElementById('cloudLastBackupText');
+
+    if (connected) {
+      if (connectBtn) connectBtn.style.display = 'none';
+      if (disconnectBtn) disconnectBtn.style.display = '';
+      if (uploadBtn) uploadBtn.style.display = '';
+      if (downloadBtn) downloadBtn.style.display = '';
+      if (refreshBtn) refreshBtn.style.display = '';
+      if (statusText) statusText.innerHTML = '<i class="fas fa-circle" style="color:#0f9960;"></i> 已连接';
+    } else {
+      if (connectBtn) connectBtn.style.display = '';
+      if (disconnectBtn) disconnectBtn.style.display = 'none';
+      if (uploadBtn) uploadBtn.style.display = 'none';
+      if (downloadBtn) downloadBtn.style.display = 'none';
+      if (refreshBtn) refreshBtn.style.display = 'none';
+      if (statusText) statusText.innerHTML = '<i class="fas fa-circle" style="color:#888;"></i> 未连接';
+    }
+
+    if (lastBackupText) {
+      lastBackupText.textContent = lastBackup ? `上次备份：${new Date(lastBackup).toLocaleString('zh-CN')}` : '上次备份：暂无记录';
+    }
+  }
+
+  async function connectSupabase() {
+    const urlInput = document.getElementById('supabaseUrlInput');
+    const keyInput = document.getElementById('supabaseKeyInput');
+    const url = urlInput?.value.trim() || '';
+    const key = keyInput?.value.trim() || '';
+
+    if (!url || !key) {
+      showToast('请填写 Supabase URL 和 Anon Key');
+      return;
+    }
+
+    try {
+      // 测试连接：获取数据库版本
+      const response = await fetch(`${url}/rest/v1/`, {
+        headers: {
+          'apikey': key,
+          'Authorization': `Bearer ${key}`
+        }
+      });
+
+      if (!response.ok) throw new Error('连接失败，请检查 URL 和 Key');
+
+      saveSupabaseConfig(url, key);
+      supabaseConnected = true;
+      updateCloudUI(true, localStorage.getItem('supabase_last_backup'));
+      showToast('Supabase 连接成功');
+    } catch (e) {
+      showToast('连接失败：' + e.message);
+    }
+  }
+
+  function disconnectSupabase() {
+    supabaseClient = null;
+    supabaseConnected = false;
+    removeSupabaseConfig();
+    updateCloudUI(false, '');
+    showToast('已断开 Supabase 连接');
+  }
+
+  async function uploadBackup() {
+    const config = getSupabaseConfig();
+    if (!config.url || !config.key) {
+      showToast('请先连接 Supabase');
+      return;
+    }
+
+    try {
+      // 收集所有本地数据
+      const backupData = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        backupData[key] = localStorage.getItem(key);
+      }
+
+      const deviceId = btoa(config.url + config.key).replace(/[^a-zA-Z0-9]/g, '').slice(0, 50);
+      const now = new Date().toISOString();
+
+      // 先检查是否已有备份
+      const checkResp = await fetch(`${config.url}/rest/v1/backups?device_id=eq.${deviceId}`, {
+        headers: {
+          'apikey': config.key,
+          'Authorization': `Bearer ${config.key}`
+        }
+      });
+
+      const existing = await checkResp.json();
+
+      if (existing && existing.length > 0) {
+        // 更新现有备份
+        await fetch(`${config.url}/rest/v1/backups?device_id=eq.${deviceId}`, {
+          method: 'PATCH',
+          headers: {
+            'apikey': config.key,
+            'Authorization': `Bearer ${config.key}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({
+            backup_data: JSON.stringify(backupData),
+            updated_at: now
+          })
+        });
+      } else {
+        // 创建新备份
+        await fetch(`${config.url}/rest/v1/backups`, {
+          method: 'POST',
+          headers: {
+            'apikey': config.key,
+            'Authorization': `Bearer ${config.key}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({
+            device_id: deviceId,
+            backup_data: JSON.stringify(backupData),
+            created_at: now,
+            updated_at: now
+          })
+        });
+      }
+
+      localStorage.setItem('supabase_last_backup', now);
+      updateCloudUI(true, now);
+      showToast('备份上传成功');
+    } catch (e) {
+      showToast('上传失败：' + e.message);
+    }
+  }
+
+  async function downloadBackup() {
+    const config = getSupabaseConfig();
+    if (!config.url || !config.key) {
+      showToast('请先连接 Supabase');
+      return;
+    }
+
+    try {
+      const deviceId = btoa(config.url + config.key).replace(/[^a-zA-Z0-9]/g, '').slice(0, 50);
+
+      const response = await fetch(`${config.url}/rest/v1/backups?device_id=eq.${deviceId}`, {
+        headers: {
+          'apikey': config.key,
+          'Authorization': `Bearer ${config.key}`
+        }
+      });
+
+      const backups = await response.json();
+
+      if (!backups || backups.length === 0) {
+        showToast('没有找到云端备份');
+        return;
+      }
+
+      showCommonDialog({
+        title: '恢复备份',
+        message: '将从云端下载备份并覆盖本地数据，确定继续吗？',
+        confirmText: '确定恢复',
+        onConfirm: () => {
+          const backupData = JSON.parse(backups[0].backup_data);
+          localStorage.clear();
+          Object.entries(backupData).forEach(([k, v]) => localStorage.setItem(k, v));
+          showToast('恢复成功，页面将刷新');
+          setTimeout(() => location.reload(), 800);
+        }
+      });
+    } catch (e) {
+      showToast('下载失败：' + e.message);
+    }
+  }
+
+  async function refreshCloudStatus() {
+    const config = getSupabaseConfig();
+    if (!config.url || !config.key) {
+      showToast('请先连接 Supabase');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${config.url}/rest/v1/`, {
+        headers: {
+          'apikey': config.key,
+          'Authorization': `Bearer ${config.key}`
+        }
+      });
+
+      if (response.ok) {
+        supabaseConnected = true;
+        updateCloudUI(true, config.lastBackup);
+        showToast('云端状态正常');
+      } else {
+        throw new Error('连接异常');
+      }
+    } catch (e) {
+      supabaseConnected = false;
+      updateCloudUI(false, '');
+      showToast('云端连接异常：' + e.message);
+    }
+  }
+
+  function initCloudBackup() {
+    const config = getSupabaseConfig();
+    const urlInput = document.getElementById('supabaseUrlInput');
+    const keyInput = document.getElementById('supabaseKeyInput');
+
+    if (urlInput && config.url) urlInput.value = config.url;
+    if (keyInput && config.key) keyInput.value = config.key;
+
+    if (config.url && config.key) {
+      // 尝试自动连接
+      connectSupabase();
+    } else {
+      updateCloudUI(false, config.lastBackup);
+    }
+  }
+
   // ---------- 分模块导入导出 ----------
   function downloadJSON(filename, obj) {
     const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
@@ -4042,6 +4336,12 @@ ${existingMemories || '暂无'}
     sendBtn.addEventListener('click', handleSendMessage);
     messageInput.addEventListener('keydown', e => { if (e.key==='Enter'&&!e.shiftKey) { e.preventDefault(); handleSendMessage(); } });
     messageInput.addEventListener('input', ()=>{ messageInput.style.height='auto'; messageInput.style.height=Math.min(messageInput.scrollHeight,120)+'px'; });
+
+    // ===== 继续说按钮 =====
+    const continueBtn = document.getElementById('continueBtn');
+    if (continueBtn) {
+      continueBtn.addEventListener('click', handleContinueReply);
+    }
     configBtn.addEventListener('click', openDrawer);
     closeDrawerBtn.addEventListener('click', closeDrawer);
     overlay.addEventListener('click', closeDrawer);
@@ -4196,6 +4496,59 @@ ${existingMemories || '暂无'}
     document.getElementById('settingsExportBtn')?.addEventListener('click', exportSettingsData);
     document.getElementById('settingsImportBtn')?.addEventListener('click', () => document.getElementById('settingsImportInput').click());
     document.getElementById('settingsImportInput')?.addEventListener('change', e => { if(e.target.files[0]) { importSettingsData(e.target.files[0]); e.target.value=''; } });
+
+    // 云端备份 (Supabase)
+    initCloudBackup();
+    document.getElementById('cloudConnectBtn')?.addEventListener('click', connectSupabase);
+    document.getElementById('cloudDisconnectBtn')?.addEventListener('click', disconnectSupabase);
+    document.getElementById('cloudUploadBtn')?.addEventListener('click', uploadBackup);
+    document.getElementById('cloudDownloadBtn')?.addEventListener('click', downloadBackup);
+    document.getElementById('cloudRefreshBtn')?.addEventListener('click', refreshCloudStatus);
+
+    // 云端备份教程弹窗
+    const cloudTutorialOverlay = document.getElementById('cloudTutorialOverlay');
+    document.getElementById('cloudBackupHelpBtn')?.addEventListener('click', () => {
+        cloudTutorialOverlay.classList.add('show');
+    });
+    document.getElementById('closeCloudTutorialBtn')?.addEventListener('click', () => {
+        cloudTutorialOverlay.classList.remove('show');
+    });
+    document.getElementById('closeCloudTutorialFooterBtn')?.addEventListener('click', () => {
+        cloudTutorialOverlay.classList.remove('show');
+    });
+    cloudTutorialOverlay?.addEventListener('click', (e) => {
+        if (e.target === cloudTutorialOverlay) cloudTutorialOverlay.classList.remove('show');
+    });
+    // 复制代码按钮
+    document.querySelectorAll('.tutorial-copy-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const text = btn.dataset.copy;
+            navigator.clipboard.writeText(text).then(() => {
+                btn.classList.add('copied');
+                btn.innerHTML = '<i class="fas fa-check"></i> 已复制';
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.innerHTML = '<i class="fas fa-copy"></i> 复制';
+                }, 2000);
+            }).catch(() => {
+                // 降级方案
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                btn.classList.add('copied');
+                btn.innerHTML = '<i class="fas fa-check"></i> 已复制';
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.innerHTML = '<i class="fas fa-copy"></i> 复制';
+                }, 2000);
+            });
+        });
+    });
 
     resetCharacterBtn.addEventListener('click', ()=>{
       showCommonDialog({
