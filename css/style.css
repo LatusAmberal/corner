@@ -3671,6 +3671,22 @@ body.light-theme .character-preview-content .btn-secondary:hover {
     font-weight: 500;
 }
 
+/* 教程字段示例（正确/错误对比） */
+.tutorial-field-example {
+    font-size: 12.5px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 7px;
+    padding: 10px 12px;
+    margin-top: 8px;
+    line-height: 2;
+    color: var(--text-secondary);
+}
+.tfe-label {
+    font-weight: 600;
+    margin-right: 6px;
+}
+.tfe-wrong { color: #f87171; }
+
 /* ===== 卡片右上角帮助按钮 ===== */
 .card-help-btn {
     margin-left: auto;
