@@ -115,7 +115,7 @@
             <div class="settings-card">
                 <h3><i class="fas fa-palette"></i> 外观</h3>
                 <div class="flex-between">
-                    <span class="theme-toggle-label"><i class="fas fa-moon"></i> 深色模式</span>
+                    <span class="theme-toggle-label"><i class="fas fa-moon"></i> 浅色模式</span>
                     <div class="apple-toggle" id="themeToggleSettings"></div>
                 </div>
                 <div class="mt-8 fs-13 text-secondary">
@@ -959,38 +959,53 @@
                         </div>
                     </div>
 
-                    <!-- Step 4 -->
+                    <!-- Step 4a：获取 URL -->
                     <div class="tutorial-step">
                         <div class="tutorial-step-num">4</div>
                         <div class="tutorial-step-content">
-                            <div class="tutorial-step-title">获取 URL 和 Anon Key</div>
+                            <div class="tutorial-step-title">获取项目 URL</div>
                             <div class="tutorial-step-desc">
-                                在项目左侧菜单点击 <strong>Project Settings</strong>（齿轮图标）→ <strong>Data API</strong>，找到：
+                                在左侧菜单点击 <strong>Project Settings（齿轮图标）</strong> → <strong>Integrations</strong> → <strong>Data API</strong>，找到 <strong>API URL</strong> 一栏，复制其中的地址。
                             </div>
-                            <ul class="tutorial-list">
-                                <li><strong>Project URL</strong>：形如 <code>https://xxxx.supabase.co</code></li>
-                                <li><strong>Project API Keys</strong> 中的 <code>anon</code> <code>public</code> 那一行</li>
-                            </ul>
                             <div class="tutorial-tip warn">
-                                <i class="fas fa-shield-alt"></i> <strong>anon key 是公钥，可以安全地填入本应用。</strong>不要使用 <code>service_role</code> key。
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span>注意：复制的地址末尾可能带有 <code>/rest/v1/</code>，<strong>填入时请去掉这一段</strong>，只保留 <code>https://xxxx.supabase.co</code> 这部分。</span>
+                            </div>
+                            <div class="tutorial-field-example">
+                                <span class="tfe-label">✅ 正确：</span><code>https://xxxx.supabase.co</code><br>
+                                <span class="tfe-label tfe-wrong">❌ 错误：</span><code>https://xxxx.supabase.co/rest/v1/</code>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Step 5 -->
+                    <!-- Step 4b：获取 Anon Key -->
                     <div class="tutorial-step">
                         <div class="tutorial-step-num">5</div>
                         <div class="tutorial-step-content">
-                            <div class="tutorial-step-title">填入并连接</div>
+                            <div class="tutorial-step-title">获取 Anon Key</div>
                             <div class="tutorial-step-desc">
-                                将 <strong>Project URL</strong> 和 <strong>Anon Key</strong> 分别填入下方输入框，点击 <strong>连接</strong>。看到绿色「已连接」状态即成功。
+                                在 <strong>Project Settings</strong> → <strong>API Keys</strong>（注意：这是另一个页面，和上一步不同！），切换到 <strong>Legacy anon, service_role API keys</strong> 标签页，复制标有 <code>anon</code> <code>public</code> 的那行密钥。
+                            </div>
+                            <div class="tutorial-tip warn">
+                                <i class="fas fa-shield-alt"></i> <strong>只复制 anon public 那行</strong>，不要复制 service_role 密钥。
                             </div>
                         </div>
                     </div>
 
-                    <!-- Step 6 -->
+                    <!-- Step 5 →原 Step 5 变 6 -->
                     <div class="tutorial-step">
                         <div class="tutorial-step-num">6</div>
+                        <div class="tutorial-step-content">
+                            <div class="tutorial-step-title">填入并连接</div>
+                            <div class="tutorial-step-desc">
+                                将上面获取的 <strong>URL</strong>（不含 <code>/rest/v1/</code>）和 <strong>Anon Key</strong> 分别填入输入框，点击 <strong>连接</strong>。看到绿色「已连接」即成功。
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 7 -->
+                    <div class="tutorial-step">
+                        <div class="tutorial-step-num">7</div>
                         <div class="tutorial-step-content">
                             <div class="tutorial-step-title">上传 / 恢复数据</div>
                             <div class="tutorial-step-desc">
@@ -1014,7 +1029,7 @@
                     <div class="tutorial-faq-title"><i class="fas fa-question-circle"></i> 常见问题</div>
                     <details class="tutorial-faq-item">
                         <summary>连接失败怎么办？</summary>
-                        <p>请检查：① URL 是否完整（含 <code>https://</code>）；② Anon Key 是否完整复制（很长的字符串）；③ 数据表是否已创建。</p>
+                        <p>最常见原因：<strong>URL 末尾多了 <code>/rest/v1/</code></strong>，请删掉这一段，只填 <code>https://xxxx.supabase.co</code>。其他原因：① Anon Key 没有完整复制；② 数据表未创建（回到步骤3执行 SQL）；③ Data API 未开启。</p>
                     </details>
                     <details class="tutorial-faq-item">
                         <summary>免费额度够用吗？</summary>
