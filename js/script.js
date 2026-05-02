@@ -3976,22 +3976,29 @@ ${existingMemories || '暂无'}
     }
 
     try {
-      // 测试连接：获取数据库版本
-      const response = await fetch(`${url}/rest/v1/`, {
+      // 测试连接：直接查询 backups 表验证权限是否正常
+      const response = await fetch(`${url}/rest/v1/backups?select=id&limit=1`, {
         headers: {
           'apikey': key,
           'Authorization': `Bearer ${key}`
         }
       });
 
-      if (!response.ok) throw new Error('连接失败，请检查 URL 和 Key');
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`连接失败 (${response.status}): ${errText.slice(0, 100)}`);
+      }
 
       saveSupabaseConfig(url, key);
       supabaseConnected = true;
       updateCloudUI(true, localStorage.getItem('supabase_last_backup'));
       showToast('Supabase 连接成功');
     } catch (e) {
-      showToast('连接失败：' + e.message);
+      let msg = e.message;
+      if (msg === '连接失败 (403)') {
+        msg = '连接失败 (403)：可能是 RLS 权限未正确设置，请在 SQL Editor 重新执行建表 SQL';
+      }
+      showToast(msg);
     }
   }
 
