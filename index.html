@@ -33,6 +33,7 @@
         <div class="sidebar-icon" title="人物管理" id="characterIcon"><i class="fas fa-user-tag"></i></div>
         <div class="sidebar-icon" title="专注" id="focusIcon"><i class="fas fa-hourglass-half"></i></div>
         <div class="sidebar-icon" title="统计" id="statsIcon"><i class="fas fa-chart-bar"></i></div>
+        <div class="sidebar-icon" title="推文" id="momentsIcon" onclick="setActiveView('moments')"><i class="fas fa-atom"></i></div>
         <div class="sidebar-divider"></div>
         <div class="sidebar-icon" title="设置"><i class="fas fa-cog"></i></div>
         <div class="sidebar-icon" title="数据管理" id="dataManagerIcon"><i class="fas fa-database"></i></div>
@@ -101,9 +102,7 @@
 
         <!-- 设置视图 -->
         <div class="settings-view" id="settingsView">
-            <div class="view-title-row">
-                <h2 class="mb-20 fw-500"><i class="fas fa-cog mr-12"></i>设置</h2>
-            </div>
+            <h2 class="settings-page-title fw-500"><i class="fas fa-cog mr-12"></i>设置</h2>
             <div class="settings-card import-export-card">
                 <h3><i class="fas fa-exchange-alt"></i> 导入 / 导出</h3>
                 <div class="import-export-btn-row">
@@ -207,11 +206,45 @@
                 </div>
             </div>
             <div class="profile-content">
-                <div class="empty-state">
-                    <i class="fas fa-tools fs-48 mb-20 opacity-5"></i>
-                    <h3 class="fw-400 mb-8">更多功能开发中</h3>
-                    <p>敬请期待</p>
+                <div class="profile-posts-grid" id="profilePostsGrid">
+                    <!-- 推文九宫格由 JS 渲染 -->
                 </div>
+            </div>
+        </div>
+
+        <!-- 角色个人主页视图 -->
+        <div class="char-home-view" id="charHomeView" style="display:none;">
+            <div class="profile-banner">
+                <button class="char-home-back-btn" id="charHomeBackBtn" title="返回">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <div class="profile-banner-content">
+                    <div class="profile-avatar-large" id="charHomeAvatarLarge">
+                        <i class="fas fa-user-astronaut"></i>
+                    </div>
+                    <div class="profile-info">
+                        <h2 id="charHomeDisplayName">角色名称<span class="online-status-text" id="charHomeOnlineIndicator"><span class="online-status-dot"></span><span class="online-status-label">在线</span></span></h2>
+                        <p id="charHomeBioDisplay"><i class="fas fa-quote-left mr-8"></i>暂无个性签名</p>
+                    </div>
+                </div>
+            </div>
+            <div class="profile-content">
+                <div class="profile-posts-grid" id="charHomePostsGrid">
+                    <!-- 角色推文九宫格由 JS 渲染 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 单条推文详情页 -->
+        <div class="post-detail-view" id="postDetailView" style="display:none;">
+            <div class="post-detail-header">
+                <button class="post-detail-back-btn" id="postDetailBackBtn">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <span class="post-detail-title">帖子</span>
+            </div>
+            <div class="post-detail-body" id="postDetailBody">
+                <!-- 详情内容由 JS 渲染 -->
             </div>
         </div>
 
@@ -306,9 +339,7 @@
 
         <!-- 统计视图 -->
         <div class="stats-view" id="statsView">
-            <div class="view-title-row">
-                <h2 class="stats-page-title fw-500"><i class="fas fa-chart-bar mr-12"></i>统计</h2>
-            </div>
+            <h2 class="stats-page-title fw-500"><i class="fas fa-chart-bar mr-12"></i>统计</h2>
             <div class="settings-card import-export-card">
                 <h3><i class="fas fa-exchange-alt"></i> 导入 / 导出</h3>
                 <div class="import-export-btn-row">
@@ -455,11 +486,169 @@
             </div>
         </div>
 
+        <!-- 朋友圈视图 -->
+        <div class="moments-view" id="momentsView">
+            <h2 class="moments-page-title fw-500">
+                <i class="fas fa-atom mr-12"></i>推文
+                <span class="moments-action-btns">
+                    <button class="moments-settings-btn" id="momentsSettingsBtn" title="角色行为设置">
+                        <i class="fas fa-ellipsis-h"></i>
+                    </button>
+                    <button class="moments-filter-btn" data-filter="all" id="momentsFilterBtn" title="筛选">
+                        <i class="fas fa-filter"></i>
+                    </button>
+                    <button class="moments-settings-btn" id="momentsSearchBtn" title="搜索">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <button class="moments-post-btn" id="momentsPostBtn" title="发推文">
+                        <i class="fas fa-pen-square"></i>
+                    </button>
+                </span>
+            </h2>
+            <!-- 搜索栏 -->
+            <div class="moments-search-bar" id="momentsSearchBar" style="display:none;">
+                <i class="fas fa-search"></i>
+                <input type="text" class="moments-search-input" id="momentsSearchInput" placeholder="搜索推文内容或作者...">
+                <button class="moments-search-close" id="momentsSearchClose"><i class="fas fa-times"></i></button>
+            </div>
+            <!-- 筛选菜单 -->
+            <div class="moments-filter-menu" id="momentsFilterMenu" style="display:none;">
+                <button class="moments-filter-btn ${momentsFilter === 'all' ? 'active' : ''}" data-filter="all"><i class="fas fa-globe"></i> 全部</button>
+                <button class="moments-filter-btn ${momentsFilter === 'user' ? 'active' : ''}" data-filter="user"><i class="fas fa-user"></i> 用户</button>
+                <button class="moments-filter-btn ${momentsFilter === 'char' ? 'active' : ''}" data-filter="char"><i class="fas fa-user-astronaut"></i> 角色</button>
+                <button class="moments-filter-btn ${momentsFilter === 'favorites' ? 'active' : ''}" data-filter="favorites"><i class="fas fa-star"></i> 收藏</button>
+                <div class="moments-filter-divider"></div>
+                <button class="moments-filter-btn ${momentsSort === 'newest' ? 'active' : ''}" data-sort="newest"><i class="fas fa-clock"></i> 最新</button>
+                <button class="moments-filter-btn ${momentsSort === 'oldest' ? 'active' : ''}" data-sort="oldest"><i class="fas fa-history"></i> 最老</button>
+            </div>
+            <div class="moments-feed" id="momentsFeed">
+                <!-- 帖子动态渲染 -->
+            </div>
+        </div>
+
+        <!-- 发帖弹窗 -->
+        <div class="modal-overlay" id="momentsPostModalOverlay">
+            <div class="modal-container w-500">
+                <div class="modal-header">
+                    <h3>发推文</h3>
+                    <button class="modal-close" id="closeMomentsPostModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="moments-account-switcher" id="momentsAccountSwitcher">
+                        <button class="moments-account-btn active" data-account="user">
+                            <i class="fas fa-user"></i> 用户账号
+                        </button>
+                        <button class="moments-account-btn" data-account="char">
+                            <i class="fas fa-user-astronaut"></i> 角色账号
+                        </button>
+                    </div>
+                    <div class="config-group mt-12">
+                        <textarea id="momentsPostText" rows="4" placeholder="分享你的动态..."></textarea>
+                    </div>
+                    <div class="moments-media-preview" id="momentsMediaPreview">
+                        <!-- 图片/视频预览 -->
+                    </div>
+                    <div class="moments-upload-card" id="momentsAddImageBtn">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <span class="moments-media-count" id="momentsMediaCount">0/9</span>
+                    <button class="btn btn-primary" id="momentsPublishBtn">发布</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 评论区弹窗 -->
+        <div class="modal-overlay" id="momentsCommentModalOverlay">
+            <div class="modal-container w-500">
+                <div class="modal-header">
+                    <h3>评论</h3>
+                    <button class="modal-close" id="closeMomentsCommentModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="moments-comment-post-preview" id="momentsCommentPostPreview">
+                        <!-- 帖子内容预览 -->
+                    </div>
+                    <div class="moments-comment-list" id="momentsCommentList">
+                        <!-- 评论列表 -->
+                    </div>
+                </div>
+                <div class="moments-comment-footer">
+                    <input type="text" class="moments-comment-input" id="momentsCommentInput" placeholder="写评论...">
+                    <button class="moments-comment-send-btn" id="momentsSendCommentBtn"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 朋友圈角色设置弹窗 -->
+        <div class="modal-overlay" id="momentsSettingsModalOverlay">
+            <div class="modal-container w-380">
+                <div class="modal-header">
+                    <h3><i class="fas fa-ellipsis-h mr-8"></i>角色行为</h3>
+                    <button class="modal-close" id="closeMomentsSettingsModal">&times;</button>
+                </div>
+                <div class="modal-body" style="padding:16px 20px 8px; display:flex; flex-direction:column; gap:12px;">
+
+                    <!-- 自动点赞 -->
+                    <div class="char-note-section" style="padding:14px;">
+                        <div class="char-note-label"><i class="fas fa-heart"></i> 自动点赞</div>
+                        <div class="chat-prefs-row" style="margin:4px 0 10px;">
+                            <label style="font-size:13px; color:var(--text-primary); font-weight:normal;">角色自动点赞用户的推文</label>
+                            <div class="apple-toggle" id="momentsAiLikeToggle"></div>
+                        </div>
+                        <div style="font-size:12px; color:var(--text-secondary); margin-bottom:6px;">点赞概率</div>
+                        <div class="probability-bar">
+                            <input type="range" id="momentsAiLikeProb" min="0" max="100" value="30" class="apple-slider"
+                                oninput="document.getElementById('momentsAiLikeProbVal').textContent=this.value+'%'; this.style.background='linear-gradient(to right,var(--accent) '+this.value+'%,var(--border-strong) '+this.value+'%)'">
+                            <span id="momentsAiLikeProbVal" style="min-width:36px;text-align:right;color:var(--accent);font-weight:600;font-size:13px;">30%</span>
+                        </div>
+                    </div>
+
+                    <!-- 自动评论 -->
+                    <div class="char-note-section" style="padding:14px;">
+                        <div class="char-note-label"><i class="fas fa-comment"></i> 自动评论</div>
+                        <div class="chat-prefs-row" style="margin:4px 0 10px;">
+                            <label style="font-size:13px; color:var(--text-primary); font-weight:normal;">角色自动评论用户的推文</label>
+                            <div class="apple-toggle" id="momentsAiCommentToggle"></div>
+                        </div>
+                        <div style="font-size:12px; color:var(--text-secondary); margin-bottom:6px;">评论概率</div>
+                        <div class="probability-bar">
+                            <input type="range" id="momentsAiCommentProb" min="0" max="100" value="20" class="apple-slider"
+                                oninput="document.getElementById('momentsAiCommentProbVal').textContent=this.value+'%'; this.style.background='linear-gradient(to right,var(--accent) '+this.value+'%,var(--border-strong) '+this.value+'%)'">
+                            <span id="momentsAiCommentProbVal" style="min-width:36px;text-align:right;color:var(--accent);font-weight:600;font-size:13px;">20%</span>
+                        </div>
+                    </div>
+
+                    <!-- 回复用户评论 -->
+                    <div class="char-note-section" style="padding:14px;">
+                        <div class="char-note-label"><i class="fas fa-reply"></i> 回复评论</div>
+                        <div style="font-size:13px; color:var(--text-secondary); margin-bottom:10px; line-height:1.5;">用户在角色推文下评论，或回复角色评论时，角色有概率回复。连续对话超过 5 轮后概率大幅降低。</div>
+                        <div style="font-size:12px; color:var(--text-secondary); margin-bottom:6px;">初始回复概率</div>
+                        <div class="probability-bar">
+                            <input type="range" id="momentsAiReplyProb" min="0" max="100" value="40" class="apple-slider"
+                                oninput="document.getElementById('momentsAiReplyProbVal').textContent=this.value+'%'; this.style.background='linear-gradient(to right,var(--accent) '+this.value+'%,var(--border-strong) '+this.value+'%)'">
+                            <span id="momentsAiReplyProbVal" style="min-width:36px;text-align:right;color:var(--accent);font-weight:600;font-size:13px;">40%</span>
+                        </div>
+                    </div>
+
+                    <div class="char-note-hint" style="margin-bottom:4px;">
+                        <i class="fas fa-info-circle"></i> 以上行为均为随机触发，非定时执行
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" id="saveMomentsSettingsBtn">保存设置</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 朋友圈隐藏文件输入 -->
+        <input type="file" id="momentsImageInput" accept="image/*" multiple style="display:none;">
+        <input type="file" id="momentsVideoInput" accept="video/*" style="display:none;">
+
         <!-- 人物管理视图 -->
         <div class="character-view" id="characterView">
-            <div class="view-title-row">
-                <h2 class="mb-20 fw-500"><i class="fas fa-user-tag mr-12"></i>人物设定</h2>
-            </div>
+            <h2 class="character-page-title fw-500"><i class="fas fa-user-tag mr-12"></i>人物设定</h2>
             <div class="settings-card import-export-card">
                 <h3><i class="fas fa-exchange-alt"></i> 导入 / 导出</h3>
                 <div class="import-export-btn-row">
@@ -572,16 +761,16 @@
                     <label>风格描述</label>
                     <textarea id="charStyleInput" rows="2" placeholder="例如：句子简短，偶尔使用「……」，生气时会说「哼」"></textarea>
                 </div>
-                <!-- AI自动学习的风格词条区域 -->
+                <!-- 角色自动学习的风格词条区域 -->
                 <div class="config-group mt-12" id="learnedTraitsSection">
                     <label class="flex-align-center">
-                        <span>AI学习词条</span>
+                        <span>角色学习词条</span>
                         <span class="fs-12 text-secondary ml-8" id="learnedTraitsCount">（0/5）</span>
                     </label>
                     <div id="learnedTraitsContainer" class="learned-traits-container">
-                        <div class="learned-traits-empty text-secondary fs-13">暂无AI学习的词条</div>
+                        <div class="learned-traits-empty text-secondary fs-13">暂无角色学习的词条</div>
                     </div>
-                    <div class="fs-12 text-secondary mt-6">点击词条可选入风格描述，未选词条仅供展示不会被AI读取</div>
+                    <div class="fs-12 text-secondary mt-6">点击词条可选入风格描述，未选词条仅供展示不会被角色读取</div>
                 </div>
                 <details class="mt-12" id="styleAdvancedDetails">
                     <summary class="advanced-summary">高级设置 · 对话示例</summary>
@@ -598,7 +787,7 @@
 
         <!-- 数据管理视图 -->
         <div class="data-manager-view" id="dataManagerView">
-            <h2 class="mb-20 fw-500"><i class="fas fa-database mr-12"></i>数据管理</h2>
+            <h2 class="data-manager-page-title fw-500"><i class="fas fa-database mr-12"></i>数据管理</h2>
             <div class="settings-card">
                 <h3><i class="fas fa-chart-pie"></i> 存储概览</h3>
                 <div class="storage-grid">
