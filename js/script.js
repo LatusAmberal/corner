@@ -91,6 +91,32 @@
   const confirmBatchSendBtn = document.getElementById('confirmBatchSendBtn');
   const batchMessageInput = document.getElementById('batchMessageInput');
 
+  // ---------- 朋友圈 DOM ----------
+  const momentsIcon = document.getElementById('momentsIcon');
+  const momentsPostBtn = document.getElementById('momentsPostBtn');
+  const momentsSettingsBtn = document.getElementById('momentsSettingsBtn');
+  const momentsPostModalOverlay = document.getElementById('momentsPostModalOverlay');
+  const closeMomentsPostModal = document.getElementById('closeMomentsPostModal');
+  const momentsAccountSwitcher = document.getElementById('momentsAccountSwitcher');
+  const momentsPostText = document.getElementById('momentsPostText');
+  const momentsMediaPreview = document.getElementById('momentsMediaPreview');
+  const momentsAddImageBtn = document.getElementById('momentsAddImageBtn');
+  const momentsAddVideoBtn = document.getElementById('momentsAddVideoBtn');
+  const momentsMediaCount = document.getElementById('momentsMediaCount');
+  const momentsPublishBtn = document.getElementById('momentsPublishBtn');
+  const momentsCommentModalOverlay = document.getElementById('momentsCommentModalOverlay');
+  const closeMomentsCommentModal = document.getElementById('closeMomentsCommentModal');
+  const momentsCommentPostPreview = document.getElementById('momentsCommentPostPreview');
+  const momentsCommentList = document.getElementById('momentsCommentList');
+  const momentsCommentInput = document.getElementById('momentsCommentInput');
+  const momentsSendCommentBtn = document.getElementById('momentsSendCommentBtn');
+  const momentsFeed = document.getElementById('momentsFeed');
+  const momentsImageInput = document.getElementById('momentsImageInput');
+  const momentsVideoInput = document.getElementById('momentsVideoInput');
+  const momentsSettingsModalOverlay = document.getElementById('momentsSettingsModalOverlay');
+  const closeMomentsSettingsModal = document.getElementById('closeMomentsSettingsModal');
+  const saveMomentsSettingsBtn = document.getElementById('saveMomentsSettingsBtn');
+
   // ---------- 状态 ----------
   let messages = (() => {
     const saved = localStorage.getItem('chat_messages');
@@ -119,6 +145,22 @@
   let lastMemoryCheckTime = 0;
   const MEMORY_CHECK_COOLDOWN = 60000; // 检查冷却时间：1分钟
   let memorySuggestionPending = false;
+
+  // ---------- 朋友圈状态 ----------
+  let momentsPosts = [];
+  let momentsMediaFiles = [];  // 当前发帖的媒体文件（base64）
+  let currentMomentsPostAccount = 'user';  // 'user' 或 'char'
+  let currentCommentPostId = null;  // 当前评论的帖子ID
+  let currentMomentsTab = 'all';  // 当前 tab
+
+  // ---------- 朋友圈角色设置状态 ----------
+  let momentsAiSettings = {
+    autoLikeEnabled: false,
+    autoLikeProb: 30,
+    autoCommentEnabled: false,
+    autoCommentProb: 20,
+    autoReplyProb: 40
+  };
 
   // 聊天偏好状态
   let chatPreferences = {
@@ -1535,16 +1577,11 @@
         learnedTraits.push({
           id: 'trait_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
           text: learningResult.trim(),
-          selected: false,
           timestamp: Date.now()
         });
         saveLearnedTraits();
         renderLearnedTraits();
-
-        // 如果累积到5条词条，自动总结
-        if (learnedTraits.length >= 5) {
-          summarizeTraitsToStyle();
-        }
+        showToast('已提取风格词条，可点击＋添加到风格描述');
       }
     } catch(e) {
       console.error('AI Learning error:', e);
@@ -1764,6 +1801,8 @@ ${existingMemories || '暂无'}
     updateCharacterPreview();
     updateMemoriesCards();
     updateExampleBubbles();
+
+    return characterData;
   }
 
   function updateMemoriesCards() {
@@ -2508,6 +2547,7 @@ ${existingMemories || '暂无'}
     try {
       const savedName = localStorage.getItem('profile_name') || '用户';
       const savedBio = localStorage.getItem('profile_bio') || '在一隅，遇见自己。';
+      const savedAvatar = localStorage.getItem('profile_avatar') || null;
       profileDisplayName.textContent = savedName;
       profileBioDisplay.innerHTML = `<i class="fas fa-quote-left mr-8"></i>${savedBio}`;
       editProfileNameInput.value = savedName;
@@ -2515,7 +2555,10 @@ ${existingMemories || '暂无'}
       if (editProfileCidInput) editProfileCidInput.value = localStorage.getItem('profile_cid') || '';
       if (editProfileRegionInput) editProfileRegionInput.value = localStorage.getItem('profile_region') || '';
       if (editProfileSelfIntroInput) editProfileSelfIntroInput.value = localStorage.getItem('profile_self_intro') || '';
-    } catch(e) {}
+      return { name: savedName, bio: savedBio, avatar: savedAvatar };
+    } catch(e) {
+      return { name: '用户', bio: '在一隅，遇见自己。', avatar: null };
+    }
   }
 
   // ---------- 提示弹窗 ----------
@@ -2535,18 +2578,22 @@ ${existingMemories || '暂无'}
 
   // ---------- 视图切换 ----------
   function setActiveView(view) {
-    chatMain.classList.remove('chat-hidden', 'profile-hidden', 'character-hidden', 'data-hidden', 'focus-hidden', 'stats-hidden');
+    // 关闭浮层视图（角色主页、推文详情）
+    closeCharHome();
+    const postDetailView = document.getElementById('postDetailView');
+    if (postDetailView) postDetailView.style.display = 'none';
+
+    chatMain.classList.remove('chat-hidden', 'profile-hidden', 'character-hidden', 'data-hidden', 'focus-hidden', 'stats-hidden', 'moments-hidden');
     document.querySelectorAll('.sidebar-icon').forEach(icon => icon.classList.remove('active'));
     userAvatarBtn.classList.remove('active');
     if (view === 'chat') chatIcon.classList.add('active');
     else if (view === 'settings') { chatMain.classList.add('chat-hidden'); gearIcon.classList.add('active'); }
-    else if (view === 'profile') { chatMain.classList.add('profile-hidden'); userAvatarBtn.classList.add('active'); }
+    else if (view === 'profile') { chatMain.classList.add('profile-hidden'); userAvatarBtn.classList.add('active'); renderProfilePostsGrid(); }
     else if (view === 'character') { chatMain.classList.add('character-hidden'); characterIcon.classList.add('active'); }
     else if (view === 'focus') { chatMain.classList.add('focus-hidden'); focusIcon?.classList.add('active'); }
     else if (view === 'stats') {
       chatMain.classList.add('stats-hidden');
       statsIcon?.classList.add('active');
-      // 打开统计视图时默认显示今日统计tab
       document.querySelectorAll('.stats-tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.stats-content').forEach(c => c.classList.remove('active'));
       document.querySelector('.stats-tab[data-tab="today"]')?.classList.add('active');
@@ -2558,7 +2605,16 @@ ${existingMemories || '暂无'}
       dataManagerIcon.classList.add('active');
       refreshStorageStats();
     }
+    else if (view === 'moments') {
+      chatMain.classList.add('moments-hidden');
+      momentsIcon?.classList.add('active');
+      renderMomentsFeed();
+    }
   }
+
+  // 暴露 setActiveView/openPostDetail 到全局作用域，让 HTML onclick 可以调用
+  window.setActiveView = setActiveView;
+  window.openPostDetail = openPostDetail;
 
   // ---------- 统计视图 ----------
   function refreshStatsView() {
@@ -4315,6 +4371,935 @@ ${existingMemories || '暂无'}
     });
   }
 
+  // ============================================================
+  // =================== 朋友圈核心功能 =========================
+  // ============================================================
+
+  // ---------- 加载朋友圈数据 ----------
+  function loadMomentsPosts() {
+    try {
+      const saved = localStorage.getItem('moments_posts');
+      if (saved) {
+        let parsed = JSON.parse(saved);
+        // 过滤掉旧的示例数据
+        parsed = parsed.filter(p => p.id !== 'sample_1' && p.id !== 'sample_2');
+        momentsPosts = parsed;
+      } else {
+        momentsPosts = [];
+      }
+    } catch(e) {
+      momentsPosts = [];
+    }
+  }
+
+  // ---------- 朋友圈角色设置 ----------
+  function loadMomentsAiSettings() {
+    try {
+      const saved = localStorage.getItem('moments_ai_settings');
+      if (saved) {
+        momentsAiSettings = { ...momentsAiSettings, ...JSON.parse(saved) };
+      }
+    } catch(e) {}
+
+    // 填充表单
+    const likeToggle = document.getElementById('momentsAiLikeToggle');
+    const commentToggle = document.getElementById('momentsAiCommentToggle');
+    const likeProb = document.getElementById('momentsAiLikeProb');
+    const commentProb = document.getElementById('momentsAiCommentProb');
+    const replyProb = document.getElementById('momentsAiReplyProb');
+
+    if (likeToggle) likeToggle.classList.toggle('active', momentsAiSettings.autoLikeEnabled);
+    if (commentToggle) commentToggle.classList.toggle('active', momentsAiSettings.autoCommentEnabled);
+
+    // 辅助：更新滑块渐变背景 + 数值显示
+    function syncSlider(slider, valId, value) {
+      if (!slider) return;
+      slider.value = value;
+      const el = document.getElementById(valId);
+      if (el) el.textContent = value + '%';
+      slider.style.background = `linear-gradient(to right,var(--accent) ${value}%,var(--border-strong) ${value}%)`;
+    }
+
+    syncSlider(likeProb,    'momentsAiLikeProbVal',    momentsAiSettings.autoLikeProb);
+    syncSlider(commentProb, 'momentsAiCommentProbVal', momentsAiSettings.autoCommentProb);
+    syncSlider(replyProb,   'momentsAiReplyProbVal',   momentsAiSettings.autoReplyProb);
+  }
+
+  function updateSliderValue(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value + '%';
+  }
+
+  function saveMomentsAiSettings() {
+    const likeToggle = document.getElementById('momentsAiLikeToggle');
+    const commentToggle = document.getElementById('momentsAiCommentToggle');
+    const likeProb = document.getElementById('momentsAiLikeProb');
+    const commentProb = document.getElementById('momentsAiCommentProb');
+    const replyProb = document.getElementById('momentsAiReplyProb');
+
+    momentsAiSettings.autoLikeEnabled = likeToggle?.classList.contains('active') || false;
+    momentsAiSettings.autoCommentEnabled = commentToggle?.classList.contains('active') || false;
+    momentsAiSettings.autoLikeProb = parseInt(likeProb?.value) || 30;
+    momentsAiSettings.autoCommentProb = parseInt(commentProb?.value) || 20;
+    momentsAiSettings.autoReplyProb = parseInt(replyProb?.value) || 40;
+
+    try {
+      localStorage.setItem('moments_ai_settings', JSON.stringify(momentsAiSettings));
+    } catch(e) {}
+
+    closeMomentsSettingsModalFn();
+    showToast('角色行为设置已保存');
+  }
+
+  function openMomentsSettingsModal() {
+    loadMomentsAiSettings();
+    momentsSettingsModalOverlay?.classList.add('show');
+    // 绑定 apple-toggle 点击
+    ['momentsAiLikeToggle','momentsAiCommentToggle'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && !el.dataset.toggleBound) {
+        el.addEventListener('click', () => el.classList.toggle('active'));
+        el.dataset.toggleBound = '1';
+      }
+    });
+  }
+
+  function closeMomentsSettingsModalFn() {
+    momentsSettingsModalOverlay?.classList.remove('show');
+  }
+
+  // 生成示例朋友圈数据
+  function generateSampleMomentsPosts() {
+    // 不生成示例数据，返回空数组
+    return [];
+  }
+
+  // 保存朋友圈数据
+  function saveMomentsPosts() {
+    try {
+      localStorage.setItem('moments_posts', JSON.stringify(momentsPosts));
+    } catch(e) {
+      console.error('保存朋友圈数据失败:', e);
+    }
+  }
+
+  // ---------- 渲染朋友圈动态 ----------
+  function renderMomentsFeed() {
+    if (!momentsFeed) return;
+    loadMomentsPosts();
+
+    // 根据 tab 过滤
+    let filteredPosts = momentsPosts;
+    if (currentMomentsTab === 'user') {
+      filteredPosts = momentsPosts.filter(p => p.authorType === 'user');
+    } else if (currentMomentsTab === 'char') {
+      filteredPosts = momentsPosts.filter(p => p.authorType === 'char');
+    }
+
+    // 根据筛选条件过滤
+    if (momentsFilter === 'user') {
+      filteredPosts = filteredPosts.filter(p => p.authorType === 'user');
+    } else if (momentsFilter === 'char') {
+      filteredPosts = filteredPosts.filter(p => p.authorType === 'char');
+    } else if (momentsFilter === 'favorites') {
+      filteredPosts = filteredPosts.filter(p => p.isFavorited);
+    }
+
+    // 搜索过滤
+    if (momentsSearch) {
+      filteredPosts = filteredPosts.filter(p => 
+        p.content.toLowerCase().includes(momentsSearch) || 
+        p.authorName.toLowerCase().includes(momentsSearch)
+      );
+    }
+
+    // 按时间排序（最新或最老）
+    filteredPosts.sort((a, b) => momentsSort === 'oldest' 
+      ? a.timestamp - b.timestamp 
+      : b.timestamp - a.timestamp);
+
+    if (filteredPosts.length === 0) {
+      momentsFeed.innerHTML = `
+        <div class="moments-empty">
+          <i class="fas fa-inbox"></i>
+          <p>${momentsFilter === 'favorites' ? '还没有收藏的动态' : momentsSearch ? '没有找到相关动态' : '还没有动态，快来发布第一条吧'}</p>
+        </div>
+      `;
+      return;
+    }
+
+    const html = filteredPosts.map(post => renderMomentsPost(post)).join('');
+    momentsFeed.innerHTML = html;
+
+    // 绑定事件
+    bindMomentsPostEvents();
+  }
+
+  // 渲染单个帖子
+  function renderMomentsPost(post) {
+    const userProfile = loadProfile();
+    const charData = loadCharacterFromStorage();
+    const isOwnPost = (post.authorType === 'user' || post.authorType === 'char');
+    const hasLiked = post.likes.some(l => l.userId === getCurrentUserId(post.authorType));
+    const timeAgo = getTimeAgo(post.timestamp);
+    const mediaHtml = renderMomentsMedia(post.media);
+
+    // 获取当前账号的点赞信息
+    const currentUserId = post.authorType === 'user' ? 'user' : 'char_1';
+    const currentUserName = post.authorType === 'user' ? (userProfile.name || '我') : (charData.name || 'AI');
+
+    // 头像：优先使用帖子作者头像，否则使用用户/角色头像，否则显示默认图标
+    const authorAvatar = post.authorAvatar || (post.authorType === 'user' ? userProfile.avatar : charData.avatar);
+    const avatarIcon = post.authorType === 'user' ? 'fa-user' : 'fa-user-astronaut';
+    const avatarHtml = authorAvatar 
+      ? `<img src="${authorAvatar}" alt="">` 
+      : `<i class="fas ${avatarIcon}"></i>`;
+
+    // 生成点赞列表显示
+    let likesDisplay = '';
+    if (post.likes.length > 0) {
+      const names = post.likes.map(l => l.userName).join('、');
+      likesDisplay = `<div class="mp-likes"><i class="fas fa-heart"></i> ${names}</div>`;
+    }
+
+    // 生成评论预览
+    let commentsPreview = '';
+    if (post.comments.length > 0) {
+      const previewComments = post.comments.slice(0, 2);
+      commentsPreview = `
+        <div class="mp-comments-preview">
+          ${previewComments.map(c => `
+            <div class="mcp-item">
+              <span class="mcp-author">${c.userName}:</span>
+              <span class="mcp-content">${escapeHtml(c.content)}</span>
+            </div>
+          `).join('')}
+          ${post.comments.length > 2 ? `<div class="mcp-more">共 ${post.comments.length} 条评论</div>` : ''}
+        </div>
+      `;
+    }
+
+    return `
+      <div class="moments-post" data-post-id="${post.id}" onclick="openPostDetail('${post.id}')">
+        <div class="mp-author">
+          <div class="mp-avatar" onclick="openMomentsAuthorProfile(event,'${post.authorType}')">
+            ${avatarHtml}
+          </div>
+          <div class="mp-author-info">
+            <span class="mp-author-name">${escapeHtml(post.authorName || currentUserName)}</span>
+            <span class="mp-time">${timeAgo}</span>
+          </div>
+          ${isOwnPost ? `
+            <div class="mp-actions-dropdown" onclick="event.stopPropagation()">
+              <button class="mp-action-btn" data-action="more"><i class="fas fa-ellipsis-h"></i></button>
+              <div class="mp-dropdown-menu" style="display:none;">
+                <button class="mp-dropdown-item" data-action="edit"><i class="fas fa-edit"></i> 编辑</button>
+                <button class="mp-dropdown-item" data-action="favorite"><i class="${post.isFavorited ? 'fas' : 'far'} fa-star"></i> ${post.isFavorited ? '取消收藏' : '收藏'}</button>
+                <button class="mp-dropdown-item danger" data-action="delete"><i class="fas fa-trash"></i> 删除</button>
+              </div>
+            </div>
+          ` : `
+            <div class="mp-actions-dropdown" onclick="event.stopPropagation()">
+              <button class="mp-action-btn" data-action="more"><i class="fas fa-ellipsis-h"></i></button>
+              <div class="mp-dropdown-menu" style="display:none;">
+                <button class="mp-dropdown-item" data-action="favorite"><i class="${post.isFavorited ? 'fas' : 'far'} fa-star"></i> ${post.isFavorited ? '取消收藏' : '收藏'}</button>
+              </div>
+            </div>
+          `}
+        </div>
+        <div class="mp-content">${escapeHtml(post.content)}</div>
+        ${mediaHtml}
+        ${likesDisplay}
+        ${commentsPreview}
+        <div class="mp-actions">
+          <button class="mp-action-like ${hasLiked ? 'liked' : ''}" data-action="like" onclick="event.stopPropagation()">
+            <i class="${hasLiked ? 'fas' : 'far'} fa-heart"></i>
+            <span>${post.likes.length || ''}</span>
+          </button>
+          <button class="mp-action-comment" data-action="comment" onclick="event.stopPropagation()">
+            <i class="far fa-comment"></i>
+            <span>${post.comments.length || ''}</span>
+          </button>
+          <button class="mp-action-repost" data-action="repost" onclick="event.stopPropagation()">
+            <i class="fas fa-share"></i>
+          </button>
+        </div>
+      </div>
+    `;
+  }
+  function renderMomentsMedia(media) {
+    if (!media || media.length === 0) return '';
+
+    const images = media.filter(m => m.type === 'image');
+    const videos = media.filter(m => m.type === 'video');
+
+    let html = '<div class="mp-media">';
+
+    // 图片网格
+    if (images.length > 0) {
+      if (images.length === 1) {
+        html += `<div class="mp-media-single"><img src="${images[0].url}" alt=""></div>`;
+      } else {
+        html += `<div class="mp-media-grid cols-${Math.min(images.length, 3)}">`;
+        images.forEach(img => {
+          html += `<div class="mp-media-item"><img src="${img.url}" alt="" onclick="previewMomentsImage('${img.url}')"></div>`;
+        });
+        html += '</div>';
+      }
+    }
+
+    // 视频
+    if (videos.length > 0) {
+      videos.forEach(vid => {
+        html += `<div class="mp-media-video"><video src="${vid.url}" controls></video></div>`;
+      });
+    }
+
+    html += '</div>';
+    return html;
+  }
+
+  // 绑定帖子事件
+  function bindMomentsPostEvents() {
+    // 点赞
+    document.querySelectorAll('.mp-action-like').forEach(btn => {
+      btn.addEventListener('click', handleMomentsLike);
+    });
+
+    // 评论
+    document.querySelectorAll('.mp-action-comment').forEach(btn => {
+      btn.addEventListener('click', handleMomentsComment);
+    });
+
+    // 转发
+    document.querySelectorAll('.mp-action-repost').forEach(btn => {
+      btn.addEventListener('click', handleMomentsRepost);
+    });
+
+    // 更多按钮（下拉菜单）
+    document.querySelectorAll('.mp-action-btn[data-action="more"]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const menu = btn.nextElementSibling;
+        const isVisible = menu.style.display === 'block';
+        // 关闭所有其他菜单
+        document.querySelectorAll('.mp-dropdown-menu').forEach(m => m.style.display = 'none');
+        menu.style.display = isVisible ? 'none' : 'block';
+      });
+    });
+
+    // 编辑/删除
+    document.querySelectorAll('.mp-dropdown-item').forEach(item => {
+      item.addEventListener('click', handleMomentsEditDelete);
+    });
+
+    // 点击其他地方关闭菜单
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.mp-dropdown-menu').forEach(m => m.style.display = 'none');
+    });
+  }
+
+  // 获取当前用户ID
+  function getCurrentUserId(authorType) {
+    return authorType === 'user' ? 'user' : 'char_1';
+  }
+
+  // 处理点赞
+  function handleMomentsLike(e) {
+    const btn = e.currentTarget;
+    const postEl = btn.closest('.moments-post');
+    const postId = postEl.dataset.postId;
+    const post = momentsPosts.find(p => p.id === postId);
+    if (!post) return;
+
+    const userId = 'user';  // 当前默认用户点赞
+    const userProfile = loadProfile();
+    const userName = userProfile.name || '我';
+
+    const existingLikeIndex = post.likes.findIndex(l => l.userId === userId);
+
+    if (existingLikeIndex >= 0) {
+      post.likes.splice(existingLikeIndex, 1);
+      btn.classList.remove('liked');
+      btn.querySelector('i').className = 'far fa-heart';
+    } else {
+      post.likes.push({ userId, userName, type: 'user' });
+      btn.classList.add('liked');
+      btn.querySelector('i').className = 'fas fa-heart';
+    }
+
+    const count = post.likes.length;
+    btn.querySelector('span').textContent = count || '';
+    btn.querySelector('span').style.display = count ? 'inline' : 'none';
+
+    saveMomentsPosts();
+
+    // 更新点赞显示
+    const postHtml = postEl.closest('.moments-post');
+    const likesDisplay = postHtml.querySelector('.mp-likes');
+    if (post.likes.length > 0) {
+      const names = post.likes.map(l => l.userName).join('、');
+      if (likesDisplay) {
+        likesDisplay.innerHTML = `<i class="fas fa-heart"></i> ${names}`;
+      } else {
+        const contentEl = postHtml.querySelector('.mp-content');
+        contentEl.insertAdjacentHTML('afterend', `<div class="mp-likes"><i class="fas fa-heart"></i> ${names}</div>`);
+      }
+    } else if (likesDisplay) {
+      likesDisplay.remove();
+    }
+  }
+
+  // 处理评论（进入推文详情页）
+  function handleMomentsComment(e) {
+    const postEl = e.currentTarget.closest('.moments-post');
+    const postId = postEl.dataset.postId;
+    openPostDetail(postId, 'momentsFeed');
+  }
+
+  // 处理转发
+  function handleMomentsRepost(e) {
+    const postEl = e.currentTarget.closest('.moments-post');
+    const postId = postEl.dataset.postId;
+    const post = momentsPosts.find(p => p.id === postId);
+    if (!post) return;
+
+    showCommonDialog({
+      title: '转发',
+      message: `确定要转发 ${post.authorName} 的这条动态吗？`,
+      onConfirm: () => {
+        post.reposts = (post.reposts || 0) + 1;
+        saveMomentsPosts();
+        renderMomentsFeed();
+        showToast('转发成功');
+      }
+    });
+  }
+
+  // 处理编辑/删除/收藏
+  function handleMomentsEditDelete(e) {
+    const action = e.currentTarget.dataset.action;
+    const postEl = e.currentTarget.closest('.moments-post');
+    const postId = postEl.dataset.postId;
+    const post = momentsPosts.find(p => p.id === postId);
+    if (!post) return;
+
+    document.querySelectorAll('.mp-dropdown-menu').forEach(m => m.style.display = 'none');
+
+    if (action === 'delete') {
+      showCommonDialog({
+        title: '删除动态',
+        message: '确定要删除这条动态吗？',
+        onConfirm: () => {
+          momentsPosts = momentsPosts.filter(p => p.id !== postId);
+          saveMomentsPosts();
+          renderMomentsFeed();
+          showToast('已删除');
+        }
+      });
+    } else if (action === 'edit') {
+      openMomentsEditModal(post);
+    } else if (action === 'favorite') {
+      post.isFavorited = !post.isFavorited;
+      saveMomentsPosts();
+      renderMomentsFeed();
+      showToast(post.isFavorited ? '已收藏' : '已取消收藏');
+    }
+  }
+
+  // 打开评论区弹窗
+  function openMomentsCommentModal(postId) {
+    currentCommentPostId = postId;
+    const post = momentsPosts.find(p => p.id === postId);
+    if (!post) return;
+
+    // 帖子预览
+    momentsCommentPostPreview.innerHTML = `
+      <div class="mcp-preview-author">
+        <span class="mcp-preview-name">${escapeHtml(post.authorName)}:</span>
+        <span class="mcp-preview-content">${escapeHtml(post.content)}</span>
+      </div>
+    `;
+
+    // 评论列表
+    if (post.comments.length === 0) {
+      momentsCommentList.innerHTML = '<div class="moments-empty-comments">还没有评论，快来抢沙发~</div>';
+    } else {
+      momentsCommentList.innerHTML = post.comments.map(c => `
+        <div class="mcl-item">
+          <span class="mcl-author">${escapeHtml(c.userName)}:</span>
+          <span class="mcl-content">${escapeHtml(c.content)}</span>
+        </div>
+      `).join('');
+    }
+
+    momentsCommentModalOverlay.classList.add('show');
+    momentsCommentInput.value = '';
+    momentsCommentInput.focus();
+  }
+
+  // 发送评论
+  function sendMomentsComment() {
+    const content = momentsCommentInput.value.trim();
+    if (!content || !currentCommentPostId) return;
+
+    const post = momentsPosts.find(p => p.id === currentCommentPostId);
+    if (!post) return;
+
+    const userProfile = loadProfile();
+    post.comments.push({
+      id: 'c_' + Date.now(),
+      userId: 'user',
+      userName: userProfile.name || '我',
+      type: 'user',
+      content: content
+    });
+
+    saveMomentsPosts();
+    momentsCommentInput.value = '';
+
+    // 更新评论列表
+    if (post.comments.length === 1) {
+      momentsCommentList.innerHTML = '';
+    }
+    const newComment = document.createElement('div');
+    newComment.className = 'mcl-item';
+    newComment.innerHTML = `<span class="mcl-author">${escapeHtml(userProfile.name || '我')}:</span><span class="mcl-content">${escapeHtml(content)}</span>`;
+    momentsCommentList.appendChild(newComment);
+
+    // 自动关闭弹窗
+    momentsCommentModalOverlay.classList.remove('show');
+
+    // 如果推文详情页正打开同一帖子，刷新它
+    const detailView = document.getElementById('postDetailView');
+    if (detailView.style.display !== 'none' && typeof openPostDetail === 'function') {
+      openPostDetail(postId, 'momentsFeed');
+    }
+
+    // 更新帖子显示
+    renderMomentsFeed();
+  }
+
+  // 打开编辑弹窗
+  function openMomentsEditModal(post) {
+    momentsPostText.value = post.content;
+    momentsMediaFiles = post.media ? [...post.media] : [];
+    renderMomentsMediaPreview();
+    momentsPublishBtn.textContent = '保存修改';
+    momentsPublishBtn.dataset.editId = post.id;
+    openMomentsPostModal();
+  }
+
+  // 打开发帖弹窗
+  function openMomentsPostModal() {
+    if (!momentsPostModalOverlay) return;
+    momentsPostModalOverlay.classList.add('show');
+    momentsPostText.focus();
+  }
+
+  // 关闭发帖弹窗
+  function closeMomentsPostModalFn() {
+    momentsPostModalOverlay.classList.remove('show');
+    resetMomentsPostForm();
+  }
+
+  // 重置发帖表单
+  function resetMomentsPostForm() {
+    momentsPostText.value = '';
+    momentsMediaFiles = [];
+    renderMomentsMediaPreview();
+    momentsPublishBtn.textContent = '发布';
+    delete momentsPublishBtn.dataset.editId;
+    currentMomentsPostAccount = 'user';
+    updateMomentsAccountSwitcher();
+  }
+
+  // 渲染媒体预览
+  function renderMomentsMediaPreview() {
+    if (momentsMediaFiles.length === 0) {
+      momentsMediaPreview.innerHTML = '';
+      momentsMediaPreview.style.display = 'none';
+    } else {
+      momentsMediaPreview.style.display = 'grid';
+      momentsMediaPreview.innerHTML = momentsMediaFiles.map((file, index) => `
+        <div class="mmp-item" data-index="${index}">
+          ${file.type === 'image' ? `<img src="${file.url}" alt="">` : `<video src="${file.url}" controls></video>`}
+          <button class="mmp-remove" onclick="removeMomentsMedia(${index})"><i class="fas fa-times"></i></button>
+        </div>
+      `).join('');
+    }
+    momentsMediaCount.textContent = `${momentsMediaFiles.length}/9`;
+  }
+
+  // 移除媒体
+  window.removeMomentsMedia = function(index) {
+    momentsMediaFiles.splice(index, 1);
+    renderMomentsMediaPreview();
+  };
+
+  // 发布/编辑帖子
+  function publishMomentsPost() {
+    const content = momentsPostText.value.trim();
+    if (!content && momentsMediaFiles.length === 0) {
+      showToast('请输入内容或添加媒体');
+      return;
+    }
+
+    const userProfile = loadProfile();
+    const charData = loadCharacterFromStorage();
+    const editId = momentsPublishBtn.dataset.editId;
+
+    if (editId) {
+      // 编辑模式
+      const post = momentsPosts.find(p => p.id === editId);
+      if (post) {
+        post.content = content;
+        post.media = [...momentsMediaFiles];
+        post.timestamp = Date.now();
+      }
+      showToast('已保存修改');
+    } else {
+      // 新发布
+      const newPost = {
+        id: 'post_' + Date.now(),
+        authorType: currentMomentsPostAccount,
+        authorName: currentMomentsPostAccount === 'user' ? (userProfile.name || '我') : (charData.name || 'AI'),
+        authorAvatar: currentMomentsPostAccount === 'user' ? (userProfile.avatar || null) : (charData.avatar || null),
+        content: content,
+        media: [...momentsMediaFiles],
+        likes: [],
+        comments: [],
+        reposts: 0,
+        timestamp: Date.now(),
+        isAIGenerated: false
+      };
+      momentsPosts.unshift(newPost);
+      showToast('发布成功');
+    }
+
+    saveMomentsPosts();
+    closeMomentsPostModalFn();
+    renderMomentsFeed();
+  }
+
+  // 更新账号切换器状态
+  function updateMomentsAccountSwitcher() {
+    momentsAccountSwitcher.querySelectorAll('.moments-account-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.account === currentMomentsPostAccount);
+    });
+  }
+
+  // 处理图片添加
+  function handleMomentsAddImage() {
+    momentsImageInput.click();
+  }
+
+  // 处理图片选择
+  function handleMomentsImageSelect(e) {
+    const files = Array.from(e.target.files);
+    if (momentsMediaFiles.length + files.length > 9) {
+      showToast('最多只能添加9张图片');
+      return;
+    }
+    files.forEach(file => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = ev => {
+          momentsMediaFiles.push({
+            type: 'image',
+            url: ev.target.result
+          });
+          renderMomentsMediaPreview();
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+    e.target.value = '';
+  }
+
+  // 预览朋友圈图片
+  window.previewMomentsImage = function(url) {
+    // 简单实现：打开新窗口或显示提示
+    window.open(url, '_blank');
+  };
+
+  // 打开作者主页弹窗（朋友圈头像点击）
+  // 复用 showCharProfilePopup / showUserProfilePopup 的定位逻辑
+  window.openMomentsAuthorProfile = function(event, authorType) {
+    event.stopPropagation();
+    const POP_W = 268;
+
+    // 辅助：计算并设置弹窗位置（紧贴头像元素右侧，右侧不够则放左侧）
+    function positionPopup(popup, triggerEl) {
+      popup.classList.add('visible');
+      const rect = triggerEl.getBoundingClientRect();
+      const POP_H = popup.offsetHeight || 340;
+
+      let left = rect.right + 10;
+      let top  = rect.top;
+
+      if (left + POP_W > window.innerWidth - 8) left = rect.left - POP_W - 10;
+      if (left < 8) left = 8;
+      if (top + POP_H > window.innerHeight - 8) top = window.innerHeight - POP_H - 8;
+      if (top < 8) top = 8;
+
+      popup.style.left = left + 'px';
+      popup.style.top  = top  + 'px';
+
+      // 点击弹窗外部关闭
+      const closeHandler = function(ev) {
+        if (!popup.contains(ev.target)) {
+          popup.classList.add('closing');
+          setTimeout(() => { popup.classList.remove('visible', 'closing'); }, 150);
+          document.removeEventListener('click', closeHandler);
+        }
+      };
+      setTimeout(() => document.addEventListener('click', closeHandler), 0);
+    }
+
+    const triggerEl = event.currentTarget || event.target;
+
+    if (authorType === 'user') {
+      const popup = document.getElementById('userProfilePopup');
+      if (!popup) return;
+
+      // toggle：已打开则关闭
+      if (popup.classList.contains('visible')) {
+        popup.classList.add('closing');
+        setTimeout(() => popup.classList.remove('visible', 'closing'), 150);
+        return;
+      }
+      closeAllProfilePopups(popup);
+
+      // 填充用户数据
+      const userName = localStorage.getItem('profile_name') || '用户';
+      const userBio = localStorage.getItem('profile_bio') || '';
+      const userCid = localStorage.getItem('profile_cid') || '—';
+      const userRegion = localStorage.getItem('profile_region') || '—';
+      const userSelfIntro = localStorage.getItem('profile_self_intro') || '—';
+
+      const upAvatar = document.getElementById('upAvatar');
+      const userAvatar = localStorage.getItem('user_avatar') || '';
+      upAvatar.innerHTML = userAvatar ? `<img src="${userAvatar}" alt="">` : '<i class="fas fa-user"></i>';
+
+      const upCover = document.getElementById('upCover');
+      const userCover = localStorage.getItem('user_cover') || '';
+      upCover.style.backgroundImage = userCover ? `url(${userCover})` : '';
+      if (userCover) { upCover.style.backgroundSize = 'cover'; upCover.style.backgroundPosition = 'center'; }
+
+      document.getElementById('upName').textContent = userName;
+      document.getElementById('upBio').textContent = userBio || '暂无个性签名';
+      document.getElementById('upCid').textContent = userCid;
+      document.getElementById('upRegion').textContent = userRegion;
+      document.getElementById('upSelfIntro').textContent = userSelfIntro;
+
+      const upOnlineIndicator = document.getElementById('upOnlineIndicator');
+      if (upOnlineIndicator) {
+        const statusClass = aiRealOfflineStatus ? 'offline' : (onlineStatus ? 'online' : 'offline');
+        upOnlineIndicator.className = 'online-status-text ' + statusClass;
+      }
+
+      positionPopup(popup, triggerEl);
+
+    } else {
+      const popup = document.getElementById('charProfilePopup');
+      if (!popup) return;
+
+      // toggle：已打开则关闭
+      if (popup.classList.contains('visible')) {
+        popup.classList.add('closing');
+        setTimeout(() => popup.classList.remove('visible', 'closing'), 150);
+        return;
+      }
+      closeAllProfilePopups(popup);
+
+      const charSaved = localStorage.getItem('character_data');
+      const charData = charSaved ? JSON.parse(charSaved) : {};
+      const charName = charData.name || characterData.name || '角色名称';
+      const charBio = charData.bio || characterData.bio || '';
+      const charCid = charData.cid || characterData.cid || '—';
+      const charRegion = charData.region || characterData.region || '—';
+      const charSelfIntro = charData.selfIntro || characterData.selfIntro || '—';
+      const charAvatar = charData.avatar || characterData.avatar || '';
+      const charCover = charData.cover || characterData.cover || '';
+
+      const cppAvatar = document.getElementById('cppAvatar');
+      cppAvatar.innerHTML = charAvatar ? `<img src="${charAvatar}" alt="">` : '<i class="fas fa-user-astronaut"></i>';
+
+      const cppCover = document.getElementById('cppCover');
+      cppCover.style.backgroundImage = charCover ? `url(${charCover})` : '';
+      if (charCover) { cppCover.style.backgroundSize = 'cover'; cppCover.style.backgroundPosition = 'center'; }
+
+      document.getElementById('cppName').textContent = charName;
+      document.getElementById('cppBio').textContent = charBio || '暂无个性签名';
+      document.getElementById('cppCid').textContent = charCid;
+      document.getElementById('cppRegion').textContent = charRegion;
+      document.getElementById('cppNote').textContent = charSelfIntro;
+
+      const cppOnlineIndicator = document.getElementById('cppOnlineIndicator');
+      if (cppOnlineIndicator) {
+        cppOnlineIndicator.className = 'online-status-text ' + (aiRealOfflineStatus ? 'offline' : 'online');
+      }
+
+      positionPopup(popup, triggerEl);
+    }
+  };
+
+  // 初始化朋友圈 Tab 切换
+  function initMomentsTabs() {
+    document.querySelectorAll('.moments-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.moments-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentMomentsTab = tab.dataset.tab;
+        renderMomentsFeed();
+      });
+    });
+  }
+
+  // ---------- 初始化朋友圈 ----------
+  function initMoments() {
+    loadMomentsPosts();
+    renderMomentsFeed();
+    loadMomentsAiSettings();
+
+    // 发帖按钮
+    momentsPostBtn?.addEventListener('click', openMomentsPostModal);
+
+    // 设置按钮
+    momentsSettingsBtn?.addEventListener('click', openMomentsSettingsModal);
+
+    // 筛选按钮
+    const momentsFilterBtn = document.getElementById('momentsFilterBtn');
+    const momentsFilterMenu = document.getElementById('momentsFilterMenu');
+    momentsFilterBtn?.addEventListener('click', () => {
+      const isVisible = momentsFilterMenu.style.display !== 'none';
+      momentsFilterMenu.style.display = isVisible ? 'none' : 'flex';
+      document.getElementById('momentsSearchBar').style.display = 'none';
+    });
+
+    // 搜索按钮
+    const momentsSearchBtn = document.getElementById('momentsSearchBtn');
+    const momentsSearchBar = document.getElementById('momentsSearchBar');
+    const momentsSearchInput = document.getElementById('momentsSearchInput');
+    const momentsSearchClose = document.getElementById('momentsSearchClose');
+    momentsSearchBtn?.addEventListener('click', () => {
+      const isVisible = momentsSearchBar.style.display !== 'none';
+      momentsSearchBar.style.display = isVisible ? 'none' : 'flex';
+      momentsFilterMenu.style.display = 'none';
+      if (!isVisible) {
+        setTimeout(() => momentsSearchInput?.focus(), 100);
+      }
+    });
+    momentsSearchClose?.addEventListener('click', () => {
+      momentsSearchBar.style.display = 'none';
+      momentsSearch = '';
+      momentsSearchInput.value = '';
+      renderMomentsFeed();
+    });
+
+    // 排序按钮（事件委托处理）
+    document.addEventListener('click', (e) => {
+      const sortBtn = e.target.closest('.moments-filter-btn[data-sort]');
+      if (!sortBtn) return;
+      momentsSort = sortBtn.dataset.sort;
+      document.querySelectorAll('.moments-filter-btn[data-sort]').forEach(b => b.classList.remove('active'));
+      sortBtn.classList.add('active');
+      renderMomentsFeed();
+    });
+
+    // 关闭设置弹窗
+    closeMomentsSettingsModal?.addEventListener('click', closeMomentsSettingsModalFn);
+    momentsSettingsModalOverlay?.addEventListener('click', e => {
+      if (e.target === momentsSettingsModalOverlay) closeMomentsSettingsModalFn();
+    });
+    saveMomentsSettingsBtn?.addEventListener('click', saveMomentsAiSettings);
+
+    // 设置弹窗开关点击
+    document.getElementById('momentsAiLikeToggle')?.addEventListener('click', function() {
+      this.classList.toggle('active');
+      updateSliderValue('momentsAiLikeProbVal', document.getElementById('momentsAiLikeProb')?.value || 30);
+    });
+    document.getElementById('momentsAiCommentToggle')?.addEventListener('click', function() {
+      this.classList.toggle('active');
+    });
+
+    // 设置弹窗滑块实时更新数值
+    document.getElementById('momentsAiLikeProb')?.addEventListener('input', function() {
+      updateSliderValue('momentsAiLikeProbVal', this.value);
+    });
+    document.getElementById('momentsAiCommentProb')?.addEventListener('input', function() {
+      updateSliderValue('momentsAiCommentProbVal', this.value);
+    });
+    document.getElementById('momentsAiReplyProb')?.addEventListener('input', function() {
+      updateSliderValue('momentsAiReplyProbVal', this.value);
+    });
+
+    // 关闭发帖弹窗
+    closeMomentsPostModal?.addEventListener('click', closeMomentsPostModalFn);
+    momentsPostModalOverlay?.addEventListener('click', e => {
+      if (e.target === momentsPostModalOverlay) closeMomentsPostModalFn();
+    });
+
+    // 账号切换
+    momentsAccountSwitcher?.addEventListener('click', e => {
+      const btn = e.target.closest('.moments-account-btn');
+      if (btn) {
+        currentMomentsPostAccount = btn.dataset.account;
+        updateMomentsAccountSwitcher();
+      }
+    });
+
+    // 添加图片
+    momentsAddImageBtn?.addEventListener('click', handleMomentsAddImage);
+    momentsImageInput?.addEventListener('change', handleMomentsImageSelect);
+
+    // 添加视频（暂不支持）
+    momentsAddVideoBtn?.addEventListener('click', () => {
+      showToast('视频功能即将上线');
+    });
+
+    // 发布
+    momentsPublishBtn?.addEventListener('click', publishMomentsPost);
+
+    // 评论弹窗
+    closeMomentsCommentModal?.addEventListener('click', () => {
+      momentsCommentModalOverlay.classList.remove('show');
+    });
+    momentsCommentModalOverlay?.addEventListener('click', e => {
+      if (e.target === momentsCommentModalOverlay) {
+        momentsCommentModalOverlay.classList.remove('show');
+      }
+    });
+    momentsSendCommentBtn?.addEventListener('click', sendMomentsComment);
+    momentsCommentInput?.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sendMomentsComment();
+      }
+    });
+  }
+
+  // ---------- 工具函数 ----------
+  function getTimeAgo(timestamp) {
+    const diff = Date.now() - timestamp;
+    const minute = 60 * 1000;
+    const hour = 60 * minute;
+    const day = 24 * hour;
+
+    if (diff < minute) return '刚刚';
+    if (diff < hour) return Math.floor(diff / minute) + '分钟前';
+    if (diff < day) return Math.floor(diff / hour) + '小时前';
+    if (diff < 7 * day) return Math.floor(diff / day) + '天前';
+    return new Date(timestamp).toLocaleDateString('zh-CN');
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
   // ---------- 初始化 ----------
   async function init() {
     loadTheme();
@@ -4715,6 +5700,10 @@ ${existingMemories || '暂无'}
       e.stopPropagation();
       triggerFocusAnimUpload('user');
     });
+
+    // ===== 朋友圈初始化 =====
+    initMoments();
+    momentsIcon?.addEventListener('click', () => setActiveView('moments'));
   }
 
   // ============================================================
@@ -4833,29 +5822,39 @@ ${existingMemories || '暂无'}
     if (learnedTraits.length === 0) {
       container.innerHTML = '<div class="learned-traits-empty text-secondary fs-13">暂无AI学习的词条</div>';
       if (countEl) countEl.textContent = '（0/5）';
+      // 同时隐藏确认按钮
+      const confirmBtn = document.getElementById('confirmAddTraitsBtn');
+      if (confirmBtn) confirmBtn.style.display = 'none';
       return;
     }
 
     container.innerHTML = '';
     learnedTraits.forEach(trait => {
       const tag = document.createElement('div');
-      tag.className = 'learned-trait-tag' + (trait.selected ? ' selected' : '');
+      tag.className = 'learned-trait-tag';
       tag.innerHTML = `
-        <span class="trait-text" title="${trait.text}">${trait.text}</span>
+        <span class="trait-text">${trait.text}</span>
+        <button class="trait-add-btn" title="添加到风格描述">＋</button>
         <span class="trait-remove" title="删除">×</span>
       `;
-      tag.querySelector('.trait-text').addEventListener('click', () => {
-        trait.selected = !trait.selected;
+      tag.querySelector('.trait-add-btn').addEventListener('click', () => {
+        // 添加到风格描述底部
+        if (charStyleInput) {
+          const current = charStyleInput.value.trim();
+          charStyleInput.value = current + (current ? '\n' : '') + trait.text;
+          saveCharacterToStorage();
+          showToast('已添加到风格描述');
+        }
+        // 从词条列表中删除
+        learnedTraits = learnedTraits.filter(t => t.id !== trait.id);
         saveLearnedTraits();
         renderLearnedTraits();
-        updateStyleFromTraits();
       });
       tag.querySelector('.trait-remove').addEventListener('click', e => {
         e.stopPropagation();
         learnedTraits = learnedTraits.filter(t => t.id !== trait.id);
         saveLearnedTraits();
         renderLearnedTraits();
-        updateStyleFromTraits();
       });
       container.appendChild(tag);
     });
@@ -5408,6 +6407,312 @@ ${traitsText}
     if (window.closeClearConfirm) window.closeClearConfirm();
     setTimeout(() => location.reload(), 300);
   }
+
+  // ============================================================
+  // 个人主页 & 角色主页 推文九宫格
+  // ============================================================
+
+  // 格式化相对时间
+  function formatRelativeTime(ts) {
+    const diff = Date.now() - ts;
+    if (diff < 60000) return '刚刚';
+    if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+    if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+    if (diff < 2592000000) return Math.floor(diff / 86400000) + '天前';
+    const d = new Date(ts);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  // 渲染九宫格（type: 'user' | 'char'，containerId: 网格容器id）
+  function renderPostsGrid(authorType, containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    loadMomentsPosts();
+    const posts = momentsPosts
+      .filter(p => p.authorType === authorType)
+      .sort((a, b) => b.timestamp - a.timestamp);
+
+    if (posts.length === 0) {
+      container.innerHTML = `<div class="profile-empty"><i class="fas fa-feather-alt"></i><span>还没有发过推文</span></div>`;
+      return;
+    }
+
+    container.innerHTML = posts.map(post => {
+      const hasMedia = post.media && post.media.length > 0;
+      const safeId = escapeHtml(post.id);
+      if (hasMedia) {
+        const firstImg = post.media.find(m => m.type === 'image' || !m.type);
+        const firstVid = post.media.find(m => m.type === 'video');
+        const imgSrc = firstImg ? firstImg.url : (firstVid ? firstVid.url : '');
+        const countBadge = post.media.length > 1 ? `<span class="pgi-img-count"><i class="fas fa-images"></i> ${post.media.length}</span>` : '';
+        const textPart = post.content ? `<div class="pgi-text">${escapeHtml(post.content)}</div>` : '';
+        return `<div class="post-grid-item has-media" data-post-id="${safeId}" data-from="${containerId}">
+          <div class="pgi-img-wrap">
+            ${firstVid && !firstImg ? `<video src="${imgSrc}" muted playsinline></video>` : `<img src="${imgSrc}" alt="">`}
+            ${countBadge}
+          </div>
+          ${textPart}
+        </div>`;
+      } else {
+        return `<div class="post-grid-item text-only" data-post-id="${safeId}" data-from="${containerId}">
+          <div class="pgi-text-content">${escapeHtml(post.content || '')}</div>
+          <div class="pgi-time">${formatRelativeTime(post.timestamp)}</div>
+        </div>`;
+      }
+    }).join('');
+  }
+
+  // 渲染用户个人主页九宫格
+  function renderProfilePostsGrid() {
+    renderPostsGrid('user', 'profilePostsGrid');
+  }
+
+  // 九宫格点击事件委托（统一处理 profilePostsGrid 和 charHomePostsGrid）
+  document.addEventListener('click', (e) => {
+    const item = e.target.closest('.post-grid-item[data-post-id]');
+    if (!item) return;
+    const postId = item.dataset.postId;
+    const fromId = item.dataset.from || 'profilePostsGrid';
+    openPostDetail(postId, fromId);
+  });
+
+  // ============================================================
+  // 单条推文详情页
+  // ============================================================
+  let postDetailReturnTarget = null; // 从哪里来的（'profile' | 'charHome'）
+
+  function openPostDetail(postId, fromContainerId) {
+    loadMomentsPosts();
+    const post = momentsPosts.find(p => p.id === postId);
+    if (!post) return;
+
+    postDetailReturnTarget = fromContainerId === 'charHomePostsGrid' ? 'charHome' : fromContainerId === 'profilePostsGrid' ? 'profile' : 'moments';
+
+    const userProfile = loadProfile();
+    const charData = loadCharacterFromStorage();
+
+    // 头像
+    const avatarHtml = post.authorAvatar
+      ? `<img src="${post.authorAvatar}" alt="">`
+      : `<i class="fas fa-${post.authorType === 'char' ? 'user-astronaut' : 'user'}"></i>`;
+
+    // 媒体
+    let mediaHtml = '';
+    if (post.media && post.media.length > 0) {
+      const cols = post.media.length === 1 ? 'cols-1' : post.media.length === 2 ? 'cols-2' : 'cols-3';
+      const items = post.media.map(m => {
+        if (m.type === 'video') return `<video src="${m.url}" controls playsinline></video>`;
+        return `<img src="${m.url}" alt="">`;
+      }).join('');
+      mediaHtml = `<div class="pd-media-grid ${cols}">${items}</div>`;
+    }
+
+    // 点赞状态
+    const isLiked = post.likes && post.likes.some(l => l.userId === 'current_user');
+    const likedClass = isLiked ? 'liked' : '';
+
+    // 评论 HTML
+    const commentsHtml = post.comments && post.comments.length > 0
+      ? `<div class="pd-comment-title">评论 ${post.comments.length}</div>` +
+        post.comments.map(c => {
+          const isChar = c.type === 'char';
+          const avatar = isChar
+            ? (charData.avatar ? `<img src="${charData.avatar}" alt="">` : '<i class="fas fa-user-astronaut"></i>')
+            : (userProfile.avatar ? `<img src="${userProfile.avatar}" alt="">` : '<i class="fas fa-user"></i>');
+          return `<div class="pd-comment-item">
+            <div class="pd-comment-avatar">${avatar}</div>
+            <div class="pd-comment-body">
+              <div class="pd-comment-author">${escapeHtml(c.userName)}</div>
+              <div class="pd-comment-text">${escapeHtml(c.content)}</div>
+            </div>
+          </div>`;
+        }).join('')
+      : '<div class="pd-comment-title" style="color:var(--text-secondary);font-weight:400;">还没有评论</div>';
+
+    const body = `
+      <div class="pd-author-row">
+        <div class="pd-avatar">${avatarHtml}</div>
+        <div>
+          <div class="pd-name">${escapeHtml(post.authorName)}</div>
+          <div class="pd-time">${formatRelativeTime(post.timestamp)}</div>
+        </div>
+      </div>
+      <div class="pd-content">${escapeHtml(post.content || '')}</div>
+      ${mediaHtml}
+      <div class="pd-stats">
+        <span><strong>${post.likes ? post.likes.length : 0}</strong> 喜欢</span>
+        <span><strong>${post.comments ? post.comments.length : 0}</strong> 评论</span>
+        <span><strong>${post.reposts || 0}</strong> 转发</span>
+      </div>
+      <div class="pd-actions">
+        <button class="pd-action-btn ${likedClass}" data-action="like" data-post-id="${postId}">
+          <i class="fas fa-heart"></i><span>${isLiked ? '已喜欢' : '喜欢'}</span>
+        </button>
+        <button class="pd-action-btn" data-action="comment" data-post-id="${postId}">
+          <i class="fas fa-comment"></i><span>评论</span>
+        </button>
+        <button class="pd-action-btn" data-action="repost" data-post-id="${postId}">
+          <i class="fas fa-retweet"></i><span>转发</span>
+        </button>
+      </div>
+      ${commentsHtml}
+    `;
+
+    const detailBody = document.getElementById('postDetailBody');
+    if (detailBody) detailBody.innerHTML = body;
+
+    const detailView = document.getElementById('postDetailView');
+    if (detailView) detailView.style.display = 'flex';
+  }
+
+  // 绑定详情页返回按钮
+  document.getElementById('postDetailBackBtn')?.addEventListener('click', () => {
+    const detailView = document.getElementById('postDetailView');
+    if (detailView) detailView.style.display = 'none';
+    // 根据来源刷新对应视图
+    if (postDetailReturnTarget === 'moments') {
+      renderMomentsFeed();
+    } else if (postDetailReturnTarget === 'charHome') {
+      openCharHome();
+    } else if (postDetailReturnTarget === 'profile') {
+      renderProfilePostsGrid();
+      const profileView = document.querySelector('.profile-view') || document.getElementById('profilePostsGrid')?.closest('.profile-content')?.parentElement;
+      if (profileView) profileView.style.display = '';
+    }
+  });
+
+  // 详情页互动按钮（点赞/评论/转发 — 复用朋友圈逻辑）
+  document.getElementById('postDetailBody')?.addEventListener('click', e => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const action = btn.dataset.action;
+    const postId = btn.dataset.postId;
+    if (action === 'like') {
+      const idx = momentsPosts.findIndex(p => p.id === postId);
+      if (idx < 0) return;
+      const post = momentsPosts[idx];
+      const likedIdx = post.likes.findIndex(l => l.userId === 'current_user');
+      if (likedIdx >= 0) {
+        post.likes.splice(likedIdx, 1);
+        btn.classList.remove('liked');
+        btn.querySelector('span').textContent = '喜欢';
+      } else {
+        post.likes.push({ userId: 'current_user', userName: '我', type: 'user' });
+        btn.classList.add('liked');
+        btn.querySelector('span').textContent = '已喜欢';
+      }
+      saveMomentsPosts();
+      // 更新喜欢数
+      const statsEl = btn.closest('.pd-actions')?.previousElementSibling;
+      if (statsEl && statsEl.classList.contains('pd-stats')) {
+        statsEl.querySelector('span:first-child strong').textContent = post.likes.length;
+      }
+    } else if (action === 'comment') {
+      openMomentsCommentModal(postId);
+    } else if (action === 'repost') {
+      const idx = momentsPosts.findIndex(p => p.id === postId);
+      if (idx >= 0) {
+        momentsPosts[idx].reposts = (momentsPosts[idx].reposts || 0) + 1;
+        saveMomentsPosts();
+        btn.querySelector('span').textContent = '已转发';
+      }
+    }
+  });
+
+  // ============================================================
+  // 朋友圈筛选与收藏状态
+  // ============================================================
+  let momentsFilter = 'all'; // 'all' | 'user' | 'char' | 'favorites'
+  let momentsSearch = '';
+  let momentsSort = 'newest'; // 'newest' | 'oldest'
+
+  // 筛选按钮点击（使用事件委托）
+  document.addEventListener('click', (e) => {
+    const filterBtn = e.target.closest('.moments-filter-btn');
+    if (!filterBtn) return;
+    const filter = filterBtn.dataset.filter;
+    if (!filter) return;
+    momentsFilter = filter;
+    // 更新按钮状态
+    document.querySelectorAll('.moments-filter-btn').forEach(b => b.classList.remove('active'));
+    filterBtn.classList.add('active');
+    // 重新渲染
+    renderMomentsFeed();
+  });
+
+  // 搜索输入
+  document.addEventListener('input', (e) => {
+    if (e.target.classList.contains('moments-search-input')) {
+      momentsSearch = e.target.value.trim().toLowerCase();
+      renderMomentsFeed();
+    }
+  });
+
+  // ============================================================
+  // 角色个人主页
+  // ============================================================
+  function openCharHome() {
+    loadMomentsPosts();
+    closeSidebar();
+    const charData = loadCharacterFromStorage();
+    const charName = charData.name || '角色名称';
+    const charBio = charData.bio || '暂无个性签名';
+    const charAvatar = charData.avatar || '';
+    const charCover = charData.cover || '';
+
+    // 设置头像
+    const avatarEl = document.getElementById('charHomeAvatarLarge');
+    if (avatarEl) {
+      avatarEl.innerHTML = charAvatar ? `<img src="${charAvatar}" alt="">` : '<i class="fas fa-user-astronaut"></i>';
+    }
+
+    // 设置背景图
+    const bannerEl = document.querySelector('#charHomeView .profile-banner');
+    if (bannerEl) {
+      bannerEl.style.backgroundImage = charCover ? `url(${charCover})` : '';
+      if (charCover) { bannerEl.style.backgroundSize = 'cover'; bannerEl.style.backgroundPosition = 'center'; }
+    }
+
+    // 设置名字和签名
+    const nameEl = document.getElementById('charHomeDisplayName');
+    if (nameEl) {
+      const indicator = nameEl.querySelector('#charHomeOnlineIndicator');
+      nameEl.textContent = charName;
+      if (indicator) nameEl.appendChild(indicator);
+    }
+    document.getElementById('charHomeBioDisplay').innerHTML = `<i class="fas fa-quote-left mr-8"></i>${escapeHtml(charBio)}`;
+
+    // 设置在线状态
+    const onlineEl = document.getElementById('charHomeOnlineIndicator');
+    if (onlineEl) {
+      const statusClass = aiRealOfflineStatus ? 'offline' : 'online';
+      onlineEl.className = 'online-status-text ' + statusClass;
+    }
+
+    // 渲染推文九宫格
+    renderPostsGrid('char', 'charHomePostsGrid');
+
+    // 显示角色主页
+    const view = document.getElementById('charHomeView');
+    if (view) view.style.display = 'flex';
+  }
+
+  function closeCharHome() {
+    const view = document.getElementById('charHomeView');
+    if (view) view.style.display = 'none';
+  }
+
+  // 返回按钮（角色主页）
+  document.getElementById('charHomeBackBtn')?.addEventListener('click', closeCharHome);
+
+  // 弹窗"进入角色主页"按钮
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('#cppViewBtn')) {
+      const popup = document.getElementById('charProfilePopup');
+      if (popup) { popup.classList.remove('visible'); }
+      openCharHome();
+    }
+  });
 
   init();
 })();
