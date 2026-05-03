@@ -1,6718 +1,5130 @@
-// js/script.js
-(function(){
-  "use strict";
-
-  // ---------- DOM 元素 ----------
-  const apiProviderSelect = document.getElementById('apiProviderSelect');
-  const modelSelect = document.getElementById('modelSelect');
-  const messagesArea = document.getElementById('messagesArea');
-  const messageInput = document.getElementById('messageInput');
-  const sendBtn = document.getElementById('sendBtn');
-  const chatTitleDisplay = document.getElementById('chatTitleDisplay');
-  const configBtn = document.getElementById('configMenuBtn');
-  const drawer = document.getElementById('configDrawer');
-  const overlay = document.getElementById('drawerOverlay');
-  const closeDrawerBtn = document.getElementById('closeDrawerBtn');
-  const sidebar = document.getElementById('sidebar');
-  const sidebarOverlay = document.getElementById('sidebarOverlay');
-  const globalMenuBtn = document.getElementById('globalMenuBtn');
-  const modelInput = document.getElementById('modelInput');
-  const systemPromptInput = document.getElementById('systemPromptInput');
-  const testConnectionBtn = document.getElementById('testConnectionBtn');
-  const clearChatBtn = document.getElementById('clearChatBtn');
-  const saveConfigBtn = document.getElementById('saveConfigBtn');
-  const apiKeyInput = document.getElementById('apiKeyInput');
-  const apiUrlInput = document.getElementById('apiUrlInput');
-  const apiStatus = document.getElementById('apiStatus');
-  const themeToggleSettings = document.getElementById('themeToggleSettings');
-  const themeLabelTextSettings = document.getElementById('themeLabelTextSettings');
-  const gearIcon = document.querySelector('.sidebar-icon[title="设置"]');
-  const chatIcon = document.querySelector('.sidebar-icon[title="当前对话"]');
-  const characterIcon = document.getElementById('characterIcon');
-  const dataManagerIcon = document.getElementById('dataManagerIcon');
-  const statsIcon = document.getElementById('statsIcon');
-  const userAvatarBtn = document.getElementById('userAvatarBtn');
-  const chatMain = document.getElementById('chatMain');
-  const profileDisplayName = document.getElementById('profileDisplayName');
-  const profileBioDisplay = document.getElementById('profileBioDisplay');
-  const editProfileNameInput = document.getElementById('editProfileNameInput');
-  const editProfileBioInput = document.getElementById('editProfileBioInput');
-  const editProfileCidInput = document.getElementById('editProfileCidInput');
-  const editProfileRegionInput = document.getElementById('editProfileRegionInput');
-  const editProfileSelfIntroInput = document.getElementById('editProfileSelfIntroInput');
-  const worldBookInput = document.getElementById('worldBookInput');
-  const charNameInput = document.getElementById('charNameInput');
-  const charAgeInput = document.getElementById('charAgeInput');
-  const charGenderInput = document.getElementById('charGenderInput');
-  const charAppearanceInput = document.getElementById('charAppearanceInput');
-  const charPersonalityInput = document.getElementById('charPersonalityInput');
-  const charBackstoryInput = document.getElementById('charBackstoryInput');
-  const charMemoriesInput = document.getElementById('charMemoriesInput');
-  const charStyleInput = document.getElementById('charStyleInput');
-  const charExamplesInput = document.getElementById('charExamplesInput');
-  const saveCharacterBtn = document.getElementById('saveCharacterBtn');
-  const resetCharacterBtn = document.getElementById('resetCharacterBtn');
-  const characterBioInput = document.getElementById('characterBioInput');
-  const charCidInput = document.getElementById('charCidInput');
-  const charRegionInput = document.getElementById('charRegionInput');
-  const charSelfIntroInput = document.getElementById('charSelfIntroInput');
-  const characterPreviewBg = document.getElementById('characterPreviewBg');
-  const characterPreviewAvatar = document.getElementById('characterPreviewAvatar');
-  const characterPreviewName = document.getElementById('characterPreviewName');
-  const characterPreviewBio = document.getElementById('characterPreviewBio');
-  const editCharacterAvatarBtn = document.getElementById('editCharacterAvatarBtn');
-  const editCharacterCoverBtn = document.getElementById('editCharacterCoverBtn');
-  const focusIcon = document.getElementById('focusIcon');
-  const focusUserTimerDisplay = document.getElementById('focusUserTimerDisplay');
-  const focusUserActivityDisplay = document.getElementById('focusUserActivityDisplay');
-  const focusModeToggle = document.getElementById('focusModeToggle');
-  const focusSettingsBtn = document.getElementById('focusSettingsBtn');
-  const focusStartBtn = document.getElementById('focusStartBtn');
-  const focusResetBtn = document.getElementById('focusResetBtn');
-  const inviteToggleMain = document.getElementById('inviteToggleMain');
-  const focusAiCard = document.getElementById('focusAiCard');
-  const focusAiTimerDisplay = document.getElementById('focusAiTimerDisplay');
-  const focusAiActivityDisplay = document.getElementById('focusAiActivityDisplay');
-  const editAiFocusBtn = document.getElementById('editAiFocusBtn');
-  const endAiFocusBtn = document.getElementById('endAiFocusBtn');
-
-  const commonDialogOverlay = document.getElementById('commonDialogOverlay');
-  const dialogTitle = document.getElementById('dialogTitle');
-  const dialogMessage = document.getElementById('dialogMessage');
-  const dialogCustomBody = document.getElementById('dialogCustomBody');
-  const dialogConfirmBtn = document.getElementById('dialogConfirmBtn');
-  const dialogCancelBtn = document.getElementById('dialogCancelBtn');
-  const closeCommonDialog = document.getElementById('closeCommonDialog');
-
-  const batchSendBtn = document.getElementById('batchSendBtn');
-  const batchSendModalOverlay = document.getElementById('batchSendModalOverlay');
-  const closeBatchSendModal = document.getElementById('closeBatchSendModal');
-  const cancelBatchSendBtn = document.getElementById('cancelBatchSendBtn');
-  const confirmBatchSendBtn = document.getElementById('confirmBatchSendBtn');
-  const batchMessageInput = document.getElementById('batchMessageInput');
-
-  // ---------- 朋友圈 DOM ----------
-  const momentsIcon = document.getElementById('momentsIcon');
-  const momentsPostBtn = document.getElementById('momentsPostBtn');
-  const momentsSettingsBtn = document.getElementById('momentsSettingsBtn');
-  const momentsPostModalOverlay = document.getElementById('momentsPostModalOverlay');
-  const closeMomentsPostModal = document.getElementById('closeMomentsPostModal');
-  const momentsAccountSwitcher = document.getElementById('momentsAccountSwitcher');
-  const momentsPostText = document.getElementById('momentsPostText');
-  const momentsMediaPreview = document.getElementById('momentsMediaPreview');
-  const momentsAddImageBtn = document.getElementById('momentsAddImageBtn');
-  const momentsAddVideoBtn = document.getElementById('momentsAddVideoBtn');
-  const momentsMediaCount = document.getElementById('momentsMediaCount');
-  const momentsPublishBtn = document.getElementById('momentsPublishBtn');
-  const momentsCommentModalOverlay = document.getElementById('momentsCommentModalOverlay');
-  const closeMomentsCommentModal = document.getElementById('closeMomentsCommentModal');
-  const momentsCommentPostPreview = document.getElementById('momentsCommentPostPreview');
-  const momentsCommentList = document.getElementById('momentsCommentList');
-  const momentsCommentInput = document.getElementById('momentsCommentInput');
-  const momentsSendCommentBtn = document.getElementById('momentsSendCommentBtn');
-  const momentsFeed = document.getElementById('momentsFeed');
-  const momentsImageInput = document.getElementById('momentsImageInput');
-  const momentsVideoInput = document.getElementById('momentsVideoInput');
-  const momentsSettingsModalOverlay = document.getElementById('momentsSettingsModalOverlay');
-  const closeMomentsSettingsModal = document.getElementById('closeMomentsSettingsModal');
-  const saveMomentsSettingsBtn = document.getElementById('saveMomentsSettingsBtn');
-
-  // ---------- 状态 ----------
-  let messages = (() => {
-    const saved = localStorage.getItem('chat_messages');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      return parsed.map(m => m.role === 'user' ? { ...m, readStatus: m.readStatus || 'read' } : m);
-    }
-    return [{ role: 'assistant', content: '你好！我是青绿。点击右上角「···」打开控制中心调整聊天偏好和聊天记录。左上角呼出菜单，点击齿轮进入设置配置api，点击角色进入角色设置界面修改角色指令。', timestamp: Date.now() }];
-  })();
-
-  let config = {
-    apiKey: '',
-    apiUrl: 'https://api.deepseek.com/v1/chat/completions',
-    model: 'deepseek-chat',
-    characterName: '青绿',
-    systemPrompt: ''
-  };
-
-  let isGenerating = false;
-  let currentTypingMessageId = null;
-  let currentTheme = 'dark';
-
-  // ---------- 核心记忆自动提取状态 ----------
-  let messagesSinceLastMemoryCheck = 0;
-  const MEMORY_CHECK_THRESHOLD = 20; // 多少条用户+AI消息后触发一次检查
-  let lastMemoryCheckTime = 0;
-  const MEMORY_CHECK_COOLDOWN = 60000; // 检查冷却时间：1分钟
-  let memorySuggestionPending = false;
-
-  // ---------- 朋友圈状态 ----------
-  let momentsPosts = [];
-  let momentsMediaFiles = [];  // 当前发帖的媒体文件（base64）
-  let currentMomentsPostAccount = 'user';  // 'user' 或 'char'
-  let currentCommentPostId = null;  // 当前评论的帖子ID
-  let currentMomentsTab = 'all';  // 当前 tab
-
-  // ---------- 朋友圈角色设置状态 ----------
-  let momentsAiSettings = {
-    autoLikeEnabled: false,
-    autoLikeProb: 30,
-    autoCommentEnabled: false,
-    autoCommentProb: 20,
-    autoReplyProb: 40
-  };
-
-  // 聊天偏好状态
-  let chatPreferences = {
-    enableReadIgnore: false,
-    readIgnoreProbability: 5,
-    enableLongUnread: false,
-    longUnreadProbability: 5
-  };
-
-  // ---------- 在线状态管理 ----------
-  let onlineStatus = true;  // 用户显示的在线状态
-  let aiRealOfflineEnabled = false;  // 真实不在线状态开关
-  let aiRealOfflineProb = 5;  // 不在线触发概率（百分比）
-  let aiRealOfflineStatus = false;  // AI当前是否处于不在线状态
-  let aiRealOfflineTickerId = null;  // 2小时刷新定时器
-  let aiOfflineBoosted = false;  // 是否已触发概率提高（AI说了关键词后）
-
-  function loadOnlineStatus() {
-    try {
-      const saved = localStorage.getItem('user_online_status');
-      if (saved !== null) {
-        onlineStatus = saved === 'true';
-      }
-    } catch(e) {}
-    updateAllOnlineIndicators();
-    const toggle = document.getElementById('onlineStatusToggle');
-    if (toggle) toggle.classList.toggle('active', onlineStatus);
-  }
-
-  function saveOnlineStatus() {
-    try { localStorage.setItem('user_online_status', String(onlineStatus)); } catch(e) {}
-    updateAllOnlineIndicators();
-  }
-
-  function updateAllOnlineIndicators() {
-    // 获取组合状态：用户的真实在线状态
-    // 如果开启了"真实不在线状态"且AI处于不在线状态，则显示离线
-    const showOffline = aiRealOfflineStatus;
-    const statusClass = showOffline ? 'offline' : (onlineStatus ? 'online' : 'offline');
-    const statusText = showOffline ? '离线' : (onlineStatus ? '在线' : '离线');
-
-    const indicators = [
-      document.getElementById('upOnlineIndicator'),
-      document.getElementById('profileOnlineIndicator'),
-      document.getElementById('cppOnlineIndicator')
-    ];
-
-    indicators.forEach(ind => {
-      if (ind) {
-        ind.className = 'online-status-text ' + statusClass;
-        const label = ind.querySelector('.online-status-label');
-        if (label) {
-          label.textContent = statusText;
-        }
-      }
-    });
-  }
-
-  function initOnlineStatusToggle() {
-    const toggle = document.getElementById('onlineStatusToggle');
-    if (!toggle) return;
-
-    loadOnlineStatus();
-
-    toggle.addEventListener('click', () => {
-      onlineStatus = !onlineStatus;
-      toggle.classList.toggle('active', onlineStatus);
-      saveOnlineStatus();
-    });
-  }
-
-  // ---------- 真实不在线状态管理 ----------
-  function loadAiRealOfflinePrefs() {
-    try {
-      const saved = localStorage.getItem('ai_real_offline_prefs');
-      if (saved) {
-        const prefs = JSON.parse(saved);
-        aiRealOfflineEnabled = prefs.enabled || false;
-        aiRealOfflineProb = prefs.probability || 5;
-      }
-    } catch(e) {}
-  }
-
-  function saveAiRealOfflinePrefs() {
-    try {
-      localStorage.setItem('ai_real_offline_prefs', JSON.stringify({
-        enabled: aiRealOfflineEnabled,
-        probability: aiRealOfflineProb
-      }));
-    } catch(e) {}
-  }
-
-  // 触发AI不在线状态检查
-  function checkAiRealOffline() {
-    if (!aiRealOfflineEnabled) return;
-
-    // 判断触发概率：如果已触发过概率提高，使用更高概率
-    const effectiveProb = aiOfflineBoosted ? Math.min(90, aiRealOfflineProb * 5) : aiRealOfflineProb;
-    const roll = Math.random() * 100;
-
-    if (roll < effectiveProb) {
-      aiRealOfflineStatus = true;
-    } else {
-      aiRealOfflineStatus = false;
-    }
-    updateAllOnlineIndicators();
-  }
-
-  // 重置AI不在线状态（每2小时调用一次）
-  function resetAiRealOffline() {
-    aiRealOfflineStatus = false;
-    aiOfflineBoosted = false;
-    updateAllOnlineIndicators();
-  }
-
-  // 启动AI不在线状态刷新定时器（每2小时）
-  function startAiOfflineTicker() {
-    if (aiRealOfflineTickerId) clearInterval(aiRealOfflineTickerId);
-    // 立即检查一次
-    checkAiRealOffline();
-    // 每2小时刷新
-    aiRealOfflineTickerId = setInterval(() => {
-      resetAiRealOffline();
-      checkAiRealOffline();
-    }, 2 * 60 * 60 * 1000);
-  }
-
-  // 检测AI回复中是否包含"离开"关键词，提高不在线概率
-  function detectAiOfflineKeywords(message) {
-    if (!aiRealOfflineEnabled) return;
-    const offlineKeywords = [
-      '待会再聊', '有点事', '先走了', '回头聊', '晚点聊',
-      '等会再聊', '有事要先', '先不聊了', '先撤了', '待会',
-      '等下再', '晚点再', '先忙', '待会儿', '等会儿'
-    ];
-    for (const keyword of offlineKeywords) {
-      if (message.includes(keyword)) {
-        aiOfflineBoosted = true;
-        // 立即检查一次（使用提高后的概率）
-        setTimeout(() => checkAiRealOffline(), 100);
-        break;
-      }
-    }
-  }
-
-  // 主动发消息状态
-  let proactiveMsgPrefs = {
-    enabled: false,
-    intervalMinutes: 60,
-    probability: 50
-  };
-  let proactiveLastCheckTs = 0;  // 上次主动消息检查时间戳
-  let proactiveTickerId = null;
-
-  // 通知状态
-  let notificationPrefs = {
-    enabled: false
-  };
-
-  let characterData = {
-    worldBook: '',
-    name: '',
-    avatar: '',
-    cover: '',
-    bio: '',
-    age: '',
-    gender: '',
-    appearance: '',
-    personality: '',
-    backstory: '',
-    memories: '',
-    style: '',
-    examples: '',
-    cid: '',
-    region: '',
-    selfIntro: '',
-    charNote: '',   // 用户添加的备注（显示在标题，不被AI读取）
-    charDesc: ''    // 用户添加的描述（显示在弹窗，不被AI读取）
-  };
-
-  let focusState = {
-    user: { activity: '学习', mode: 'down', durationSec: 25 * 60, remainingSec: 25 * 60, elapsedSec: 0, running: false, lastStartTs: 0, startRemainingSec: 25 * 60, startElapsedSec: 0, overlapStartTs: 0 },
-    ai: { enabled: false, locked: false, activity: '陪你专注', mode: 'down', durationSec: 25 * 60, remainingSec: 25 * 60, elapsedSec: 0, running: false, lastStartTs: 0, startRemainingSec: 25 * 60, startElapsedSec: 0, overlapStartTs: 0 }
-  };
-  let focusTickerId = null;
-
-  // ---------- 统计数据存储 ----------
-  const statsData = {
-    // 专注记录
-    focusRecords: [],  // [{owner: 'user'|'char', activity: string, durationSec: number, date: 'YYYY-MM-DD', time: 'HH:MM'}]
-    // 日程
-    schedules: [],      // [{owner: 'user'|'char', activity: string, time: 'HH:MM', date: 'YYYY-MM-DD'}]
-    // 聊天统计
-    chatStats: {
-      firstChatDate: null,
-      totalMessages: 0,
-      userMessages: 0,
-      charMessages: 0,
-      dailyMessages: {}  // {'YYYY-MM-DD': count}
-    },
-    // 共同专注总时长（秒）
-    totalOverlapSec: 0
-  };
-
-  // 加载统计数据
-  function loadStatsData() {
-    try {
-      const saved = localStorage.getItem('stats_data');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.focusRecords) statsData.focusRecords = parsed.focusRecords;
-        if (parsed.schedules) statsData.schedules = parsed.schedules;
-        if (parsed.chatStats) statsData.chatStats = { ...statsData.chatStats, ...parsed.chatStats };
-        if (typeof parsed.totalOverlapSec === 'number') statsData.totalOverlapSec = parsed.totalOverlapSec;
-      }
-    } catch(e) {}
-  }
-
-  // 保存统计数据
-  function saveStatsData() {
-    try {
-      localStorage.setItem('stats_data', JSON.stringify(statsData));
-    } catch(e) {}
-  }
-
-  // 添加专注记录（只在满足条件时添加）
-  // 返回值：true=已记录，false=未记录，'confirm'=需要用户确认
-  function addFocusRecord(owner, activity, durationSec, mode) {
-    const now = new Date();
-    const dateStr = now.toISOString().split('T')[0];
-    const timeStr = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
-
-    // 判断是否应该记录
-    // 规则：1. 任何专注小于1分钟不计入 2. 用户正计时小于5分钟不计入
-    // 3. 倒计时提前结束不计入 4. 角色倒计时正常结束计入，角色正计时>=1分钟计入
-
-    const MINute = 60;  // 1分钟
-    const FIVE_MINUTES = 5 * 60;  // 5分钟
-
-    // 规则1：小于1分钟不计入
-    if (durationSec < MINute) {
-      showToast('专注时长不足1分钟，不计入记录');
-      return false;
-    }
-
-    if (mode === 'up') {
-      // 正计时模式
-      if (owner === 'user') {
-        // 用户正计时：必须>=5分钟
-        if (durationSec < FIVE_MINUTES) {
-          return 'confirm_under_5min';  // 需要确认弹窗
-        }
-      }
-      // 角色正计时：>=1分钟即可（已在规则1中处理）
-      // 记录
-      statsData.focusRecords.push({
-        owner: owner,
-        activity: activity,
-        durationSec: durationSec,
-        date: dateStr,
-        time: timeStr
-      });
-      saveStatsData();
-      return true;
-    } else {
-      // 倒计时模式：正常结束才记录
-      // durationSec 在倒计时模式下就是设定的时长，所以通过实际经过时间来验证
-      // 已在上面判断了1分钟，这里倒计时正常结束直接记录
-      statsData.focusRecords.push({
-        owner: owner,
-        activity: activity,
-        durationSec: durationSec,
-        date: dateStr,
-        time: timeStr
-      });
-      saveStatsData();
-      return true;
-    }
-  }
-
-  // 确认提前结束专注（用户点击确认后调用）
-  function confirmEarlyEndFocus() {
-    const elapsed = focusState.user.mode === 'up'
-      ? focusState.user.elapsedSec
-      : (focusState.user.startRemainingSec - focusState.user.remainingSec);
-    const duration = focusState.user.durationSec || 0;
-    const activity = focusState.user.activity || '专注';
-
-    // 直接结束，不记录
-    resetUserOnly();
-    showToast('本次专注不计入记录');
-  }
-
-  // 添加日程
-  function addSchedule(owner, activity, time) {
-    const now = new Date();
-    const dateStr = now.toISOString().split('T')[0];
-
-    statsData.schedules.push({
-      owner: owner,
-      activity: activity,
-      time: time,
-      date: dateStr
-    });
-    saveStatsData();
-  }
-
-  // 删除日程
-  function deleteSchedule(index) {
-    if (index >= 0 && index < statsData.schedules.length) {
-      statsData.schedules.splice(index, 1);
-      saveStatsData();
-    }
-  }
-
-  // 更新聊天统计
-  function updateChatStats(role) {
-    const now = new Date();
-    const dateStr = now.toISOString().split('T')[0];
-
-    if (!statsData.chatStats.firstChatDate) {
-      statsData.chatStats.firstChatDate = dateStr;
-    }
-
-    statsData.chatStats.totalMessages++;
-    statsData.chatStats.dailyMessages[dateStr] = (statsData.chatStats.dailyMessages[dateStr] || 0) + 1;
-
-    if (role === 'user') {
-      statsData.chatStats.userMessages++;
-    } else {
-      statsData.chatStats.charMessages++;
-    }
-
-    saveStatsData();
-  }
-
-  // 从历史消息重建聊天统计（确保历史记录都被统计）
-  function rebuildChatStatsFromHistory() {
-    const realMsgs = messages.filter(m => (m.role === 'user' || m.role === 'assistant') && !m.isReset && m.timestamp);
-    if (realMsgs.length === 0) return;
-
-    // 重置统计数据
-    let userCount = 0, charCount = 0;
-    const daily = {};
-    let firstDate = null;
-
-    realMsgs.forEach(m => {
-      const d = new Date(m.timestamp);
-      const dateStr = d.toISOString().split('T')[0];
-      daily[dateStr] = (daily[dateStr] || 0) + 1;
-      if (!firstDate || dateStr < firstDate) firstDate = dateStr;
-      if (m.role === 'user') userCount++;
-      else charCount++;
-    });
-
-    statsData.chatStats.totalMessages = userCount + charCount;
-    statsData.chatStats.userMessages = userCount;
-    statsData.chatStats.charMessages = charCount;
-    statsData.chatStats.dailyMessages = daily;
-    statsData.chatStats.firstChatDate = firstDate;
-    saveStatsData();
-  }
-
-  // 获取高频词
-  function getTopWords(count = 20) {
-    const wordCount = {};
-    const stopWords = new Set(['的', '了', '在', '是', '我', '你', '他', '她', '它', '们', '这', '那', '有', '和', '与', '也', '都', '就', '不', '很', '要', '会', '可以', '一个', '什么', '怎么', '为什么', '没有', '什么', '这个', '那个', '但是', '如果', '因为', '所以', '虽然', '然后', '还是', '或者', '而且', '不过', '已经', '可能', '应该', '自己', '现在', '这里', '那里', '知道', '觉得', '想', '能', '啊', '呢', '吧', '吗', '呀', '哦', '嗯', '哈哈', '...', '……', '。', '，', '？', '！', ':', ';', '...']);
-
-    messages.forEach(msg => {
-      // 跳过时间戳消息（isReset类型）
-      if (msg.isReset) return;
-      if (msg.content) {
-        const words = msg.content.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, ' ').split(/\s+/);
-        words.forEach(word => {
-          if (word.length >= 2 && !stopWords.has(word.toLowerCase())) {
-            wordCount[word] = (wordCount[word] || 0) + 1;
-          }
-        });
-      }
-    });
-
-    return Object.entries(wordCount)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, count)
-      .map(([word, count]) => ({ word, count }));
-  }
-
-  // ---------- 清除括号及其内容 ----------
-  function cleanParentheses(text) {
-    return text.replace(/[（(][^）)]*?[）)]/g, '').trim();
-  }
-
-  // ---------- 主题管理 ----------
-  function applyTheme(theme) {
-    if (theme === 'light') document.body.classList.add('light-theme');
-    else document.body.classList.remove('light-theme');
-    currentTheme = theme;
-    localStorage.setItem('chat_theme', theme);
-    if (themeToggleSettings) themeToggleSettings.classList.toggle('active', theme === 'light');
-    if (themeLabelTextSettings) themeLabelTextSettings.textContent = theme === 'light' ? '浅色模式' : '深色模式';
-  }
-
-  function toggleTheme() {
-    applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
-  }
-
-  function loadTheme() {
-    const saved = localStorage.getItem('chat_theme') || 'dark';
-    applyTheme(saved);
-  }
-
-  // ---------- 聊天偏好 ----------
-  function loadChatPreferences() {
-    try {
-      const saved = localStorage.getItem('chat_preferences');
-      if (saved) chatPreferences = { ...chatPreferences, ...JSON.parse(saved) };
-    } catch(e) {}
-    const readIgnoreToggle = document.getElementById('readIgnoreToggle');
-    const longUnreadToggle = document.getElementById('longUnreadToggle');
-    const readIgnoreProbSlider = document.getElementById('readIgnoreProbSlider');
-    const longUnreadProbSlider = document.getElementById('longUnreadProbSlider');
-    const readIgnoreProbVal = document.getElementById('readIgnoreProbVal');
-    const longUnreadProbVal = document.getElementById('longUnreadProbVal');
-    if (readIgnoreToggle) readIgnoreToggle.classList.toggle('active', chatPreferences.enableReadIgnore);
-    if (longUnreadToggle) longUnreadToggle.classList.toggle('active', chatPreferences.enableLongUnread);
-    if (readIgnoreProbSlider) readIgnoreProbSlider.value = chatPreferences.readIgnoreProbability;
-    if (longUnreadProbSlider) longUnreadProbSlider.value = chatPreferences.longUnreadProbability;
-    if (readIgnoreProbVal) readIgnoreProbVal.textContent = chatPreferences.readIgnoreProbability + '%';
-    if (longUnreadProbVal) longUnreadProbVal.textContent = chatPreferences.longUnreadProbability + '%';
-  }
-
-  function saveChatPreferences() {
-    try { localStorage.setItem('chat_preferences', JSON.stringify(chatPreferences)); } catch(e) {}
-  }
-
-  function buildChatPreferencesUI() {
-    const drawerContent = document.querySelector('.drawer-content');
-    if (!drawerContent) return;
-
-    const prefSection = document.createElement('div');
-    prefSection.className = 'chat-prefs-section';
-    prefSection.innerHTML = `
-      <h4 class="chat-prefs-header">
-        <i class="fas fa-sliders-h"></i> 聊天偏好
-      </h4>
-
-      <!-- 真实不在线状态 -->
-      <div class="chat-prefs-row">
-        <label><i class="fas fa-moon"></i> 真实不在线</label>
-        <div class="apple-toggle" id="aiRealOfflineToggle"></div>
-      </div>
-      <div id="aiRealOfflineControls" style="display:none;">
-        <div class="probability-bar">
-          <label class="probability-label"><i class="fas fa-percentage"></i> 触发概率</label>
-          <input type="range" min="1" max="100" value="${aiRealOfflineProb}" class="apple-slider" id="aiRealOfflineProbSlider">
-          <span id="aiRealOfflineProbVal" class="probability-value">${aiRealOfflineProb}%</span>
-        </div>
-        <div class="chat-prefs-info">
-          开启后，对方有一定概率显示为"不在线"。<br>
-          对方说出"待会再聊，有点事"等离开理由后，不在线概率会提高。<br>
-        </div>
-      </div>
-
-      <div class="drawer-divider-label" style="margin-top:16px;">主动发消息</div>
-      <div class="chat-prefs-row">
-        <label><i class="fas fa-bolt"></i> 主动发消息</label>
-        <div class="apple-toggle" id="proactiveMsgToggle"></div>
-      </div>
-      <div class="proactive-controls" id="proactiveControls" style="display:none;">
-        <div class="probability-bar">
-          <label class="probability-label"><i class="fas fa-clock"></i> 间隔时间</label>
-          <input type="range" min="10" max="240" value="${proactiveMsgPrefs.intervalMinutes}" class="apple-slider" id="proactiveIntervalSlider">
-          <span id="proactiveIntervalVal" class="probability-value">${proactiveMsgPrefs.intervalMinutes}分钟</span>
-        </div>
-        <div class="probability-bar">
-          <label class="probability-label"><i class="fas fa-percentage"></i> 触发概率</label>
-          <input type="range" min="5" max="100" value="${proactiveMsgPrefs.probability}" class="apple-slider" id="proactiveProbSlider">
-          <span id="proactiveProbVal" class="probability-value">${proactiveMsgPrefs.probability}%</span>
-        </div>
-        <div class="chat-prefs-info">
-          AI 将在间隔时间后，以概率触发主动发消息
-        </div>
-      </div>
-
-      <div class="drawer-divider-label" style="margin-top:16px;">通知</div>
-      <div class="chat-prefs-row">
-        <label><i class="fas fa-bell"></i> 通知</label>
-        <div class="apple-toggle" id="notifyToggle"></div>
-      </div>
-      <div class="chat-prefs-info" id="notifyStatusInfo">
-        开启后，对方回复时将发送通知
-      </div>
-
-      <div class="drawer-divider-label" style="margin-top:16px;">已读状态模拟</div>
-      <div class="chat-prefs-row">
-        <label><i class="fas fa-eye-slash"></i> 已读不回</label>
-        <div class="apple-toggle" id="readIgnoreToggle"></div>
-      </div>
-      <div class="probability-bar">
-        <label class="probability-label">触发概率</label>
-        <input type="range" min="0" max="100" value="${chatPreferences.readIgnoreProbability}" class="apple-slider" id="readIgnoreProbSlider">
-        <span id="readIgnoreProbVal" class="probability-value">${chatPreferences.readIgnoreProbability}%</span>
-      </div>
-
-      <div class="chat-prefs-row mt-16">
-        <label><i class="fas fa-clock"></i> 长时间未读</label>
-        <div class="apple-toggle" id="longUnreadToggle"></div>
-      </div>
-      <div class="probability-bar">
-        <label class="probability-label">触发概率</label>
-        <input type="range" min="0" max="100" value="${chatPreferences.longUnreadProbability}" class="apple-slider" id="longUnreadProbSlider">
-        <span id="longUnreadProbVal" class="probability-value">${chatPreferences.longUnreadProbability}%</span>
-      </div>
-      <div class="chat-prefs-info">
-        已读不回：已读后 对方 可能不回复（晚安等类似场景更易触发）。<br>
-        长时间未读：对方 可能在说出"稍等"等理由后暂时不读你的消息。
-      </div>
-    `;
-
-    // 找到角色备注板块，在其后插入聊天偏好
-    const charNoteSection = document.getElementById('charNoteSection');
-    if (charNoteSection) {
-      charNoteSection.after(prefSection);
-    } else {
-      const clearBtnContainer = document.querySelector('.drawer-content > div:first-child');
-      if (clearBtnContainer) {
-        clearBtnContainer.before(prefSection);
-      } else {
-        drawerContent.prepend(prefSection);
-      }
-    }
-
-    // 初始化UI状态
-    const aiRealOfflineToggle = document.getElementById('aiRealOfflineToggle');
-    const aiRealOfflineControls = document.getElementById('aiRealOfflineControls');
-    const aiRealOfflineProbSlider = document.getElementById('aiRealOfflineProbSlider');
-    const aiRealOfflineProbVal = document.getElementById('aiRealOfflineProbVal');
-
-    const proactiveMsgToggle = document.getElementById('proactiveMsgToggle');
-    const proactiveControls = document.getElementById('proactiveControls');
-    const proactiveIntervalSlider = document.getElementById('proactiveIntervalSlider');
-    const proactiveProbSlider = document.getElementById('proactiveProbSlider');
-    const proactiveIntervalVal = document.getElementById('proactiveIntervalVal');
-    const proactiveProbVal = document.getElementById('proactiveProbVal');
-
-    const notifyToggle = document.getElementById('notifyToggle');
-    const notifyInfo = document.getElementById('notifyStatusInfo');
-
-    const readIgnoreToggle = document.getElementById('readIgnoreToggle');
-    const longUnreadToggle = document.getElementById('longUnreadToggle');
-    const readIgnoreProbSlider = document.getElementById('readIgnoreProbSlider');
-    const longUnreadProbSlider = document.getElementById('longUnreadProbSlider');
-    const readIgnoreProbVal = document.getElementById('readIgnoreProbVal');
-    const longUnreadProbVal = document.getElementById('longUnreadProbVal');
-
-    // 统一的填充色函数
-    function updateSliderFill(slider) {
-      if (!slider) return;
-      const min = Number(slider.min) || 0;
-      const max = Number(slider.max) || 100;
-      const val = Number(slider.value) || 0;
-      const pct = ((val - min) / (max - min)) * 100;
-      slider.style.background = `linear-gradient(to right, var(--accent) ${pct}%, var(--border-strong) ${pct}%)`;
-    }
-
-    // 初始化真实不在线状态
-    aiRealOfflineToggle.classList.toggle('active', aiRealOfflineEnabled);
-    aiRealOfflineControls.style.display = aiRealOfflineEnabled ? '' : 'none';
-    if (aiRealOfflineProbSlider) aiRealOfflineProbSlider.value = aiRealOfflineProb;
-    if (aiRealOfflineProbVal) aiRealOfflineProbVal.textContent = aiRealOfflineProb + '%';
-    updateSliderFill(aiRealOfflineProbSlider);
-
-    // 真实不在线状态开关事件
-    aiRealOfflineToggle.addEventListener('click', () => {
-      aiRealOfflineEnabled = !aiRealOfflineEnabled;
-      aiRealOfflineToggle.classList.toggle('active', aiRealOfflineEnabled);
-      aiRealOfflineControls.style.display = aiRealOfflineEnabled ? '' : 'none';
-      saveAiRealOfflinePrefs();
-      if (aiRealOfflineEnabled) {
-        startAiOfflineTicker();
-      } else {
-        if (aiRealOfflineTickerId) {
-          clearInterval(aiRealOfflineTickerId);
-          aiRealOfflineTickerId = null;
-        }
-        aiRealOfflineStatus = false;
-      }
-      updateAllOnlineIndicators();
-    });
-
-    // 真实不在线概率滑块
-    aiRealOfflineProbSlider?.addEventListener('input', (e) => {
-      aiRealOfflineProb = parseInt(e.target.value);
-      aiRealOfflineProbVal.textContent = aiRealOfflineProb + '%';
-      updateSliderFill(e.target);
-      saveAiRealOfflinePrefs();
-    });
-
-    // 初始化主动发消息
-    proactiveMsgToggle.classList.toggle('active', proactiveMsgPrefs.enabled);
-    proactiveControls.style.display = proactiveMsgPrefs.enabled ? '' : 'none';
-    if (proactiveIntervalSlider) proactiveIntervalSlider.value = proactiveMsgPrefs.intervalMinutes;
-    if (proactiveIntervalVal) proactiveIntervalVal.textContent = proactiveMsgPrefs.intervalMinutes + '分钟';
-    if (proactiveProbSlider) proactiveProbSlider.value = proactiveMsgPrefs.probability;
-    if (proactiveProbVal) proactiveProbVal.textContent = proactiveMsgPrefs.probability + '%';
-    updateSliderFill(proactiveIntervalSlider);
-    updateSliderFill(proactiveProbSlider);
-
-    // 主动发消息开关事件
-    proactiveMsgToggle.addEventListener('click', () => {
-      proactiveMsgPrefs.enabled = !proactiveMsgPrefs.enabled;
-      proactiveMsgToggle.classList.toggle('active', proactiveMsgPrefs.enabled);
-      proactiveControls.style.display = proactiveMsgPrefs.enabled ? '' : 'none';
-      saveProactiveMsgPrefs();
-      if (proactiveMsgPrefs.enabled) startProactiveTicker();
-      else stopProactiveTicker();
-    });
-
-    // 主动发消息间隔滑块
-    proactiveIntervalSlider?.addEventListener('input', (e) => {
-      proactiveMsgPrefs.intervalMinutes = parseInt(e.target.value);
-      proactiveIntervalVal.textContent = proactiveMsgPrefs.intervalMinutes + '分钟';
-      updateSliderFill(e.target);
-      saveProactiveMsgPrefs();
-    });
-
-    // 主动发消息概率滑块
-    proactiveProbSlider?.addEventListener('input', (e) => {
-      proactiveMsgPrefs.probability = parseInt(e.target.value);
-      proactiveProbVal.textContent = proactiveMsgPrefs.probability + '%';
-      updateSliderFill(e.target);
-      saveProactiveMsgPrefs();
-    });
-
-    // 初始化通知
-    notifyToggle.classList.toggle('active', notificationPrefs.enabled);
-    if (notificationPrefs.enabled) {
-      notifyInfo.textContent = '通知已开启 ✓';
-    }
-
-    // 通知开关事件
-    notifyToggle.addEventListener('click', async () => {
-      if (!notificationPrefs.enabled) {
-        if (!('Notification' in window)) {
-          showCommonDialog({ title: '不支持通知', message: '当前浏览器不支持通知功能' });
-          return;
-        }
-        const perm = await Notification.requestPermission();
-        if (perm === 'granted') {
-          notificationPrefs.enabled = true;
-          notifyToggle.classList.add('active');
-          notifyInfo.textContent = '通知已开启 ✓';
-          saveNotificationPrefs();
-        } else {
-          showCommonDialog({ title: '权限被拒绝', message: '请在浏览器设置中允许通知权限' });
-        }
-      } else {
-        notificationPrefs.enabled = false;
-        notifyToggle.classList.remove('active');
-        notifyInfo.textContent = '开启后，对方 回复时将发送通知';
-        saveNotificationPrefs();
-      }
-    });
-
-    // 已读不回开关
-    readIgnoreToggle?.addEventListener('click', () => {
-      chatPreferences.enableReadIgnore = !chatPreferences.enableReadIgnore;
-      readIgnoreToggle.classList.toggle('active', chatPreferences.enableReadIgnore);
-      saveChatPreferences();
-    });
-
-    // 长时间未读开关
-    longUnreadToggle?.addEventListener('click', () => {
-      chatPreferences.enableLongUnread = !chatPreferences.enableLongUnread;
-      longUnreadToggle.classList.toggle('active', chatPreferences.enableLongUnread);
-      saveChatPreferences();
-    });
-
-    // 已读不回概率滑块
-    readIgnoreProbSlider?.addEventListener('input', (e) => {
-      chatPreferences.readIgnoreProbability = parseInt(e.target.value);
-      readIgnoreProbVal.textContent = chatPreferences.readIgnoreProbability + '%';
-      updateSliderFill(e.target);
-      saveChatPreferences();
-    });
-
-    // 长时间未读概率滑块
-    longUnreadProbSlider?.addEventListener('input', (e) => {
-      chatPreferences.longUnreadProbability = parseInt(e.target.value);
-      longUnreadProbVal.textContent = chatPreferences.longUnreadProbability + '%';
-      updateSliderFill(e.target);
-      saveChatPreferences();
-    });
-
-    // 初始化滑块填充色
-    setTimeout(() => {
-      updateSliderFill(readIgnoreProbSlider);
-      updateSliderFill(longUnreadProbSlider);
-    }, 0);
-  }
-
-  // ---------- 主动发消息 ----------
-  function loadProactiveMsgPrefs() {
-    try {
-      const saved = localStorage.getItem('proactive_msg_prefs');
-      if (saved) proactiveMsgPrefs = { ...proactiveMsgPrefs, ...JSON.parse(saved) };
-    } catch(e) {}
-    try {
-      const saved2 = localStorage.getItem('notification_prefs');
-      if (saved2) notificationPrefs = { ...notificationPrefs, ...JSON.parse(saved2) };
-    } catch(e) {}
-  }
-
-  function saveProactiveMsgPrefs() {
-    try { localStorage.setItem('proactive_msg_prefs', JSON.stringify(proactiveMsgPrefs)); } catch(e) {}
-  }
-
-  function saveNotificationPrefs() {
-    try { localStorage.setItem('notification_prefs', JSON.stringify(notificationPrefs)); } catch(e) {}
-  }
-
-  /** 主动发消息计时器 */
-  function startProactiveTicker() {
-    if (proactiveTickerId) clearInterval(proactiveTickerId);
-    proactiveLastCheckTs = Date.now();
-    proactiveTickerId = setInterval(() => {
-      checkProactiveMessage();
-      checkProactiveFollowUp();
-    }, 60 * 1000); // 每分钟检查一次
-  }
-
-  function stopProactiveTicker() {
-    if (proactiveTickerId) { clearInterval(proactiveTickerId); proactiveTickerId = null; }
-  }
-
-  // 主动消息追问：记录上次主动消息发出时间 & 是否已等待催问
-  let proactiveLastSentTs = 0;     // 上次主动消息发出时间
-  let proactiveFollowUpSent = false; // 本轮是否已发过催消息
-  // 无回复多少分钟后催问（固定15分钟）
-  const PROACTIVE_FOLLOWUP_MINUTES = 15;
-
-  /** 检查是否应该主动发消息 */
-  async function checkProactiveMessage() {
-    if (!proactiveMsgPrefs.enabled || isGenerating) return;
-    const elapsed = (Date.now() - proactiveLastCheckTs) / 1000 / 60; // 分钟
-    if (elapsed < proactiveMsgPrefs.intervalMinutes) return;
-
-    // 已到达间隔，掷骰子
-    proactiveLastCheckTs = Date.now();
-    const roll = Math.random() * 100;
-    if (roll > proactiveMsgPrefs.probability) return;
-
-    // 检查：最后一条消息是否是 assistant（避免 AI 主动发消息后没人理又立刻再发）
-    const lastMsg = messages.filter(m => m.role === 'user' || m.role === 'assistant').slice(-1)[0];
-    if (lastMsg && lastMsg.role === 'assistant') return; // 上条是AI发的，跳过
-
-    // 触发主动消息
-    isGenerating = true;
-    try {
-      // 只用少量历史（5条），避免 AI 接续自己发的消息导致自问自答
-      const shortHistory = messages.filter(m => m.role === 'user' || m.role === 'assistant').slice(-5)
-        .map(m => ({ role: m.role, content: m.content }));
-      const systemMsg = {
-        role: 'system',
-        content: `你是角色${charNameInput ? charNameInput.value || '角色' : '角色'}，现在你主动联系对方说一句话。要求：只输出一句话，简洁自然，符合你的角色设定，不要其他内容。`
-      };
-      const res = await fetch(config.apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.apiKey}` },
-        body: JSON.stringify({ model: config.model, messages: [systemMsg, ...shortHistory], temperature: 0.9 })
-      });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
-      const triggerMsg = data?.choices?.[0]?.message?.content;
-      if (triggerMsg && triggerMsg.trim()) {
-        const cleaned = cleanParentheses(triggerMsg.trim());
-        addMessage('assistant', cleaned);
-        detectAiOfflineKeywords(cleaned);
-        triggerNotification((charNameInput?.value || '角色') + ' 发来消息', cleaned);
-        proactiveLastSentTs = Date.now();
-        proactiveFollowUpSent = false; // 重置催问状态
-      }
-    } catch(e) {
-      console.warn('主动消息生成失败:', e);
-    } finally {
-      isGenerating = false;
-    }
-  }
-
-  /** 检查是否需要发催消息（主动消息发出后长时间无回复） */
-  async function checkProactiveFollowUp() {
-    if (!proactiveMsgPrefs.enabled || isGenerating) return;
-    if (!proactiveLastSentTs || proactiveFollowUpSent) return;
-
-    // 检查距离主动消息发出是否超过阈值
-    const waitedMin = (Date.now() - proactiveLastSentTs) / 1000 / 60;
-    if (waitedMin < PROACTIVE_FOLLOWUP_MINUTES) return;
-
-    // 检查：最后一条消息是否还是 assistant（用户仍未回复）
-    const lastMsg = messages.filter(m => m.role === 'user' || m.role === 'assistant').slice(-1)[0];
-    if (!lastMsg || lastMsg.role !== 'assistant') {
-      // 用户已回复，重置
-      proactiveLastSentTs = 0;
-      proactiveFollowUpSent = false;
-      return;
-    }
-
-    proactiveFollowUpSent = true; // 标记已发，不重复催
-    isGenerating = true;
-    try {
-      const charName = charNameInput?.value || '角色';
-      // 取最近5条上下文（不含刚发的那条，避免再接自己话题）
-      const shortHistory = messages.filter(m => m.role === 'user' || m.role === 'assistant').slice(-5)
-        .map(m => ({ role: m.role, content: m.content }));
-      const systemMsg = {
-        role: 'system',
-        content: `你是角色${charName}。你之前发了消息但对方一直没有回复，现在你想问问对方为什么不回你，语气和表达方式要符合你的角色设定，只输出一句话，自然且不刻意。`
-      };
-      const res = await fetch(config.apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.apiKey}` },
-        body: JSON.stringify({ model: config.model, messages: [systemMsg, ...shortHistory], temperature: 0.9 })
-      });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
-      const followUpMsg = data?.choices?.[0]?.message?.content;
-      if (followUpMsg && followUpMsg.trim()) {
-        const cleaned = cleanParentheses(followUpMsg.trim());
-        addMessage('assistant', cleaned);
-        detectAiOfflineKeywords(cleaned);
-        triggerNotification(charName + ' 发来消息', cleaned);
-        proactiveLastSentTs = 0; // 重置，避免再次触发
-      }
-    } catch(e) {
-      console.warn('催消息生成失败:', e);
-    } finally {
-      isGenerating = false;
-    }
-  }
-
-  /** 触发浏览器通知 */
-  function triggerNotification(title, body) {
-    // 只在页面处于后台时才发送浏览器通知
-    if (!notificationPrefs.enabled || Notification.permission !== 'granted') return;
-    if (!document.hidden) return;
-    try {
-      const n = new Notification(title, { body, icon: 'logos/icon.png', silent: false });
-      n.onclick = () => { window.focus(); n.close(); };
-      setTimeout(() => n.close(), 8000);
-    } catch(e) { console.warn('Notification error:', e); }
-  }
-
-  // ---------- 配置管理 ----------
-  function populateSelectsFromConfig() {
-    const url = config.apiUrl;
-    if (url.includes('deepseek.com')) apiProviderSelect.value = 'deepseek';
-    else if (url.includes('openrouter.ai')) apiProviderSelect.value = 'openrouter';
-    else if (url.includes('groq.com')) apiProviderSelect.value = 'groq';
-    else if (url.includes('api.openai.com')) apiProviderSelect.value = 'openai';
-    else apiProviderSelect.value = 'custom';
-
-    const model = config.model;
-    let found = false;
-    for (let opt of modelSelect.options) {
-      if (opt.value === model) {
-        modelSelect.value = model;
-        found = true;
-        break;
-      }
-    }
-    if (!found) modelSelect.value = 'custom';
-
-    apiUrlInput.value = config.apiUrl;
-    modelInput.value = config.model;
-  }
-
-  function loadConfigFromStorage() {
-    try {
-      const saved = localStorage.getItem('chat_roleplay_config_v2');
-      if (saved) config = { ...config, ...JSON.parse(saved) };
-    } catch(e) {}
-
-    const setVal = (el, val) => { if (el) el.value = val; };
-
-    setVal(apiKeyInput, config.apiKey || '');
-    setVal(apiUrlInput, config.apiUrl);
-    setVal(modelInput, config.model);
-
-    // 加载配置到表单
-    if (config.characterName) {
-      setVal(charNameInput, config.characterName);
-    }
-    setVal(characterBioInput, config.characterBio || '');
-    setVal(charAgeInput, config.characterAge || '');
-    setVal(charGenderInput, config.characterGender || '');
-    setVal(charMemoriesInput, config.characterMemories || '');
-    setVal(charExamplesInput, config.exampleDialog || '');
-    setVal(systemPromptInput, config.systemPrompt);
-
-    // 更新 UI 显示
-    updateChatTitle();
-    updateApiStatusBadge();
-    populateSelectsFromConfig();
-    updateCharacterPreview();
-    updateMemoriesCards();
-    updateExampleBubbles();
-  }
-
-  function saveConfigToStorage() {
-    try { localStorage.setItem('chat_roleplay_config_v2', JSON.stringify(config)); } catch(e) {}
-  }
-
-  // ---------- 角色备注与描述 ----------
-  // 注意：备注和描述不被读取
-  function loadCharNoteAndDesc() {
-    try {
-      const note = localStorage.getItem('char_note') || '';
-      const desc = localStorage.getItem('char_desc') || '';
-      const noteInput = document.getElementById('charNoteInput');
-      const descInput = document.getElementById('charDescInput');
-      if (noteInput) noteInput.value = note;
-      if (descInput) descInput.value = desc;
-      // 同步到 characterData（仅用于弹窗显示）
-      characterData.charNote = note;
-      characterData.charDesc = desc;
-    } catch(e) {}
-  }
-
-  function saveCharNote() {
-    const note = document.getElementById('charNoteInput')?.value.trim() || '';
-    const desc = document.getElementById('charDescInput')?.value.trim() || '';
-    localStorage.setItem('char_note', note);
-    localStorage.setItem('char_desc', desc);
-    characterData.charNote = note;
-    characterData.charDesc = desc;
-    updateChatTitle();
-  }
-
-  function updateChatTitle() {
-    const namePart1 = charNameInput.value.trim();
-    const fullName = namePart1 || '青绿';
-    const note = characterData.charNote || '';
-    // 设置了备注则直接用备注替换标题，其他地方角色昵称不变
-    chatTitleDisplay.textContent = note || fullName;
-  }
-
-  function updateApiStatusBadge() {
-    if (config.apiKey && config.apiKey.trim().length > 5) {
-      apiStatus.textContent = '已设置密钥';
-      apiStatus.className = 'status-badge active';
-    } else {
-      apiStatus.textContent = '未设置密钥';
-      apiStatus.className = 'status-badge inactive';
-    }
-  }
-
-  function syncConfigFromForm() {
-    const getVal = (el) => el ? el.value.trim() : '';
-
-    config.apiKey = getVal(apiKeyInput);
-    config.apiUrl = getVal(apiUrlInput);
-    config.model = getVal(modelInput);
-
-    config.characterName = getVal(charNameInput) || '青绿';
-
-    config.characterBio = getVal(characterBioInput);
-    config.characterAge = getVal(charAgeInput);
-    config.characterGender = getVal(charGenderInput);
-    config.characterMemories = getVal(charMemoriesInput);
-    config.exampleDialog = getVal(charExamplesInput);
-    config.systemPrompt = getVal(systemPromptInput);
-  }
-
-  function applyConfig() {
-    syncConfigFromForm();
-    saveConfigToStorage();
-    updateChatTitle();
-    updateApiStatusBadge();
-  }
-
-  function updateModelVisibility() {
-    const provider = apiProviderSelect.value;
-    const optgroups = modelSelect.querySelectorAll('optgroup');
-    optgroups.forEach(group => {
-      if (group.label.toLowerCase().includes(provider.toLowerCase()) ||
-          (provider === 'custom' && group.label === '其他')) {
-        group.style.display = '';
-      } else {
-        group.style.display = 'none';
-      }
-    });
-
-    // 如果当前选中的模型在隐藏的组里，自动选择该组的第一个
-    const currentOption = modelSelect.options[modelSelect.selectedIndex];
-    const currentGroup = currentOption.parentElement;
-    if (currentGroup.style.display === 'none') {
-      const firstVisibleGroup = Array.from(optgroups).find(g => g.style.display !== 'none');
-      if (firstVisibleGroup && firstVisibleGroup.options.length > 0) {
-        modelSelect.value = firstVisibleGroup.options[0].value;
-        updateModelInputFromSelect();
-      }
-    }
-  }
-
-  // ---------- 消息渲染 ----------
-  function formatTime(ts) {
-    const d = new Date(ts);
-    const hhmm = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const msgDay = new Date(d);
-    msgDay.setHours(0, 0, 0, 0);
-    const diffDays = Math.round((today - msgDay) / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 0) return hhmm;
-    if (diffDays === 1) return `昨天 ${hhmm}`;
-    if (diffDays === 2) return `前天 ${hhmm}`;
-    if (diffDays < 30) return `${diffDays}天前 ${hhmm}`;
-    return `${d.getMonth()+1}/${d.getDate()} ${hhmm}`;
-  }
-
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
-
-  function formatDateSeparator(ts) {
-    const d = new Date(ts);
-    const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-    return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 ${weekdays[d.getDay()]}`;
-  }
-
-  function renderMessages() {
-    const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    const oneHour = 60 * 60 * 1000;
-
-    const getUserAvatarUrl = () => {
-      try { return localStorage.getItem('user_avatar') || ''; } catch(e) { return ''; }
-    };
-    const getAssistantAvatarUrl = () => characterData?.avatar || '';
-    const buildAvatarHtml = (role) => {
-      const url = role === 'user' ? getUserAvatarUrl() : getAssistantAvatarUrl();
-      const clickAttr = role === 'assistant'
-        ? `onclick="showCharProfilePopup(event)" style="cursor:pointer;"`
-        : (role === 'user' ? `onclick="showUserProfilePopup(event)" style="cursor:pointer;"` : '');
-      if (url) return `<div class="message-avatar ${role}" ${clickAttr}><img src="${url}" alt=""></div>`;
-      const icon = role === 'user' ? 'fa-user' : 'fa-user-astronaut';
-      return `<div class="message-avatar ${role}" ${clickAttr}><i class="fas ${icon}"></i></div>`;
-    };
-
-    let html = '';
-    let lastTimestamp = 0;
-    let lastDateKey = '';
-
-    messages.forEach((msg, index) => {
-      const msgTime = msg.timestamp;
-      const msgDateKey = new Date(msgTime).toDateString();
-
-      if (msg.isReset) {
-        // 显示消息的 content 内容（如"对方专注结束 · HH:MM"）
-        const displayText = msg.content || '';
-        html += `<div class="message-separator reset-separator">
-          <div class="line line-left"></div>
-          <span>${displayText}</span>
-          <div class="line line-right"></div>
-        </div>`;
-        lastTimestamp = msgTime;
-        lastDateKey = msgDateKey;
-        return;
-      }
-
-      if (index === 0 || msgDateKey !== lastDateKey) {
-        const isToday = (msgTime >= todayStart && msgTime < todayStart + 86400000);
-        const label = isToday ? '今天' : formatDateSeparator(msgTime);
-        html += `<div class="message-separator"><span>${label}</span></div>`;
-      } else if (index > 0 && (msgTime - lastTimestamp > oneHour)) {
-        const d = new Date(msgTime);
-        const timeLabel = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-        html += `<div class="message-separator"><span>${timeLabel}</span></div>`;
-      }
-
-      const safe = escapeHtml(msg.content).replace(/\n/g, '<br>');
-
-      // 已读未读状态，放在气泡外部底部（用户气泡的左下角外侧）
-      const readStatusHtml = (msg.role === 'user' && msg.readStatus)
-        ? `<span class="read-status-outside ${msg.readStatus === 'read' ? 'read' : 'unread'}">${msg.readStatus === 'read' ? '已读' : '未读'}</span>`
-        : '';
-
-      let bubble = `
-        <div class="message-bubble" data-index="${index}" onclick="handleBubbleClick(event, ${index})">
-          <div class="bubble-content">${safe}</div>
-          <div class="message-info">
-            <div class="message-time">${formatTime(msgTime)}</div>
-          </div>
-          <!-- 悬停操作菜单 -->
-          <div class="bubble-actions">
-            <i class="fas fa-trash-alt" title="删除" onclick="deleteMessage(${index})"></i>
-            <i class="fas fa-star" title="收藏" onclick="favoriteMessage(${index})"></i>
-            <i class="fas fa-edit" title="修改" onclick="editMessage(${index})"></i>
-          </div>
-        </div>`;
-
-      if (msg.role === 'assistant') {
-        html += `<div class="message-row assistant">${buildAvatarHtml('assistant')}${bubble}</div>`;
-      } else {
-        // 用户消息：已读标签放在气泡外部下方
-        html += `<div class="message-row user">
-          <div class="user-message-wrapper">
-            ${bubble}
-            ${readStatusHtml}
-          </div>
-          ${buildAvatarHtml('user')}
-        </div>`;
-      }
-
-      lastTimestamp = msgTime;
-      lastDateKey = msgDateKey;
-    });
-
-    if (currentTypingMessageId) {
-      html += `<div class="message-row assistant" id="${currentTypingMessageId}">${buildAvatarHtml('assistant')}<div class="message-bubble typing-indicator"><span></span><span></span><span></span></div></div>`;
-    }
-
-    messagesArea.innerHTML = html;
-    messagesArea.scrollTop = messagesArea.scrollHeight;
-  }
-
-  // 消息操作函数
-  window.handleBubbleClick = function(e, index) {
-    // 点击操作按钮本身（修改/删除/收藏），不触发动作菜单切换
-    const isActionIcon = e.target.closest('.bubble-actions i');
-    if (isActionIcon) return;
-
-    const actions = e.currentTarget.querySelector('.bubble-actions');
-    if (actions.classList.contains('show')) {
-      actions.classList.remove('show');
-    } else {
-      // 关闭其他所有已打开的
-      document.querySelectorAll('.bubble-actions').forEach(el => el.classList.remove('show'));
-      actions.classList.add('show');
-    }
-    e.stopPropagation();
-  };
-
-  // 点击页面任意位置，关闭所有气泡操作菜单
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('.bubble-actions')) {
-      document.querySelectorAll('.bubble-actions.show').forEach(el => el.classList.remove('show'));
-    }
-  });
-
-  // 关闭所有弹窗的通用函数
-  function closeAllProfilePopups(except) {
-    const charPopup = document.getElementById('charProfilePopup');
-    const userPopup = document.getElementById('userProfilePopup');
-    if (charPopup && except !== charPopup) {
-      charPopup.classList.add('closing');
-      setTimeout(() => { charPopup.classList.remove('visible', 'closing'); }, 150);
-    }
-    if (userPopup && except !== userPopup) {
-      userPopup.classList.add('closing');
-      setTimeout(() => { userPopup.classList.remove('visible', 'closing'); }, 150);
-    }
-  }
-
-  // 角色主页弹窗
-  window.showCharProfilePopup = function(e) {
-    e.stopPropagation();
-    const popup = document.getElementById('charProfilePopup');
-    if (!popup) return;
-    // 若已打开则关闭（切换行为）
-    if (popup.classList.contains('visible')) {
-      popup.classList.add('closing');
-      setTimeout(() => popup.classList.remove('visible', 'closing'), 150);
-      return;
-    }
-    // 关闭其他所有弹窗
-    closeAllProfilePopups(popup);
-
-    // 向上找到头像元素（内联onclick中currentTarget为null）
-    const avatarEl = e.target.closest('.message-avatar') || e.target;
-
-    // 填充数据
-    const name = charNameInput?.value || characterData.name || '角色名称';
-    const bio  = characterData.bio || '';
-    const cid  = characterData.cid || '—';
-    const region = characterData.region || '—';
-    // 自我介绍取角色设置中的 selfIntro
-    const note  = characterData.selfIntro || '—';
-    // 描述取用户在控制中心添加的描述（charDesc）
-    const charDesc = characterData.charDesc || '—';
-
-    // 头像
-    const cppAvatar = document.getElementById('cppAvatar');
-    cppAvatar.innerHTML = characterData.avatar
-      ? `<img src="${characterData.avatar}" alt="">`
-      : '<i class="fas fa-user-astronaut"></i>';
-
-    // 封面背景
-    const cppCover = document.getElementById('cppCover');
-    if (characterData.cover) {
-      cppCover.style.backgroundImage = `url(${characterData.cover})`;
-      cppCover.style.backgroundSize = 'cover';
-      cppCover.style.backgroundPosition = 'center';
-    } else {
-      cppCover.style.backgroundImage = '';
-    }
-
-    document.getElementById('cppName').textContent = name;
-    document.getElementById('cppBio').textContent = bio || '暂无个性签名';
-    document.getElementById('cppCid').textContent = cid;
-    document.getElementById('cppRegion').textContent = region;
-    document.getElementById('cppNote').textContent = note;
-    document.getElementById('cppDesc').textContent = charDesc;
-
-    // 定位（position:fixed，相对于视口）
-    popup.classList.add('visible');
-    const rect = avatarEl.getBoundingClientRect();
-    const POP_W = 268, POP_H = popup.offsetHeight || 340;
-
-    let left = rect.right + 10;
-    let top  = rect.top;
-
-    // 右侧放不下 → 放左侧
-    if (left + POP_W > window.innerWidth - 8) left = rect.left - POP_W - 10;
-    if (left < 8) left = 8;
-    // 下方放不下 → 上移
-    if (top + POP_H > window.innerHeight - 8) top = window.innerHeight - POP_H - 8;
-    if (top < 8) top = 8;
-
-    popup.style.left = left + 'px';
-    popup.style.top  = top  + 'px';
-
-    // 点击弹窗外部关闭
-    const closeHandler = function(ev) {
-      // 只在点击弹窗外部时关闭
-      if (!popup.contains(ev.target)) {
-        popup.classList.remove('visible');
-        document.removeEventListener('click', closeHandler);
-      }
-    };
-    // 延迟添加事件监听器，避免立即触发
-    setTimeout(() => document.addEventListener('click', closeHandler), 0);
-  };
-
-  // 用户主页弹窗
-  window.showUserProfilePopup = function(e) {
-    e.stopPropagation();
-    const popup = document.getElementById('userProfilePopup');
-    if (!popup) return;
-    // 若已打开则关闭（切换行为）
-    if (popup.classList.contains('visible')) {
-      popup.classList.add('closing');
-      setTimeout(() => popup.classList.remove('visible', 'closing'), 150);
-      return;
-    }
-    // 关闭其他所有弹窗
-    closeAllProfilePopups(popup);
-
-    const avatarEl = e.target.closest('.message-avatar') || e.target;
-
-    // 填充用户数据
-    const userName = localStorage.getItem('profile_name') || '用户';
-    const userBio = localStorage.getItem('profile_bio') || '';
-    const userCid = localStorage.getItem('profile_cid') || '—';
-    const userRegion = localStorage.getItem('profile_region') || '—';
-    const userSelfIntro = localStorage.getItem('profile_self_intro') || '—';
-
-    // 头像
-    const upAvatar = document.getElementById('upAvatar');
-    const userAvatar = localStorage.getItem('user_avatar') || '';
-    if (userAvatar) {
-      upAvatar.innerHTML = `<img src="${userAvatar}" alt="">`;
-    } else {
-      upAvatar.innerHTML = '<i class="fas fa-user"></i>';
-    }
-
-    // 封面
-    const upCover = document.getElementById('upCover');
-    const userCover = localStorage.getItem('user_cover') || '';
-    if (userCover) {
-      upCover.style.backgroundImage = `url(${userCover})`;
-      upCover.style.backgroundSize = 'cover';
-      upCover.style.backgroundPosition = 'center';
-    } else {
-      upCover.style.backgroundImage = '';
-    }
-
-    document.getElementById('upName').textContent = userName;
-    document.getElementById('upBio').textContent = userBio || '暂无个性签名';
-    document.getElementById('upCid').textContent = userCid;
-    document.getElementById('upRegion').textContent = userRegion;
-    document.getElementById('upSelfIntro').textContent = userSelfIntro;
-
-    // 定位
-    popup.classList.add('visible');
-    const rect = avatarEl.getBoundingClientRect();
-    const POP_W = 268, POP_H = popup.offsetHeight || 300;
-
-    let left = rect.right + 10;
-    let top = rect.top;
-
-    if (left + POP_W > window.innerWidth - 8) left = rect.left - POP_W - 10;
-    if (left < 8) left = 8;
-    if (top + POP_H > window.innerHeight - 8) top = window.innerHeight - POP_H - 8;
-    if (top < 8) top = 8;
-
-    popup.style.left = left + 'px';
-    popup.style.top = top + 'px';
-
-    // 点击弹窗外部关闭
-    const closeHandler = function(ev) {
-      // 只在点击弹窗外部时关闭
-      if (!popup.contains(ev.target)) {
-        popup.classList.remove('visible');
-        document.removeEventListener('click', closeHandler);
-      }
-    };
-    // 延迟添加事件监听器，避免立即触发
-    setTimeout(() => document.addEventListener('click', closeHandler), 0);
-  };
-
-  // 进入个人主页按钮
-  document.addEventListener('click', (e) => {
-    if (e.target.closest('#upViewBtn')) {
-      const popup = document.getElementById('userProfilePopup');
-      if (popup) popup.classList.remove('visible');
-      setActiveView('profile');
-    }
-  });
-
-  // 滚动聊天记录时关闭气泡菜单
-  if (messagesArea) {
-    let scrollTimer;
-    messagesArea.addEventListener('scroll', () => {
-      clearTimeout(scrollTimer);
-      scrollTimer = setTimeout(() => {
-        document.querySelectorAll('.bubble-actions.show').forEach(el => el.classList.remove('show'));
-      }, 100);
-    });
-  }
-
-  window.deleteMessage = function(index) {
-    showCommonDialog({
-      title: '删除消息',
-      message: '确定要删除这条消息吗？此操作不可撤销。',
-      confirmText: '删除',
-      onConfirm: () => {
-        messages.splice(index, 1);
-        saveMessagesToStorage();
-        renderMessages();
-      }
-    });
-  };
-
-  window.favoriteMessage = function(index) {
-    const msg = messages[index];
-    const currentMemories = charMemoriesInput.value.trim();
-    const newMemory = (currentMemories ? '\n' : '') + `收藏：${msg.content}`;
-    charMemoriesInput.value = currentMemories + newMemory;
-    updateMemoriesCards();
-    saveCharacterToStorage();
-
-    showCommonDialog({
-      title: '收藏成功',
-      message: '已将该消息内容收藏至核心记忆！',
-      showCancel: false,
-      confirmText: '知道了'
-    });
-  };
-
-  window.editMessage = function(index) {
-    const msg = messages[index];
-    const inputId = 'editMessageInput_' + index;
-    const customBody = `<textarea id="${inputId}" class="w-full mt-10" rows="5" style="padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--bg-side); color:var(--text-main);">${msg.content}</textarea>`;
-
-    showCommonDialog({
-      title: '修改消息',
-      customBody: customBody,
-      confirmText: '保存修改',
-      onConfirm: () => {
-        const newContent = document.getElementById(inputId).value.trim();
-        if (newContent && newContent !== msg.content) {
-          const oldContent = msg.content;
-          msg.content = newContent;
-          if (msg.role === 'assistant') analyzeAndLearn(oldContent, newContent);
-          saveMessagesToStorage();
-          renderMessages();
-        }
-      }
-    });
-  };
-
-  async function analyzeAndLearn(oldVal, newVal) {
-    try {
-      const prompt = `用户将你的回复从：
-"${oldVal}"
-修改为：
-"${newVal}"
-
-请仔细分析用户偏好的说话风格，总结为1条风格规则。
-要求：
-1. 专注于表达方式（如：更简洁、更口语化、更正式、喜欢用表情符号、用问句结尾等）
-2. 不要描述具体说什么内容，只描述怎么说
-3. 直接输出一条风格指令即可，不要解释
-4. 长度控制在20字以内`;
-
-      const learningResult = await callAI(prompt, "你是一个对话风格分析助手。");
-      if (learningResult && learningResult.trim()) {
-        // 添加到词条池
-        learnedTraits.push({
-          id: 'trait_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-          text: learningResult.trim(),
-          timestamp: Date.now()
-        });
-        saveLearnedTraits();
-        renderLearnedTraits();
-        showToast('已提取风格词条，可点击＋添加到风格描述');
-      }
-    } catch(e) {
-      console.error('AI Learning error:', e);
-    }
-  }
-
-  // ---------- 核心记忆自动提取 ----------
-  async function checkAndSuggestMemories() {
-    // 检查冷却时间，避免频繁触发
-    const now = Date.now();
-    if (now - lastMemoryCheckTime < MEMORY_CHECK_COOLDOWN) return;
-    if (memorySuggestionPending) return;
-    if (!config.apiKey) return;
-
-    lastMemoryCheckTime = now;
-    memorySuggestionPending = true;
-
-    try {
-      // 收集最近30条对话（不含系统消息和重置标记）
-      const recentMsgs = messages.slice(-60)
-        .filter(m => (m.role === 'user' || m.role === 'assistant') && !m.isReset)
-        .slice(-30);
-
-      if (recentMsgs.length < 5) {
-        memorySuggestionPending = false;
-        return; // 对话太少，不需要检查
-      }
-
-      const chatHistory = recentMsgs.map(m =>
-        `[${m.role === 'user' ? '用户' : '角色'}] ${m.content}`
-      ).join('\n\n');
-
-      // 获取当前已有记忆，避免重复
-      const existingMemories = charMemoriesInput ? charMemoriesInput.value.trim() : '';
-
-      const prompt = `【对话记录】
-${chatHistory}
-
-【已有记忆】（请忽略已存在的内容）
-${existingMemories || '暂无'}
-
-请分析上述对话记录，提取其中可能有意义的"重要事件"、"人物关系"、"偏好习惯"等信息。
-这些信息应该对AI角色理解和记住用户有帮助。
-
-判断标准：
-1. 用户明确提及的重要事件（如生日、纪念日、经历）
-2. 用户表达的偏好或习惯（如喜欢/讨厌某事物）
-3. 用户与角色之间的重要互动（如角色做出的承诺、用户的请求）
-4. 值得记住的人物关系或身份信息
-
-请严格判断，只有"确实值得记录"的内容才输出。如果对话中没有值得记录的内容，请只输出"[无建议]"。
-输出格式：每条记忆一行，格式为"主题：具体内容"。最多输出3条，不要过度提取。`;
-
-      const suggestion = await callAI(prompt, "你是记忆分析助手，帮助用户管理重要的对话记忆。");
-
-      if (!suggestion || suggestion.trim() === '[无建议]' || suggestion.trim() === '') {
-        memorySuggestionPending = false;
-        return;
-      }
-
-      // 解析建议的记忆
-      const lines = suggestion.split('\n')
-        .map(l => l.trim())
-        .filter(l => l && !l.startsWith('[') && (l.includes('：') || l.includes(':')));
-
-      if (lines.length === 0) {
-        memorySuggestionPending = false;
-        return;
-      }
-
-      // 显示建议弹窗
-      const suggestionsHtml = lines.map((line, i) =>
-        `<div class="memory-suggestion-item">
-          <label class="memory-suggestion-label">
-            <input type="checkbox" class="memory-suggestion-checkbox" data-idx="${i}" checked>
-            <span class="memory-suggestion-text">${escapeHtml(line)}</span>
-          </label>
-        </div>`
-      ).join('');
-
-      showCommonDialog({
-        title: '✨ 发现可记录的内容',
-        customBody: `
-          <div class="memory-suggestion-container">
-            <p class="memory-suggestion-hint">根据最近的对话，AI建议添加以下记忆：</p>
-            ${suggestionsHtml}
-            <p class="memory-suggestion-tip">勾选要添加的记忆，点击确定保存</p>
-          </div>
-        `,
-        confirmText: '添加选中记忆',
-        cancelText: '忽略',
-        onConfirm: () => {
-          const checkboxes = document.querySelectorAll('.memory-suggestion-checkbox:checked');
-          if (checkboxes.length === 0) return;
-
-          let currentMemories = charMemoriesInput ? charMemoriesInput.value.trim() : '';
-          let newMemories = [];
-
-          checkboxes.forEach(cb => {
-            const idx = parseInt(cb.dataset.idx);
-            const text = lines[idx];
-            if (text && !currentMemories.includes(text)) {
-              newMemories.push(text);
-            }
-          });
-
-          if (newMemories.length > 0) {
-            const prefix = currentMemories ? '\n' : '';
-            charMemoriesInput.value = currentMemories + prefix + newMemories.map(m => `- ${m}`).join('\n');
-            // 保存到角色数据
-            characterData.memories = charMemoriesInput.value;
-            saveCharacterToStorage();
-            // 更新卡片显示
-            updateMemoriesCards();
-
-            showToast(`已添加 ${newMemories.length} 条记忆`);
-          }
-        }
-      });
-
-    } catch(e) {
-      console.error('Memory suggestion error:', e);
-    } finally {
-      memorySuggestionPending = false;
-    }
-  }
-
-  // 更新消息计数并触发检查
-  function trackMessageForMemoryCheck() {
-    messagesSinceLastMemoryCheck++;
-    if (messagesSinceLastMemoryCheck >= MEMORY_CHECK_THRESHOLD) {
-      messagesSinceLastMemoryCheck = 0;
-      // 异步检查，不阻塞用户操作
-      setTimeout(() => checkAndSuggestMemories(), 500);
-    }
-  }
-
-  function addMessage(role, content, options = {}) {
-    const msg = { role, content, timestamp: Date.now(), ...options };
-    if (role === 'user' && !msg.readStatus) msg.readStatus = 'unread';
-    messages.push(msg);
-    saveMessagesToStorage();
-    renderMessages();
-    // 更新聊天统计
-    updateChatStats(role);
-    // 触发记忆检查
-    trackMessageForMemoryCheck();
-    return msg;
-  }
-
-  function updateMessageReadStatus(msgIndex, status) {
-    if (messages[msgIndex] && messages[msgIndex].role === 'user') {
-      messages[msgIndex].readStatus = status;
-      saveMessagesToStorage();
-      renderMessages();
-    }
-  }
-
-  function saveMessagesToStorage() {
-    try { localStorage.setItem('chat_messages', JSON.stringify(messages)); } catch(e) {}
-  }
-
-  function loadMessagesFromStorage() {
-    // 已经在一开始加载了，但为了兼容保留函数
-    const saved = localStorage.getItem('chat_messages');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      messages = parsed.map(m => m.role === 'user' ? { ...m, readStatus: m.readStatus || 'read' } : m);
-    }
-  }
-
-  function removeTypingIndicator() {
-    if (currentTypingMessageId) {
-      const el = document.getElementById(currentTypingMessageId);
-      if (el) el.remove();
-      currentTypingMessageId = null;
-    }
-  }
-
-  function showTypingIndicator() {
-    removeTypingIndicator();
-    currentTypingMessageId = 'typing-' + Date.now();
-    renderMessages();
-  }
-
-  function resetConversation() {
-    messages = [{ role: 'system', content: '', timestamp: Date.now(), isReset: true }];
-    removeTypingIndicator();
-    saveMessagesToStorage();
-    renderMessages();
-  }
-
-  // ---------- 人物设定管理 ----------
-  function loadCharacterFromStorage() {
-    try {
-      const saved = localStorage.getItem('character_data');
-      if (saved) characterData = { ...characterData, ...JSON.parse(saved) };
-    } catch(e) {}
-
-    const setVal = (el, val) => { if (el) el.value = val; };
-
-    setVal(worldBookInput, characterData.worldBook || '');
-    setVal(charNameInput, characterData.name || '');
-    setVal(charAgeInput, characterData.age || '');
-    setVal(charGenderInput, characterData.gender || '');
-    setVal(charAppearanceInput, characterData.appearance || '');
-    setVal(charPersonalityInput, characterData.personality || '');
-    setVal(charBackstoryInput, characterData.backstory || '');
-    setVal(charMemoriesInput, characterData.memories || '');
-    setVal(charStyleInput, characterData.style || '');
-    setVal(charExamplesInput, characterData.examples || '');
-    setVal(characterBioInput, characterData.bio || '温柔而冷静的陪伴');
-    setVal(charCidInput, characterData.cid || '');
-    setVal(charRegionInput, characterData.region || '');
-    setVal(charSelfIntroInput, characterData.selfIntro || '');
-
-    updateCharacterPreview();
-    updateMemoriesCards();
-    updateExampleBubbles();
-
-    return characterData;
-  }
-
-  function updateMemoriesCards() {
-    const container = document.getElementById('memoriesCardContainer');
-    if (!container) return;
-    const text = charMemoriesInput.value.trim();
-    const lines = text.split('\n').filter(l => l.trim());
-
-    container.innerHTML = lines.map(line => {
-      let title = '记忆片段';
-      let description = line;
-
-      if (line.includes('：') || line.includes(':')) {
-        const parts = line.split(/[：:]/);
-        title = parts[0].trim().replace(/^-\s*/, '');
-        description = parts.slice(1).join('：').trim();
-      } else if (line.startsWith('- ')) {
-        description = line.substring(2).trim();
-      }
-
-      return `
-        <div class="memory-card">
-          <div class="memory-card-header">
-            <i class="fas fa-bookmark memory-card-icon"></i>
-            ${escapeHtml(title)}
-          </div>
-          <div class="memory-card-content">
-            ${escapeHtml(description)}
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
-
-  function updateExampleBubbles() {
-    const container = document.getElementById('exampleBubblePreview');
-    if (!container) return;
-    const text = charExamplesInput ? charExamplesInput.value.trim() : '';
-    const lines = text.split('\n').filter(l => l.trim());
-
-    container.innerHTML = '';
-
-    lines.forEach((line, idx) => {
-      let role = 'assistant';
-      let content = line;
-      let prefix = '';
-      if (line.startsWith('用户：') || line.startsWith('User:')) {
-        role = 'user';
-        prefix = line.startsWith('用户：') ? '用户：' : 'User:';
-        content = line.replace(/^(用户：|User:)/, '');
-      } else if (line.startsWith('角色：') || line.startsWith('Assistant:') || line.startsWith('Bot:')) {
-        role = 'assistant';
-        prefix = line.startsWith('角色：') ? '角色：' : (line.startsWith('Assistant:') ? 'Assistant:' : 'Bot:');
-        content = line.replace(/^(角色：|Assistant:|Bot:)/, '');
-      } else {
-        prefix = '';
-      }
-
-      const bubbleClass = role === 'user' ? 'user' : 'assistant';
-
-      const row = document.createElement('div');
-      // 使用与主聊天界面完全一致的 message-row user/assistant 类
-      row.className = `message-row ${bubbleClass}`;
-      row.style.alignItems = 'center';
-      row.style.gap = '6px';
-
-      // 气泡（可点击编辑）
-      const bubble = document.createElement('div');
-      bubble.className = `example-bubble ${bubbleClass} editable-bubble`;
-      bubble.title = '点击编辑';
-      bubble.textContent = content;
-      bubble.dataset.idx = idx;
-      bubble.dataset.prefix = prefix;
-
-      bubble.addEventListener('click', () => {
-        if (bubble.querySelector('textarea')) return; // 已在编辑
-        const ta = document.createElement('textarea');
-        ta.className = 'bubble-inline-editor';
-        ta.value = content;
-        ta.rows = Math.max(1, content.split('\n').length);
-        bubble.textContent = '';
-        bubble.appendChild(ta);
-        ta.focus();
-        ta.select();
-
-        const commit = () => {
-          const newVal = ta.value.trim();
-          const allLines = charExamplesInput.value.split('\n');
-          allLines[idx] = prefix + newVal;
-          charExamplesInput.value = allLines.join('\n');
-          content = newVal;
-          updateExampleBubbles();
-        };
-        ta.addEventListener('blur', commit);
-        ta.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); commit(); }
-          if (e.key === 'Escape') { bubble.textContent = content; }
-        });
-      });
-
-      // 删除按钮
-      const delBtn = document.createElement('button');
-      delBtn.className = 'bubble-del-btn';
-      delBtn.title = '删除此行';
-      delBtn.innerHTML = '<i class="fas fa-times"></i>';
-      delBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const allLines = charExamplesInput.value.split('\n');
-        allLines.splice(idx, 1);
-        charExamplesInput.value = allLines.join('\n');
-        updateExampleBubbles();
-      });
-
-      if (role === 'user') {
-        row.appendChild(delBtn);
-        row.appendChild(bubble);
-      } else {
-        row.appendChild(bubble);
-        row.appendChild(delBtn);
-      }
-
-      container.appendChild(row);
-    });
-
-    // 添加"+"按钮
-    const addRow = document.createElement('div');
-    addRow.className = 'flex-center mt-10';
-    addRow.innerHTML = `
-      <button class="btn btn-secondary btn-sm" onclick="addExampleGroup()">
-        <i class="fas fa-plus mr-5"></i> 添加一组对话
-      </button>
-    `;
-    container.appendChild(addRow);
-
-    // 提示（仅无内容时显示）
-    if (lines.length === 0) {
-      const hint = document.createElement('div');
-      hint.className = 'fs-13 text-secondary mt-8';
-      hint.style.textAlign = 'center';
-      hint.textContent = '点击「添加一组对话」开始，然后点击气泡直接编辑内容';
-      container.insertBefore(hint, addRow);
-    }
-  }
-
-  window.addExampleGroup = function() {
-    const currentText = charExamplesInput ? charExamplesInput.value.trim() : '';
-    const newGroup = (currentText ? '\n' : '') + "用户：你好\n角色：你好，有什么我可以帮你的吗？";
-    if (charExamplesInput) charExamplesInput.value = currentText + newGroup;
-    updateExampleBubbles();
-    if (charExamplesInput) charExamplesInput.dispatchEvent(new Event('input'));
-  };
-
-  charMemoriesInput?.addEventListener('input', updateMemoriesCards);
-  charExamplesInput?.addEventListener('input', updateExampleBubbles);
-
-  function saveCharacterToStorage() {
-    const getVal = (el) => el ? el.value.trim() : '';
-
-    characterData = {
-      worldBook: getVal(worldBookInput),
-      name: getVal(charNameInput),
-      age: getVal(charAgeInput),
-      gender: getVal(charGenderInput),
-      appearance: getVal(charAppearanceInput),
-      personality: getVal(charPersonalityInput),
-      backstory: getVal(charBackstoryInput),
-      memories: getVal(charMemoriesInput),
-      style: getVal(charStyleInput),
-      examples: getVal(charExamplesInput),
-      avatar: characterData.avatar,
-      cover: characterData.cover,
-      bio: getVal(characterBioInput),
-      cid: getVal(charCidInput),
-      region: getVal(charRegionInput),
-      selfIntro: getVal(charSelfIntroInput)
-    };
-    try {
-      localStorage.setItem('character_data', JSON.stringify(characterData));
-      updateCharacterPreview();
-      config.characterName = getVal(charNameInput) || '青绿';
-      updateChatTitle();
-      showToast('人物设定已保存');
-    } catch(e) {
-      alert('保存失败，可能是存储空间已满');
-    }
-  }
-
-  function updateCharacterPreview() {
-    if (characterPreviewBg) {
-      if (characterData.cover) {
-        characterPreviewBg.style.backgroundImage = `url(${characterData.cover})`;
-      } else {
-        characterPreviewBg.style.backgroundImage = '';
-      }
-    }
-    if (characterPreviewAvatar) {
-      if (characterData.avatar) {
-        characterPreviewAvatar.innerHTML = `<img src="${characterData.avatar}" class="avatar-img-full">`;
-      } else {
-        characterPreviewAvatar.innerHTML = '<i class="fas fa-user-astronaut"></i>';
-      }
-    }
-    const getVal = (el) => el ? el.value.trim() : '';
-    const namePart1 = getVal(charNameInput);
-    const fullName = namePart1 || '角色名称';
-
-    const bio = getVal(characterBioInput) || '温柔而冷静的陪伴';
-    if (characterPreviewName) characterPreviewName.textContent = fullName;
-    if (characterPreviewBio) characterPreviewBio.innerHTML = `<i class="fas fa-quote-left mr-8"></i>${bio}`;
-
-    // 更新标题栏
-    updateChatTitle();
-  }
-
-  // ---------- AI 调用 ----------
-    async function callAI(userMessage, customSystemPrompt = null) {
-        if (!config.apiKey) throw new Error('请先配置 API Key');
-
-        const getVal = (el) => el ? el.value : '';
-        // 整合人设信息
-        const charInfo = `
-    【角色信息】
-    姓名：${getVal(charNameInput)}
-    年龄：${getVal(charAgeInput)}
-    性别：${getVal(charGenderInput)}
-    CID：${getVal(charCidInput) || '无'}
-    地区：${getVal(charRegionInput) || '未知'}
-    自我介绍：${getVal(charSelfIntroInput) || '无'}
-    外貌：${getVal(charAppearanceInput)}
-    性格：${getVal(charPersonalityInput)}
-    经历：${getVal(charBackstoryInput)}
-    记忆：${getVal(charMemoriesInput)}
-    对话风格：${getVal(charStyleInput)}
-    对话示例（必须严格模仿）：
-    ${getVal(charExamplesInput)}
-    `.trim();
-
-        // 用户资料（AI可读取，但不应主动询问）
-        const userInfo = `
-    【关于用户】
-    用户昵称：${localStorage.getItem('profile_name') || '用户'}
-    个性签名：${localStorage.getItem('profile_bio') || '无'}
-    CID：${localStorage.getItem('profile_cid') || '无'}
-    地区：${localStorage.getItem('profile_region') || '未知'}
-    自我介绍：${localStorage.getItem('profile_self_intro') || '无'}
-    `.trim();
-
-        const systemMsg = {
-            role: 'system',
-            content: customSystemPrompt || `
-    ${getVal(systemPromptInput) || '你是一个冷静又带点青涩的助手，说话简洁但偶尔流露出温柔。请用中文交流，保持角色。'}
-
-    ${userInfo}
-
-    ${charInfo}
-
-    【核心指令】
-    1. 你必须完全遵守上述"对话风格"和"对话示例"，将其视为唯一的交流方式，不得偏离。
-    2. 禁止主动提及当前时间、年份、日期、季节等具体时间信息。你只需要根据对话上下文确认早晚、是否周末等模糊时间概念，但绝不能出现"2026年"、"今天4月26日"等具体描述。
-    3. 像真人一样聊天，禁止使用括号描述动作，例如（微笑）、（叹气）等。
-    4. 保持角色一致性，不要出戏。
-            `.trim()
-        };
-
-        const history = messages.filter(m => m.role === 'user' || m.role === 'assistant').slice(-30)
-            .map(m => ({ role: m.role, content: m.content }));
-
-        const payload = {
-            model: config.model,
-            messages: [systemMsg, ...history],
-            temperature: 0.8,
-        };
-
-        const res = await fetch(config.apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.apiKey}` },
-            body: JSON.stringify(payload)
-        });
-
-        if (!res.ok) {
-            let err = `HTTP ${res.status}`;
-            try { const d = await res.json(); err = d.error?.message || JSON.stringify(d); } catch(e) {}
-            throw new Error(err);
-        }
-
-        const data = await res.json();
-        const choice0 = data?.choices?.[0];
-        const content = choice0?.message?.content ?? choice0?.delta?.content ?? choice0?.text;
-        if (typeof content === 'string') return content;
-        const errPayload = (() => {
-          try { return JSON.stringify(data); } catch(e) { return '[unserializable]'; }
-        })();
-        throw new Error(`API 返回格式异常：缺少内容字段（choices[0].message.content）。返回：${errPayload.slice(0, 800)}`);
+/* ===== 默认深色 (黑+青绿) ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+}
+
+:root {
+    /* 深色主题 (默认) */
+    --bg-app: #0a0c0e;
+    --bg-sidebar: #0d1114;
+    --bg-chat-main: #12171a;
+    --bg-header: #0f1417;
+    --bg-input-area: #0f1417;
+    --bg-bubble-assistant: #1a252c;
+    --bg-bubble-user: #0f9960;      /* 青绿色 */
+    --text-primary: #e3e9ed;
+    --text-secondary: #9ab3c0;
+    --text-bubble-user: #ffffff;
+    --border-light: #1f2a30;
+    --border-strong: #2a3a42;
+    --accent: #0f9960;
+    --accent-hover: #0bb07a;
+    --menu-btn-hover: #1e2c34;
+    --shadow: rgba(0,0,0,0.5);
+    --drawer-bg: #12181c;
+    --drawer-border: #1e2a30;
+    --input-bg: #1a242a;
+    --toggle-bg: #2a3a42;
+    --toggle-active: #0f9960;
+    --profile-bg-image: none;
+}
+
+/* 浅色主题 (白天模式) */
+body.light-theme {
+    --bg-app: #f5f7f9;
+    --bg-sidebar: #eef1f3;
+    --bg-chat-main: #ffffff;
+    --bg-header: #f8fafc;
+    --bg-input-area: #f8fafc;
+    --bg-bubble-assistant: #e6edf2;
+    --bg-bubble-user: #0f9960;
+    --text-primary: #1e2b34;
+    --text-secondary: #3f5562;
+    --text-bubble-user: #ffffff;
+    --border-light: #d0d9e0;
+    --border-strong: #b6c4ce;
+    --accent: #0f9960;
+    --accent-hover: #0bb07a;
+    --menu-btn-hover: #e0e8ef;
+    --shadow: rgba(0,0,0,0.08);
+    --drawer-bg: #ffffff;
+    --drawer-border: #d0d9e0;
+    --input-bg: #ffffff;
+    --toggle-bg: #cfdbe5;
+    --toggle-active: #0f9960;
+}
+
+body {
+    background: var(--bg-app);  /* 让背景色跟随主题，不再有外层深色背景 */
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;          /* 确保没有外边距 */
+    padding: 0;
+}
+
+/* 主应用卡片 */
+.app {
+    display: flex;
+    width: 100%;         /* 宽度占满 */
+    height: 100vh;       /* 高度占满视口 */
+    max-width: none;     /* 移除最大宽度限制 */
+    max-height: none;    /* 移除最大高度限制 */
+    background: var(--bg-app);
+    border-radius: 0;    /* 去掉圆角 */
+    box-shadow: none;    /* 去掉阴影 */
+    overflow: hidden;
+    border: none;        /* 去掉边框 */
+    position: relative;
+}
+
+/* ========= 左侧菜单栏 ========= */
+.sidebar {
+    width: 72px;
+    background: var(--bg-sidebar);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 0;
+    gap: 12px;
+    transition: background 0.2s;
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    z-index: 1600;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease, background 0.2s;
+}
+body.sidebar-open .sidebar {
+    transform: translateX(0);
+}
+
+.sidebar-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--bg-chat-main);
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: 24px;
+    transition: all 0.15s;
+    cursor: pointer;
+    border: 1px solid var(--border-light);
+}
+
+.sidebar-icon:hover {
+    background: var(--accent);
+    color: white;
+    border-radius: 16px;
+    border-color: var(--accent);
+}
+
+.sidebar-icon.active {
+    background: var(--accent);
+    color: white;
+    border-radius: 16px;
+    border-color: var(--accent);
+}
+
+.sidebar-divider {
+    width: 32px;
+    height: 2px;
+    background: var(--border-strong);
+    margin: 8px 0;
+}
+
+/* ========= 右侧聊天区 ========= */
+    .chat-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-chat-main);
+      position: relative;
+      min-width: 0;
+}
+
+.chat-header {
+    height: 56px;
+    background: var(--bg-header);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px 0 20px;
+    flex-shrink: 0;
+    transition: background 0.2s;
+}
+
+.header-left { width: 40px; }
+.chat-title {
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--text-primary);
+    text-align: center;
+    flex: 1;
+}
+
+.menu-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 22px;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.15s;
+}
+.menu-btn:hover {
+    background: var(--menu-btn-hover);
+    color: var(--accent);
+}
+
+.mobile-only { display: none; }
+.sidebar-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 1500;
+    display: none;
+}
+body.sidebar-open .sidebar-overlay {
+    display: block;
+}
+
+.global-menu-btn {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 1700;
+    background: var(--bg-header);
+    border: 1px solid var(--border-light);
+}
+
+/* 消息区 */
+.messages-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    scroll-behavior: smooth;
+}
+
+.message-row { display: flex; width: 100%; align-items: flex-start; gap: 8px; }
+.message-row.assistant { justify-content: flex-start; }
+.message-row.user { justify-content: flex-end; }
+
+.message-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--bg-header);
+    border: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+.message-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.message-bubble {
+    max-width: 70%;
+    padding: 12px 16px;
+    border-radius: 20px;
+    font-size: 15px;
+    line-height: 1.5;
+    word-break: break-word;
+    box-shadow: 0 2px 4px var(--shadow);
+}
+
+.assistant .message-bubble {
+    background: var(--bg-bubble-assistant);
+    color: var(--text-primary);
+    border-top-left-radius: 6px;
+}
+
+.user .message-bubble {
+    background: var(--bg-bubble-user);
+    color: var(--text-bubble-user);
+    border-top-right-radius: 6px;
+    max-width: 100%; /* 填满wrapper，宽度由wrapper的max-width限制 */
+}
+
+/* 辅助/工具类 */
+.mb-8 { margin-bottom: 8px; }
+.mb-20 { margin-bottom: 20px; }
+.mb-24 { margin-bottom: 24px; }
+.mt-8 { margin-top: 8px; }
+.mt-10 { margin-top: 10px; }
+.mt-12 { margin-top: 12px; }
+.mt-16 { margin-top: 16px; }
+.mt-20 { margin-top: 20px; }
+.mr-5 { margin-right: 5px; }
+.mr-8 { margin-right: 8px; }
+.mr-12 { margin-right: 12px; }
+.pt-16 { padding-top: 16px; }
+.bt-1 { border-top: 1px solid var(--border-light); }
+.fs-12 { font-size: 12px; }
+.fs-48 { font-size: 48px; }
+.opacity-5 { opacity: 0.5; }
+
+.btn-sm {
+    padding: 4px 12px;
+    font-size: 12px;
+    border-radius: 20px;
+}
+
+.modal-container {
+    background: var(--bg-main);
+    width: 90%;
+    max-width: 500px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    overflow: hidden;
+    animation: modal-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-container.w-450 {
+    width: 450px;
+}
+
+@keyframes modal-pop {
+    0% { transform: scale(0.9); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* 气泡操作菜单控制 */
+.bubble-actions {
+    display: none;
+}
+.bubble-actions.show {
+    display: flex !important;
+}
+
+/* 吐司通知 */
+.toast-notification {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+
+.toast-notification.show {
+    opacity: 1;
+}
+
+/* 其他通用样式 */
+.hidden { display: none !important; }
+.w-full { width: 100%; }
+.flex-1 { flex: 1; }
+.white-space-nowrap { white-space: nowrap; }
+
+/* 存储统计表格 */
+.storage-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.storage-table tr {
+    border-bottom: 1px solid var(--border-light);
+}
+
+.storage-table td {
+    padding: 10px 0;
+}
+
+/* ===== 危险操作区域 ===== */
+.danger-zone {
+    border-color: rgba(176, 46, 46, 0.25) !important;
+}
+.danger-zone h3 {
+    color: #e05555;
+}
+.danger-zone h3 i { color: #e05555; }
+
+/* 危险按钮（描边版） */
+.btn-danger-outline {
+    background: transparent;
+    border: 1.5px solid #e05555;
+    color: #e05555;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+.btn-danger-outline:hover {
+    background: rgba(176, 46, 46, 0.1);
+    color: #e05555;
+}
+.btn-danger-outline:active {
+    background: rgba(176, 46, 46, 0.2);
+}
+
+/* 确认清除弹窗 */
+.clear-confirm-modal .modal-container {
+    max-width: 420px;
+}
+.clear-confirm-icon {
+    text-align: center;
+    font-size: 48px;
+    color: #e05555;
+    margin-bottom: 12px;
+}
+.clear-confirm-text {
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+.clear-confirm-text strong {
+    color: #e05555;
+}
+.modal-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 10px;
+    background: var(--bg-header);
+    color: var(--text-primary);
+    font-size: 14px;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.15s;
+}
+.modal-input:focus {
+    border-color: var(--accent);
+}
+.btn-danger-solid {
+    background: #e05555;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, opacity 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+.btn-danger-solid:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+.btn-danger-solid:not(:disabled):hover {
+    background: #c94444;
+}
+
+.fw-400 { font-weight: 400; }
+.fw-500 { font-weight: 500; }
+.fw-600 { font-weight: 600; }
+.fs-12 { font-size: 12px; }
+.fs-13 { font-size: 13px; }
+.fs-14 { font-size: 14px; }
+.fs-16 { font-size: 16px; }
+.text-secondary { color: var(--text-secondary); }
+.text-center { text-align: center; }
+
+.flex-row {
+    display: flex;
+    align-items: center;
+}
+.flex-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.flex-gap-8 { display: flex; gap: 8px; }
+.flex-gap-10 { display: flex; gap: 10px; }
+.flex-gap-12 { display: flex; gap: 12px; }
+.flex-gap-16 { display: flex; gap: 16px; }
+.flex-wrap { flex-wrap: wrap; }
+.flex-1 { flex: 1; }
+
+.info-box {
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: var(--input-bg);
+    padding: 12px;
+    border-radius: 8px;
+    border-left: 3px solid var(--accent);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+}
+
+.preview-header {
+    display: flex;
+    align-items: baseline;
+    margin-bottom: 6px;
+}
+
+.memory-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.advanced-summary {
+    cursor: pointer;
+    color: var(--accent);
+}
+
+.data-manager-view {
+    flex: 1;
+    background: var(--bg-chat-main);
+    padding: 24px 32px;
+    overflow-y: auto;
+    color: var(--text-primary);
+}
+
+.storage-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.storage-item {
+    background: var(--bg-header);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.storage-value {
+    font-size: 32px;
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+.storage-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table-header-row {
+    border-bottom: 1px solid var(--border-light);
+}
+
+.table-header-cell {
+    padding: 12px 0;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+
+.profile-banner-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 24px 32px;
+    height: 100%;
+    min-height: 110px;
+}
+
+/* 消息分割线样式 */
+.message-separator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.message-separator span {
+    background: var(--bg-chat-main);
+    padding: 0 12px;
+    position: relative;
+    z-index: 1;
+}
+
+.message-separator::before,
+.message-separator::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border-light);
+    margin: 0 15px;
+}
+
+.message-separator.reset-separator {
+    margin: 30px 0;
+    opacity: 0.8;
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.message-separator.reset-separator .line {
+    flex: 1;
+    height: 1px;
+}
+
+.message-separator.reset-separator .line-left {
+    background: linear-gradient(to right, transparent, var(--border-light));
+    margin-right: 15px;
+}
+
+.message-separator.reset-separator .line-right {
+    background: linear-gradient(to left, transparent, var(--border-light));
+    margin-left: 15px;
+}
+
+/* 消息气泡交互与已读状态 */
+.message-bubble {
+    position: relative;
+    cursor: pointer;
+}
+
+.message-info {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: 4px;
+}
+
+.message-time {
+    font-size: 10px;
+    opacity: 0.5;
+}
+
+/* 移除 hover 显示，气泡操作菜单仅通过点击触发 */
+
+.bubble-actions {
+    display: none;
+    position: absolute;
+    top: -36px;
+    background: var(--bg-header);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 6px 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 100;
+    gap: 12px;
+    align-items: center;
+}
+
+.user .bubble-actions { right: 0; }
+.assistant .bubble-actions { left: 0; }
+
+.bubble-actions i {
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+}
+
+.bubble-actions i:hover {
+    color: var(--accent);
+    transform: scale(1.1);
+}
+
+.read-status-outside {
+    font-size: 10px;
+    opacity: 0.6;
+    white-space: nowrap;
+    user-select: none;
+}
+
+/* 用户消息包裹器：让已读标签在气泡外部 */
+.user-message-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    max-width: 70%; /* 与assistant气泡max-width保持一致 */
+    min-width: 0;   /* 防止 flex 子元素撑开父容器 */
+    overflow: hidden; /* 防止内容溢出 */
+}
+
+.user .message-bubble {
+    max-width: 100%; /* 填满wrapper，宽度由wrapper限制 */
+    word-break: break-word;
+    overflow-wrap: break-word;
+    box-sizing: border-box;
+}
+
+/* 已读标签在气泡外部底部 */
+.user-message-wrapper .read-status-outside {
+    margin-top: 4px;
+    margin-right: 4px;
+    align-self: flex-end;
+}
+
+.read-status-outside.read {
+    color: var(--accent);
+    opacity: 0.9;
+}
+
+.read-status-outside.unread {
+    color: var(--text-secondary);
+}
+
+/* 聊天偏好设置部分 */
+.chat-prefs-section {
+    margin-top: 20px;
+    border-top: 1px solid var(--border-light);
+    padding-top: 20px;
+}
+
+/* 抽屉内的分割线标签 */
+.drawer-divider-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 16px 0 8px;
+    margin-top: 4px;
+}
+
+/* 主动发消息控件 */
+.proactive-controls {
+    margin-top: 10px;
+}
+
+/* 主动发消息/通知区域（抽屉顶部区块） */
+#proactiveMsgSection,
+#notifySection {
+    border-top: 1px solid var(--border-light);
+    padding-top: 16px;
+    margin-top: 0;
+}
+
+.chat-prefs-header {
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.chat-prefs-info {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 8px;
+    line-height: 1.4;
+}
+
+.probability-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.probability-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    min-width: 50px;
+}
+
+.probability-value {
+    font-size: 12px;
+    min-width: 30px;
+}
+
+/* API 状态标签 */
+.status-badge.active {
+    background: #0f9960 !important;
+}
+
+.status-badge.inactive {
+    background: var(--border-strong) !important;
+}
+
+/* 核心记忆卡片 */
+.memory-card {
+    background: var(--bg-header);
+    border: 1px solid var(--border-light);
+    padding: 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    color: var(--text-primary);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    transition: transform 0.2s;
+}
+
+.memory-card-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.memory-card-icon {
+    margin-right: 8px;
+    font-size: 12px;
+}
+
+.memory-card-content {
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* 记忆建议弹窗 */
+.memory-suggestion-container {
+    text-align: left;
+}
+
+.memory-suggestion-hint {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+.memory-suggestion-item {
+    margin-bottom: 12px;
+}
+
+.memory-suggestion-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    padding: 10px 12px;
+    background: var(--bg-header);
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+    transition: all 0.2s;
+}
+
+.memory-suggestion-label:hover {
+    border-color: var(--accent);
+    background: var(--menu-btn-hover);
+}
+
+.memory-suggestion-checkbox {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.memory-suggestion-text {
+    color: var(--text-primary);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.memory-suggestion-tip {
+    color: var(--text-secondary);
+    font-size: 12px;
+    margin-top: 16px;
+    text-align: center;
+}
+
+/* 示例气泡预览 */
+.example-bubble-container {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* 气泡预览行对齐与主界面一致 */
+.example-bubble-container .message-row {
+    width: 100%;
+}
+
+.example-bubble {
+    padding: 8px 12px;
+    font-size: 13px;
+    max-width: 80%;
+    word-break: break-word;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.example-bubble.user {
+    background: var(--bg-bubble-user);
+    color: var(--text-bubble-user);
+    border-radius: 12px 12px 2px 12px;
+}
+
+.example-bubble.assistant {
+    background: var(--bg-bubble-assistant);
+    color: var(--text-primary);
+    border-radius: 12px 12px 12px 2px;
+}
+
+/* 可编辑气泡样式 */
+.editable-bubble {
+    cursor: text;
+    transition: opacity 0.15s, box-shadow 0.15s;
+    position: relative;
+}
+.editable-bubble:hover {
+    opacity: 0.85;
+    box-shadow: 0 0 0 2px var(--accent);
+}
+.editable-bubble::after {
+    content: '\f304'; /* fa-pen */
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: 10px;
+    position: absolute;
+    bottom: 4px;
+    right: 6px;
+    opacity: 0;
+    transition: opacity 0.15s;
+    color: var(--accent);
+}
+.editable-bubble:hover::after {
+    opacity: 0.7;
+}
+/* 气泡内联编辑器 */
+.bubble-inline-editor {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: inherit;
+    font-size: 13px;
+    font-family: inherit;
+    width: 100%;
+    min-width: 120px;
+    resize: none;
+    line-height: 1.5;
+    padding: 0;
+}
+/* 气泡删除按钮 */
+.bubble-del-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 11px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s, color 0.15s, background 0.15s;
+    flex-shrink: 0;
+}
+.message-row:hover .bubble-del-btn {
+    opacity: 1;
+}
+.bubble-del-btn:hover {
+    color: #b02e2e;
+    background: rgba(176, 46, 46, 0.1);
+}
+
+/* 模态框样式 */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    display: none; /* 修改：默认隐藏 */
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.modal-overlay.show {
+    display: flex; /* 新增：支持 .show 类显示 */
+}
+
+.modal-container {
+    background: var(--bg-sidebar);
+    border-radius: 16px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    color: var(--text-primary); /* 新增：确保文字颜色随主题变化 */
+}
+
+.modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    color: var(--text-primary);
+}
+
+.modal-footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border-light);
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 24px;
+    cursor: pointer;
+}
+
+/* 头像图片预览 */
+.avatar-img-full {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* 裁剪容器 */
+.crop-container {
+    max-height: 60vh;
+    width: 100%;
+}
+
+/* 聊天偏好与滑块 */
+.apple-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    background: var(--border-strong);
+    border-radius: 6px;
+    outline: none;
+    margin: 8px 0;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+/* 已填充部分用 accent 色（通过 JS 动态更新 background 实现渐变效果） */
+.apple-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+    border: 2px solid var(--bg-sidebar);
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+.apple-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+    box-shadow: 0 3px 10px rgba(15, 153, 96, 0.4);
+}
+.apple-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid var(--bg-sidebar);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+}
+.apple-slider::-moz-range-track {
+    height: 6px;
+    background: var(--border-strong);
+    border-radius: 6px;
+}
+.apple-slider:focus {
+    outline: none;
+}
+.apple-slider:focus::-webkit-slider-thumb {
+    box-shadow: 0 0 0 3px rgba(15, 153, 96, 0.25), 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.chat-prefs-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 8px 0;
+}
+.chat-prefs-row label {
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.probability-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+}
+.probability-bar input[type=range] { flex: 1; }
+.probability-bar span { min-width: 40px; text-align: right; }
+
+.message-info {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: 4px;
+    gap: 4px;
+}
+
+.message-time {
+    font-size: 10px !important;
+    opacity: 0.5;
+    margin-top: 0 !important;
+}
+
+/* 核心记忆与预览卡片 */
+.memory-card {
+    background: var(--bg-header);
+    border: 1px solid var(--border-light);
+    padding: 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    color: var(--text-primary);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    transition: transform 0.2s;
+}
+
+.memory-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+}
+
+.example-bubble-container {
+    margin-top: 15px;
+    background: var(--bg-chat-main);
+    padding: 15px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border: 1px solid var(--border-light);
+}
+
+/* 打字效果 */
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 16px;
+}
+.typing-indicator span {
+    width: 8px;
+    height: 8px;
+    background: var(--text-secondary);
+    border-radius: 50%;
+    animation: typing 1.4s infinite ease-in-out;
+}
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typing {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-8px); opacity: 1; }
+}
+
+/* 输入区域 */
+.input-area {
+    background: var(--bg-input-area);
+    padding: 16px 20px;
+    flex-shrink: 0;
+}
+
+.input-container {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    background: var(--input-bg);
+    border-radius: 24px;
+    padding: 6px 8px 6px 18px;
+    border: 1px solid var(--border-strong);
+}
+
+.input-container textarea {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+    font-size: 15px;
+    resize: none;
+    max-height: 120px;
+    min-height: 24px;
+    padding: 8px 0;
+    line-height: 1.4;
+}
+.input-container textarea::placeholder { color: var(--text-secondary); }
+
+.send-btn {
+    background: var(--accent);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    transition: 0.15s;
+    flex-shrink: 0;
+}
+
+.batch-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    width: 36px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    transition: 0.15s;
+    flex-shrink: 0;
+}
+
+.batch-btn:hover {
+    color: var(--accent);
+    transform: scale(1.1);
+}
+.continue-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    width: 36px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    transition: 0.15s;
+    flex-shrink: 0;
+}
+.continue-btn:hover {
+    color: var(--accent);
+    transform: scale(1.1);
+}
+.continue-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+}
+.continue-btn:disabled:hover {
+    color: var(--text-secondary);
+}
+.send-btn:hover {
+    background: var(--accent-hover);
+    transform: scale(0.96);
+}
+.send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ========= 右侧配置抽屉 ========= */
+.config-drawer {
+    position: fixed;
+    top: 0; right: -360px;
+    width: 340px; height: 100vh;
+    background: var(--drawer-bg);
+    box-shadow: -5px 0 20px var(--shadow);
+    transition: right 0.25s ease;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid var(--drawer-border);
+    color: var(--text-primary);
+}
+.config-drawer.open { right: 0; }
+
+.drawer-header {
+    padding: 20px 20px 12px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border-light);
+}
+.drawer-header h3 { font-size: 18px; font-weight: 600; }
+.close-drawer {
+    background: none; border: none; color: var(--text-secondary);
+    font-size: 22px; cursor: pointer; padding: 4px;
+}
+
+.drawer-content {
+    flex: 1; overflow-y: auto; padding: 18px 20px;
+    display: flex; flex-direction: column; gap: 18px;
+}
+
+.config-group {
+    display: flex; flex-direction: column; gap: 6px;
+}
+.config-group + .config-group {
+    margin-top: 12px;
+}
+.config-group label {
+    font-size: 13px; font-weight: 500; color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-top: 6px;
+}
+.config-group:first-child label:first-child,
+.config-group label:first-child {
+    margin-top: 0;
+}
+.config-group input, .config-group textarea, .config-group select {
+    background: var(--input-bg);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px; padding: 10px 12px;
+    color: var(--text-primary); font-size: 14px; outline: none;
+}
+.config-group input:focus, .config-group textarea:focus {
+    border-color: var(--accent);
+}
+.config-group textarea { min-height: 100px; resize: vertical; }
+
+.drawer-footer {
+    padding: 16px 20px 24px; border-top: 1px solid var(--border-light);
+    display: flex; gap: 10px;
+}
+.btn {
+    padding: 10px 16px; border-radius: 8px; font-weight: 500;
+    border: none; cursor: pointer; font-size: 14px; transition: 0.15s;
+}
+.btn-primary {
+    background: var(--accent); color: white; flex: 2;
+}
+.btn-primary:hover { background: var(--accent-hover); }
+.btn {
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: 0.2s;
+}
+
+.btn-secondary {
+    background: var(--menu-btn-hover);
+    color: var(--text-primary);
+    border: 1px solid var(--border-light);
+}
+.btn-warning {
+    background: #b02e2e; color: white;
+}
+.btn-warning:hover { background: #c43c3c; }
+
+.status-badge {
+    font-size: 12px; padding: 2px 8px; border-radius: 12px;
+    background: var(--border-strong); align-self: flex-start;
+}
+
+/* 遮罩 */
+.drawer-overlay {
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.3); z-index: 999;
+    opacity: 0; visibility: hidden; transition: 0.2s;
+}
+.drawer-overlay.show { opacity: 1; visibility: visible; }
+
+/* ===== 全局滚动条统一样式 ===== */
+/* 消息区 */
+.messages-area::-webkit-scrollbar { width: 6px; }
+.messages-area::-webkit-scrollbar-track { background: transparent; }
+.messages-area::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 6px; }
+
+/* 设置/角色/数据管理/专注 视图滚动条 */
+.settings-view::-webkit-scrollbar,
+.character-view::-webkit-scrollbar,
+.data-manager-view::-webkit-scrollbar,
+.focus-view::-webkit-scrollbar { width: 4px; }
+.settings-view::-webkit-scrollbar-track,
+.character-view::-webkit-scrollbar-track,
+.data-manager-view::-webkit-scrollbar-track,
+.focus-view::-webkit-scrollbar-track { background: transparent; }
+.settings-view::-webkit-scrollbar-thumb,
+.character-view::-webkit-scrollbar-thumb,
+.data-manager-view::-webkit-scrollbar-thumb,
+.focus-view::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+
+/* 文本框 / 输入框的滚动条（纵向） */
+.config-group textarea::-webkit-scrollbar,
+.config-group input::-webkit-scrollbar { width: 4px; height: 4px; }
+.config-group textarea::-webkit-scrollbar-track,
+.config-group input::-webkit-scrollbar-track { background: transparent; }
+.config-group textarea::-webkit-scrollbar-thumb,
+.config-group input::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: 4px;
+    opacity: 0.6;
+}
+.config-group textarea::-webkit-scrollbar-thumb:hover,
+.config-group input::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-hover);
+}
+/* 横向（文本框里文字过长时出现的白色横向滑块） */
+.config-group textarea::-webkit-scrollbar-corner,
+.config-group input::-webkit-scrollbar-corner { background: transparent; }
+
+/* 抽屉滚动条 */
+.drawer-content::-webkit-scrollbar { width: 4px; }
+.drawer-content::-webkit-scrollbar-track { background: transparent; }
+.drawer-content::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+
+/* ===== 苹果风格切换开关 (toggle) ===== */
+.theme-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-light);
+}
+.theme-toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+.apple-toggle {
+    position: relative;
+    width: 48px;
+    height: 26px;
+    background: var(--toggle-bg);
+    border-radius: 26px;
+    border: 1px solid var(--border-strong);
+    cursor: pointer;
+    transition: background 0.25s;
+    display: inline-block;
+}
+.apple-toggle::after {
+    content: "";
+    position: absolute;
+    width: 22px; height: 22px;
+    background: white;
+    border-radius: 22px;
+    top: 1px; left: 2px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.4, 1);
+}
+.apple-toggle.active {
+    background: var(--toggle-active);
+}
+.apple-toggle.active::after {
+    transform: translateX(22px);
+}
+.toggle-icon {
+    font-size: 16px;
+    color: var(--text-secondary);
+}
+
+/* ===== 朋友圈设置滑块样式 ===== */
+.moment-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 120px;
+    height: 4px;
+    background: var(--toggle-bg);
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+}
+.moment-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+}
+.moment-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+}
+.slider-value {
+    min-width: 36px;
+    text-align: right;
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 13px;
+}
+
+/* ===== 页面标题统一样式 ===== */
+/* 各视图顶部标题左侧留出间距，防止被全局菜单按钮遮挡 */
+.focus-page-title,
+.stats-page-title,
+.moments-page-title,
+.settings-page-title,
+.character-page-title,
+.data-manager-page-title {
+    padding-left: 44px; /* 为左上角菜单按钮留出空间 */
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-primary);
+}
+/* 页面标题与下方内容的间距，统一与专注/统计页面一致 */
+.focus-page-title,
+.stats-page-title,
+.moments-page-title,
+.settings-page-title,
+.character-page-title,
+.data-manager-page-title {
+    margin-bottom: 12px;
+}
+
+/* 推文页面操作按钮（与标题同一行，靠右） */
+.moments-action-btns {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+}
+
+/* 设置视图（替代聊天区） */
+.settings-view {
+    flex: 1;
+    background: var(--bg-chat-main);
+    padding: 24px 32px;
+    overflow-y: auto;
+    color: var(--text-primary);
+}
+.settings-card {
+    background: var(--bg-header);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    border: 1px solid var(--border-light);
+}
+.settings-card h3 {
+    font-size: 18px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.view-toggle {
+    display: none;
+}
+.view-active {
+    display: flex;
+    flex-direction: column;
+}
+.chat-main .chat-view {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.settings-view {
+    display: none;
+}
+.settings-view.active {
+    display: block;
+}
+.chat-main.chat-hidden .chat-view {
+    display: none;
+}
+.chat-main.chat-hidden .settings-view {
+    display: block;
+}
+
+/* 用户头像 - 左下角固定 */
+.sidebar-footer {
+    margin-top: auto;
+    padding-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.user-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 22px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 2px solid var(--border-light);
+    overflow: hidden;
+}
+.user-avatar:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+}
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* ========== 个人主页视图 ========== */
+.profile-view {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-chat-main);
+    position: relative;
+    overflow-y: auto;
+    color: var(--text-primary);
+    display: none;
+}
+
+/* 背景图横幅 —— 铺满上方，无圆角，无卡片边框 */
+.profile-banner {
+    position: relative;
+    width: 100%;
+    min-height: 110px;          /* 足够容纳头像和文字 */
+    background-color: var(--bg-header);
+    background-image: var(--profile-bg-image);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-bottom: 1px solid var(--border-light);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 半透明蒙版 —— 保证文字在任何背景图下都能阅读 */
+.profile-banner::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.5); /*黑色模式个人主页背景蒙版透明度*/
+    pointer-events: none;
+    z-index: 1;
+}
+body.light-theme .profile-banner::before {
+    background: rgba(255, 255, 255, 0.75); /*白色模式个人主页蒙版透明度*/
+}
+
+@media (max-width: 600px) {
+
+    .messages-area {
+        padding: 14px 12px 8px;
     }
 
-  // ---------- 聊天偏好辅助函数 ----------
-  function getLastAssistantContent() {
-    const reversed = [...messages].reverse();
-    const lastAsst = reversed.find(m => m.role === 'assistant');
-    return lastAsst ? lastAsst.content : '';
-  }
-
-  function getLastUserContent() {
-    const reversed = [...messages].reverse();
-    const lastUser = reversed.find(m => m.role === 'user');
-    return lastUser ? lastUser.content : '';
-  }
-
-  function shouldTriggerLongUnread() {
-    if (!chatPreferences.enableLongUnread) return false;
-    if (Math.random() * 100 > chatPreferences.longUnreadProbability) return false;
-
-    const aiLastMsg = getLastAssistantContent();
-    return /稍等|没空|晚点|等等|等一下|忙|暂时不|回头|待会/.test(aiLastMsg);
-  }
-
-  function shouldTriggerReadIgnore() {
-    if (!chatPreferences.enableReadIgnore) return false;
-    const lastUser = getLastUserContent();
-    const isGoodnight = /晚安/.test(lastUser);
-    const baseProb = chatPreferences.readIgnoreProbability;
-    const adjustedProb = isGoodnight ? Math.min(100, baseProb * 3) : baseProb;
-    return Math.random() * 100 < adjustedProb;
-  }
-
-  function resolvePendingUnreads() {
-    for (let i = messages.length - 1; i >= 0; i--) {
-      if (messages[i].role === 'user' && messages[i].readStatus === 'unread') {
-        updateMessageReadStatus(i, 'read');
-      } else {
-        break;
-      }
+    .message-bubble {
+        max-width: 78%;
     }
-  }
-
-  // ---------- 发送消息 ----------
-  async function handleSendMessage(overrideSegments = null) {
-    const content = messageInput.value.trim();
-    if (!overrideSegments && (!content || isGenerating)) return;
-
-    // 分割多条消息（如果是批量发送，按行分割；如果是普通发送，按空行分割）
-    const userSegments = overrideSegments || content.split(/\n\s*\n/).filter(s => s.trim() !== '');
-    if (userSegments.length === 0) return;
-
-    if (!overrideSegments) {
-      messageInput.value = '';
-      messageInput.style.height = 'auto';
+    .user .message-bubble {
+        max-width: 100%; /* 移动端：同样撑满wrapper，由wrapper限制 */
     }
-    isGenerating = true;
-    sendBtn.disabled = true;
-
-    // 用户发消息：重置主动消息催问状态
-    proactiveLastSentTs = 0;
-    proactiveFollowUpSent = false;
-
-    resolvePendingUnreads();
-
-    // 先把用户的所有消息都发出来
-    const userMsgIndices = [];
-    for (let segIdx = 0; segIdx < userSegments.length; segIdx++) {
-      const text = userSegments[segIdx].trim();
-      if (!text) continue;
-      addMessage('user', text);
-      userMsgIndices.push(messages.length - 1);
+    .user-message-wrapper {
+        max-width: 75%; /* 移动端wrapper略宽 */
     }
 
-    // 随机延迟已读
-    const readDelay = 1000 + Math.random() * 2000;
-    setTimeout(() => {
-      userMsgIndices.forEach(idx => {
-        if (messages[idx]) updateMessageReadStatus(idx, 'read');
-      });
+    .input-area {
+        padding: 10px 12px;
+    }
 
-      // 触发 AI 回复
-      handleAiResponse();
-    }, readDelay);
+    /* 手机端：个人主页横幅改为纵向布局 */
+    .profile-banner {
+        flex-direction: column;
+        align-items: stretch;
+        min-height: unset;
+    }
+    .profile-banner-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 20px 16px 12px;
+        height: auto;
+        min-height: unset;
+    }
+    .profile-banner-actions {
+        justify-content: center;
+        padding: 0 16px 16px;
+    }
 
-    isGenerating = false;
-    sendBtn.disabled = false;
-    messageInput.focus();
-
-    async function handleAiResponse() {
-    if (shouldTriggerReadIgnore()) return;
-
-    // 长时间未读：先标记已读，然后延迟很长时间再回复
-    if (shouldTriggerLongUnread()) {
-        // 1. 先强制将用户消息标记为已读（因为对方已经看了）
-        userMsgIndices.forEach(idx => {
-            if (messages[idx]) updateMessageReadStatus(idx, 'read');
-        });
-
-        // 2. 延迟 10～30 秒，模拟几小时后才回复
-        const longDelay = 10000 + Math.random() * 20000;
-        setTimeout(async () => {
-            await generateAiReply();
-        }, longDelay);
-    } else {
-        await generateAiReply();
+    /* 手机端：角色卡片改为纵向布局 */
+    .character-preview-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .character-preview-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 16px;
+    }
+    .character-preview-info {
+        align-items: center;
+    }
+    .character-preview-info p {
+        text-align: center;
+    }
+    .character-preview-actions {
+        justify-content: center;
+        padding: 0 16px 14px;
     }
 }
 
-    async function generateAiReply() {
-      try {
-        showTypingIndicator();
-        // 获取最后一条用户消息（不直接依赖 userMsgIndices，防止其为空）
-        const lastUserMsg = [...messages].reverse().find(m => m.role === 'user' && !m.isReset);
-        if (!lastUserMsg) {
-          removeTypingIndicator();
-          isGenerating = false;
-          return;
-        }
-        const lastUserContent = lastUserMsg.content;
-        const reply = await callAI(lastUserContent);
-        const cleaned = cleanParentheses(reply);
-
-        // 按照句号、问号、感叹号以及换行符进行拆分
-        // 修改：对方换行和使用句号=发送下一条消息到气泡
-        const sentences = cleaned.split(/(?<=[。\.！？!?\n])/g)
-                                 .map(s => s.trim())
-                                 .filter(s => s.length > 0);
-
-        removeTypingIndicator();
-        for (const sentence of sentences) {
-          showTypingIndicator();
-          const charCount = sentence.length;
-          let typingDelay = Math.min(6000, Math.max(1000, charCount * 60));
-          typingDelay += (Math.random() * 400 - 200);
-          await new Promise(resolve => setTimeout(resolve, Math.max(0, typingDelay)));
-          removeTypingIndicator();
-          addMessage('assistant', sentence);
-          // 检测AI回复中的"离开"关键词，提高不在线概率
-          detectAiOfflineKeywords(sentence);
-          // AI 回复时触发通知
-          triggerNotification(charNameInput.value + ' 发来消息', sentence);
-        }
-      } catch(e) {
-        removeTypingIndicator();
-        isGenerating = false;
-        sendBtn.disabled = false;
-        showCommonDialog({
-          title: '⚠️ 请求失败',
-          message: `${e.message}`,
-          showCancel: false,
-          confirmText: '好的'
-        });
-      }
-    }
-  }
-
-  // ---------- 继续说 ----------
-  async function handleContinueReply() {
-    if (isGenerating) return;
-    const continueBtn = document.getElementById('continueBtn');
-    if (continueBtn) continueBtn.disabled = true;
-
-    try {
-      showTypingIndicator();
-      // 构造让 AI 继续说的 prompt
-      const lastAssistantMsg = [...messages].reverse().find(m => m.role === 'assistant' && !m.isReset);
-      const contextHint = lastAssistantMsg ? `对方刚刚说：「${lastAssistantMsg.content.slice(0, 200)}」\n\n请继续这个话题，再说1-2句话。` : '请主动说1-2句话，开启或延续话题。';
-      const reply = await callAI(contextHint);
-      const cleaned = cleanParentheses(reply);
-      const sentences = cleaned.split(/(?<=[。\.！？!?\n])/g)
-                               .map(s => s.trim())
-                               .filter(s => s.length > 0);
-      removeTypingIndicator();
-      for (const sentence of sentences.slice(0, 2)) {
-        showTypingIndicator();
-        const charCount = sentence.length;
-        let typingDelay = Math.min(6000, Math.max(1000, charCount * 60));
-        typingDelay += (Math.random() * 400 - 200);
-        await new Promise(resolve => setTimeout(resolve, Math.max(0, typingDelay)));
-        removeTypingIndicator();
-        addMessage('assistant', sentence);
-        detectAiOfflineKeywords(sentence);
-        triggerNotification(charNameInput.value + ' 发来消息', sentence);
-      }
-    } catch(e) {
-      removeTypingIndicator();
-      showCommonDialog({
-        title: '⚠️ 请求失败',
-        message: `${e.message}`,
-        showCancel: false,
-        confirmText: '好的'
-      });
-    } finally {
-      isGenerating = false;
-      const sendBtn = document.getElementById('sendBtn');
-      if (sendBtn) sendBtn.disabled = false;
-      if (continueBtn) continueBtn.disabled = false;
-    }
-  }
-
-  // ---------- 测试连接 ----------
-  async function testConnection() {
-    syncConfigFromForm();
-    if (!config.apiKey) { alert('请填写 API Key'); return; }
-    try {
-      const res = await fetch(config.apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.apiKey}` },
-        body: JSON.stringify({ model: config.model, messages: [{role:'user',content:'ping'}], max_tokens:5 })
-      });
-      const data = await res.json();
-      if (res.ok) alert('✅ 连接成功！');
-      else alert('❌ 失败: ' + (data.error?.message || res.status));
-    } catch(e) { alert('网络错误: ' + e.message); }
-  }
-
-  // ---------- 抽屉 ----------
-  let drawerClickHandler = null;
-  function openDrawer() {
-    // 每次打开时重新加载已保存的备注/描述，确保显示已保存值
-    loadCharNoteAndDesc();
-    drawer.classList.add('open');
-    overlay.classList.add('show');
-
-    // 延迟添加点击监听，避免触发当前点击事件
-    setTimeout(() => {
-      drawerClickHandler = (e) => {
-        // 如果点击的是抽屉内部，不关闭
-        if (drawer.contains(e.target)) return;
-        // 如果点击的是触发按钮，不关闭
-        if (configBtn.contains(e.target)) return;
-        closeDrawer();
-      };
-      document.addEventListener('click', drawerClickHandler);
-    }, 0);
-  }
-  function closeDrawer() {
-    drawer.classList.remove('open');
-    overlay.classList.remove('show');
-    // 移除点击监听
-    if (drawerClickHandler) {
-      document.removeEventListener('click', drawerClickHandler);
-      drawerClickHandler = null;
-    }
-  }
-
-  function openSidebar() {
-    document.body.classList.add('sidebar-open');
-    if (globalMenuBtn) globalMenuBtn.style.display = 'none';
-  }
-  function closeSidebar() {
-    document.body.classList.remove('sidebar-open');
-    if (globalMenuBtn) globalMenuBtn.style.display = '';
-  }
-  function toggleSidebar() {
-    if (document.body.classList.contains('sidebar-open')) closeSidebar();
-    else openSidebar();
-  }
-
-  // ---------- 预设地址 ----------
-  const apiUrlPresets = {
-    deepseek: 'https://api.deepseek.com/v1/chat/completions',
-    openai: 'https://api.openai.com/v1/chat/completions',
-    openrouter: 'https://openrouter.ai/api/v1/chat/completions',
-    groq: 'https://api.groq.com/openai/v1/chat/completions',
-    custom: ''
-  };
-  function updateApiUrlFromProvider() {
-    const provider = apiProviderSelect.value;
-    if (provider !== 'custom') apiUrlInput.value = apiUrlPresets[provider];
-  }
-  function updateModelInputFromSelect() {
-    const selected = modelSelect.value;
-    if (selected !== 'custom') modelInput.value = selected;
-  }
-
-  // ---------- 裁剪 ----------
-  let cropper = null;
-  let currentCropType = 'avatar';
-  const cropModalOverlay = document.getElementById('cropModalOverlay');
-  const cropImage = document.getElementById('cropImage');
-  const closeCropModal = document.getElementById('closeCropModal');
-  const cancelCropBtn = document.getElementById('cancelCropBtn');
-  const saveCropBtn = document.getElementById('saveCropBtn');
-
-  function openCropModal(file, type) {
-    currentCropType = type;
-    window._cropTarget = 'user';
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      cropImage.src = e.target.result;
-      cropModalOverlay.classList.add('show');
-      if (cropper) cropper.destroy();
-      cropper = new Cropper(cropImage, {
-        aspectRatio: type === 'avatar' ? 1 : 16/9,
-        viewMode: 1,
-        autoCropArea: 1,
-        responsive: true,
-      });
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function openCropModalForCharacter(file, type) {
-    currentCropType = type;
-    window._cropTarget = 'character';
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      cropImage.src = e.target.result;
-      cropModalOverlay.classList.add('show');
-      if (cropper) cropper.destroy();
-      cropper = new Cropper(cropImage, {
-        aspectRatio: type === 'avatar' ? 1 : 16/9,
-        viewMode: 1,
-        autoCropArea: 1,
-        responsive: true,
-      });
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function closeCropModalFunc() {
-    cropModalOverlay.classList.remove('show');
-    if (cropper) { cropper.destroy(); cropper = null; }
-    window._cropTarget = null;
-  }
-
-  function saveCroppedImage() {
-    if (!cropper) return;
-    const canvas = cropper.getCroppedCanvas();
-    const dataURL = canvas.toDataURL('image/jpeg', 0.9);
-
-    const cropTarget = window._cropTarget || 'user';
-    if (cropTarget === 'character') {
-      if (currentCropType === 'avatar') characterData.avatar = dataURL;
-      else characterData.cover = dataURL;
-      updateCharacterPreview();
-    } else {
-      // 保存前获取旧数据，用于判断是否有变化
-      const oldAvatar = localStorage.getItem('user_avatar') || '';
-      const oldCover = localStorage.getItem('user_cover') || '';
-
-      if (currentCropType === 'avatar') {
-        const userAvatarBtn = document.getElementById('userAvatarBtn');
-        const profileAvatarLarge = document.getElementById('profileAvatarLarge');
-        if (userAvatarBtn) userAvatarBtn.innerHTML = `<img src="${dataURL}" class="avatar-img-full">`;
-        if (profileAvatarLarge) profileAvatarLarge.innerHTML = `<img src="${dataURL}" class="avatar-img-full">`;
-        try { localStorage.setItem('user_avatar', dataURL); } catch(e) {}
-        // 检测头像是否有变化
-        if (oldAvatar && oldAvatar !== dataURL) {
-          handleUserAvatarChange();
-        }
-      } else {
-        document.documentElement.style.setProperty('--profile-bg-image', `url(${dataURL})`);
-        try { localStorage.setItem('user_cover', dataURL); } catch(e) {}
-        // 检测背景是否有变化
-        if (oldCover && oldCover !== dataURL) {
-          handleUserCoverChange();
-        }
-      }
-    }
-    closeCropModalFunc();
-    window._cropTarget = null;
-  }
-
-  // AI询问头像变化
-  async function handleUserAvatarChange() {
-    if (!config.apiKey || isGenerating) return;
-    try {
-      const charName = charNameInput?.value || 'AI';
-      const prompt = `你是角色${charName}。用户刚刚更换了头像，这让你注意到了。你应该用符合角色性格的方式，自然地提及这个变化，语气要自然，不能太刻意。要求：只输出一句话，简洁自然，符合你的角色设定，不要其他内容。`;
-
-      const res = await fetch(config.apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.apiKey}` },
-        body: JSON.stringify({ model: config.model, messages: [{role:'system',content:prompt}], temperature: 0.8, max_tokens: 100 })
-      });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
-      const reply = data?.choices?.[0]?.message?.content;
-      if (reply && reply.trim()) {
-        const cleaned = reply.trim().replace(/[（(][^）)]*?[）)]/g, '').trim();
-        addMessage('assistant', cleaned);
-        detectAiOfflineKeywords(cleaned);
-      }
-    } catch(e) {
-      console.warn('AI询问头像变化失败:', e);
-    }
-  }
-
-  // AI询问背景变化
-  async function handleUserCoverChange() {
-    if (!config.apiKey || isGenerating) return;
-    try {
-      const charName = charNameInput?.value || 'AI';
-      const prompt = `你是角色${charName}。用户刚刚更换了主页背景图，这让你注意到了。你应该用符合角色性格的方式，自然地提及这个变化，语气要自然，不能太刻意。要求：只输出一句话，简洁自然，符合你的角色设定，不要其他内容。`;
-
-      const res = await fetch(config.apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.apiKey}` },
-        body: JSON.stringify({ model: config.model, messages: [{role:'system',content:prompt}], temperature: 0.8, max_tokens: 100 })
-      });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
-      const reply = data?.choices?.[0]?.message?.content;
-      if (reply && reply.trim()) {
-        const cleaned = reply.trim().replace(/[（(][^）)]*?[）)]/g, '').trim();
-        addMessage('assistant', cleaned);
-        detectAiOfflineKeywords(cleaned);
-      }
-    } catch(e) {
-      console.warn('AI询问背景变化失败:', e);
-    }
-  }
-
-  function initUploadButtons() {
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = 'image/*';
-    fileInput.className = 'hidden';
-    document.body.appendChild(fileInput);
-    document.getElementById('editUploadAvatarBtn')?.addEventListener('click', () => {
-      fileInput.onchange = (e) => { const f = e.target.files[0]; if (f) openCropModal(f, 'avatar'); fileInput.value = ''; };
-      fileInput.click();
-    });
-    document.getElementById('editUploadCoverBtn')?.addEventListener('click', () => {
-      fileInput.onchange = (e) => { const f = e.target.files[0]; if (f) openCropModal(f, 'cover'); fileInput.value = ''; };
-      fileInput.click();
-    });
-    closeCropModal?.addEventListener('click', closeCropModalFunc);
-    cancelCropBtn?.addEventListener('click', closeCropModalFunc);
-    saveCropBtn?.addEventListener('click', saveCroppedImage);
-    cropModalOverlay?.addEventListener('click', (e) => { if (e.target === cropModalOverlay) closeCropModalFunc(); });
-  }
-
-  function loadUserImages() {
-    try {
-      const savedAvatar = localStorage.getItem('user_avatar');
-      if (savedAvatar) {
-        document.getElementById('userAvatarBtn').innerHTML = `<img src="${savedAvatar}" class="avatar-img-full">`;
-        document.getElementById('profileAvatarLarge').innerHTML = `<img src="${savedAvatar}" class="avatar-img-full">`;
-      }
-      const savedCover = localStorage.getItem('user_cover');
-      if (savedCover) document.documentElement.style.setProperty('--profile-bg-image', `url(${savedCover})`);
-    } catch(e) {}
-  }
-
-  function loadProfile() {
-    try {
-      const savedName = localStorage.getItem('profile_name') || '用户';
-      const savedBio = localStorage.getItem('profile_bio') || '在一隅，遇见自己。';
-      const savedAvatar = localStorage.getItem('profile_avatar') || null;
-      profileDisplayName.textContent = savedName;
-      profileBioDisplay.innerHTML = `<i class="fas fa-quote-left mr-8"></i>${savedBio}`;
-      editProfileNameInput.value = savedName;
-      editProfileBioInput.value = savedBio;
-      if (editProfileCidInput) editProfileCidInput.value = localStorage.getItem('profile_cid') || '';
-      if (editProfileRegionInput) editProfileRegionInput.value = localStorage.getItem('profile_region') || '';
-      if (editProfileSelfIntroInput) editProfileSelfIntroInput.value = localStorage.getItem('profile_self_intro') || '';
-      return { name: savedName, bio: savedBio, avatar: savedAvatar };
-    } catch(e) {
-      return { name: '用户', bio: '在一隅，遇见自己。', avatar: null };
-    }
-  }
-
-  // ---------- 提示弹窗 ----------
-  function showToast(text) {
-    const toast = document.createElement('div');
-    toast.className = 'toast-notification';
-    toast.textContent = text;
-    document.body.appendChild(toast);
-    setTimeout(() => {
-      toast.classList.add('show');
-      setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 300);
-      }, 2000);
-    }, 10);
-  }
-
-  // ---------- 视图切换 ----------
-  function setActiveView(view) {
-    // 关闭浮层视图（角色主页、推文详情）
-    closeCharHome();
-    const postDetailView = document.getElementById('postDetailView');
-    if (postDetailView) postDetailView.style.display = 'none';
-
-    chatMain.classList.remove('chat-hidden', 'profile-hidden', 'character-hidden', 'data-hidden', 'focus-hidden', 'stats-hidden', 'moments-hidden');
-    document.querySelectorAll('.sidebar-icon').forEach(icon => icon.classList.remove('active'));
-    userAvatarBtn.classList.remove('active');
-    if (view === 'chat') chatIcon.classList.add('active');
-    else if (view === 'settings') { chatMain.classList.add('chat-hidden'); gearIcon.classList.add('active'); }
-    else if (view === 'profile') { chatMain.classList.add('profile-hidden'); userAvatarBtn.classList.add('active'); renderProfilePostsGrid(); }
-    else if (view === 'character') { chatMain.classList.add('character-hidden'); characterIcon.classList.add('active'); }
-    else if (view === 'focus') { chatMain.classList.add('focus-hidden'); focusIcon?.classList.add('active'); }
-    else if (view === 'stats') {
-      chatMain.classList.add('stats-hidden');
-      statsIcon?.classList.add('active');
-      document.querySelectorAll('.stats-tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.stats-content').forEach(c => c.classList.remove('active'));
-      document.querySelector('.stats-tab[data-tab="today"]')?.classList.add('active');
-      document.getElementById('statsTodayContent')?.classList.add('active');
-      refreshStatsView();
-    }
-    else if (view === 'data') {
-      chatMain.classList.add('data-hidden');
-      dataManagerIcon.classList.add('active');
-      refreshStorageStats();
-    }
-    else if (view === 'moments') {
-      chatMain.classList.add('moments-hidden');
-      momentsIcon?.classList.add('active');
-      renderMomentsFeed();
-    }
-  }
-
-  // 暴露 setActiveView/openPostDetail 到全局作用域，让 HTML onclick 可以调用
-  window.setActiveView = setActiveView;
-  window.openPostDetail = openPostDetail;
-
-  // ---------- 统计视图 ----------
-  function refreshStatsView() {
-    // 设置当前日期
-    const now = new Date();
-    document.getElementById('scheduleDateDisplay').textContent = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 ${['周日','周一','周二','周三','周四','周五','周六'][now.getDay()]}`;
-
-    // 刷新各统计内容
-    renderTodaySchedule();
-    renderChatStats();
-    renderFocusStats();
-  }
-
-  // 渲染今日日程
-  function renderTodaySchedule() {
-    const todayStr = new Date().toISOString().split('T')[0];
-    const todaySchedules = statsData.schedules.filter(s => s.date === todayStr);
-    const todayRecords = statsData.focusRecords.filter(r => r.date === todayStr);
-
-    const container = document.getElementById('scheduleTimeline');
-    if (todaySchedules.length === 0 && todayRecords.length === 0) {
-      container.innerHTML = `<div class="schedule-empty"><i class="fas fa-clock opacity-5"></i><p>暂无日程安排</p></div>`;
-      return;
-    }
-
-    // 合并所有项目，按时间排序
-    const allItems = [
-      ...todaySchedules.map(s => ({ type: 'schedule', ...s })),
-      ...todayRecords.map(r => ({ type: 'focus', ...r }))
-    ].sort((a, b) => a.time.localeCompare(b.time));
-
-    if (allItems.length === 0) {
-      container.innerHTML = `<div class="schedule-empty"><i class="fas fa-clock opacity-5"></i><p>暂无日程安排</p></div>`;
-      return;
-    }
-
-    // 生成时间线HTML
-    let html = '<div class="timeline-container">';
-
-    allItems.forEach((item, index) => {
-      const isLast = index === allItems.length - 1;
-      if (item.type === 'schedule') {
-        const scheduleIndex = statsData.schedules.findIndex(s => s.date === item.date && s.time === item.time && s.activity === item.activity);
-        const isChar = item.owner === 'char';
-        html += `
-          <div class="timeline-row ${isChar ? 'char-side' : 'user-side'}">
-            <div class="timeline-left">
-              ${isChar ? `<span class="timeline-content char-content">${item.activity}</span><span class="timeline-time">${item.time}</span><span class="timeline-marker char-marker">·</span>` : ''}
-            </div>
-            <div class="timeline-center">
-              <div class="timeline-dot ${isChar ? 'char-dot' : 'user-dot'}"></div>
-              ${!isLast ? '<div class="timeline-line"></div>' : ''}
-            </div>
-            <div class="timeline-right">
-              ${!isChar ? `<span class="timeline-marker user-marker">·</span><span class="timeline-time">${item.time}</span><span class="timeline-content user-content">${item.activity}</span>` : ''}
-            </div>
-          </div>`;
-      } else {
-        const minutes = Math.round(item.durationSec / 60);
-        const isChar = item.owner === 'char';
-        const focusText = `专注 ${minutes}分钟`;
-        html += `
-          <div class="timeline-row ${isChar ? 'char-side' : 'user-side'}">
-            <div class="timeline-left">
-              ${isChar ? `<span class="timeline-content char-content"><i class="fas fa-hourglass-half"></i> ${focusText}</span><span class="timeline-time">${item.time}</span><span class="timeline-marker char-marker">·</span>` : ''}
-            </div>
-            <div class="timeline-center">
-              <div class="timeline-dot ${isChar ? 'char-dot' : 'user-dot'}"></div>
-              ${!isLast ? '<div class="timeline-line"></div>' : ''}
-            </div>
-            <div class="timeline-right">
-              ${!isChar ? `<span class="timeline-marker user-marker">·</span><span class="timeline-time">${item.time}</span><span class="timeline-content user-content"><i class="fas fa-hourglass-half"></i> ${focusText}</span>` : ''}
-            </div>
-          </div>`;
-      }
-    });
-
-    html += '</div>';
-    container.innerHTML = html;
-  }
-
-  // 删除日程并刷新
-  window.deleteScheduleAndRefresh = function(index) {
-    deleteSchedule(index);
-    renderTodaySchedule();
-  };
-
-  // 渲染聊天统计
-  function renderChatStats() {
-    const stats = statsData.chatStats;
-
-    // 对话概况
-    document.getElementById('chatStatCount').textContent = stats.totalMessages;
-    document.getElementById('userMsgCount').textContent = stats.userMessages;
-    document.getElementById('charMsgCount').textContent = stats.charMessages;
-
-    // 计算对话天数
-    if (stats.firstChatDate) {
-      const firstDate = new Date(stats.firstChatDate);
-      const today = new Date();
-      const days = Math.ceil((today - firstDate) / (1000 * 60 * 60 * 24)) + 1;
-      document.getElementById('chatStatDays').textContent = days;
-      document.getElementById('chatStatStartDate').textContent = stats.firstChatDate;
-    } else {
-      document.getElementById('chatStatDays').textContent = '0';
-      document.getElementById('chatStatStartDate').textContent = '-';
-    }
-
-    // 词排行
-    renderWordRanking();
-  }
-
-  // 渲染词排行
-  function renderWordRanking() {
-    const container = document.getElementById('wordRankingList');
-    if (!container) return;
-
-    const topWords = getTopWords(10);
-    if (topWords.length === 0) {
-      container.innerHTML = `<div class="word-ranking-empty"><i class="fas fa-list opacity-5"></i><p>暂无数据</p></div>`;
-      return;
-    }
-
-    let html = '';
-    topWords.forEach((item, index) => {
-      html += `
-        <div class="word-ranking-item">
-          <div class="word-ranking-rank">${index + 1}</div>
-          <div class="word-ranking-word">${item.word}</div>
-          <div class="word-ranking-count">${item.count}次</div>
-        </div>`;
-    });
-
-    container.innerHTML = html;
-  }
-
-  // 渲染专注统计
-  function renderFocusStats() {
-    const records = statsData.focusRecords;
-
-    // 计算总时长
-    let userSec = 0, charSec = 0;
-    records.forEach(r => {
-      if (r.owner === 'user') userSec += r.durationSec;
-      else charSec += r.durationSec;
-    });
-
-    // 共同专注时长 = 双方同时专注的时间总和
-    const overlapSec = statsData.totalOverlapSec || 0;
-
-    const formatHours = (sec) => {
-      const h = Math.floor(sec / 3600);
-      const m = Math.round((sec % 3600) / 60);
-      return h > 0 ? `${h}h${m}m` : `${m}m`;
-    };
-
-    document.getElementById('totalFocusHours').textContent = formatHours(overlapSec);
-    document.getElementById('userFocusHours').textContent = formatHours(userSec);
-    document.getElementById('charFocusHours').textContent = formatHours(charSec);
-
-    // 专注记录列表
-    const container = document.getElementById('focusRecordsList');
-    if (records.length === 0) {
-      container.innerHTML = `
-        <div class="focus-record-empty">
-          <i class="fas fa-hourglass-half opacity-5"></i>
-          <p>暂无专注记录</p>
-          <p class="fs-12 text-secondary">正计时超过5分钟、倒计时正常结束的专注会被记录</p>
-        </div>`;
-      return;
-    }
-
-    // 按时间倒序排序（最新在最上面）
-    const sortedRecords = [...records].sort((a, b) => {
-      const dateCompare = b.date.localeCompare(a.date);
-      if (dateCompare !== 0) return dateCompare;
-      return b.time.localeCompare(a.time);
-    });
-
-    // 分页：每页5条
-    const pageSize = 5;
-    let currentPage = window.focusRecordsPage || 1;
-    const totalPages = Math.ceil(sortedRecords.length / pageSize);
-    const startIdx = (currentPage - 1) * pageSize;
-    const pageRecords = sortedRecords.slice(startIdx, startIdx + pageSize);
-
-    // 格式化日期显示
-    const formatDate = (dateStr) => {
-      const d = new Date(dateStr);
-      const month = (d.getMonth() + 1).toString().padStart(2, '0');
-      const day = d.getDate().toString().padStart(2, '0');
-      return `${month}月${day}日`;
-    };
-
-    let html = '';
-    pageRecords.forEach(record => {
-      const minutes = Math.round(record.durationSec / 60);
-      const dateDisplay = formatDate(record.date);
-      html += `
-        <div class="focus-record-item">
-          <div class="focus-record-time">${dateDisplay} ${record.time}</div>
-          <div class="focus-record-dot ${record.owner === 'user' ? 'user-dot' : 'char-dot'}"></div>
-          <div class="focus-record-info">
-            <div class="focus-record-owner">${record.owner === 'user' ? '我的专注' : '角色专注'}</div>
-            <div class="focus-record-activity">${record.activity}</div>
-          </div>
-          <div class="focus-record-duration">${minutes}分钟</div>
-        </div>`;
-    });
-
-    // 添加分页控件
-    if (totalPages > 1) {
-      html += `
-        <div class="focus-records-pagination">
-          <span class="focus-records-info">${startIdx + 1}-${Math.min(startIdx + pageSize, sortedRecords.length)} / 共${sortedRecords.length}条</span>
-          <div class="focus-records-btns">
-            <button class="focus-page-btn" onclick="goToFocusPage(${currentPage - 1})" ${currentPage <= 1 ? 'disabled' : ''}>
-              <i class="fas fa-chevron-left"></i>
-            </button>
-            <span class="focus-page-num">${currentPage} / ${totalPages}</span>
-            <button class="focus-page-btn" onclick="goToFocusPage(${currentPage + 1})" ${currentPage >= totalPages ? 'disabled' : ''}>
-              <i class="fas fa-chevron-right"></i>
-            </button>
-          </div>
-        </div>`;
-    }
-
-    container.innerHTML = html;
-  }
-
-  // 专注记录分页函数
-  window.goToFocusPage = function(page) {
-    const totalRecords = statsData.focusRecords.length;
-    const totalPages = Math.ceil(totalRecords / 5);
-    if (page < 1 || page > totalPages) return;
-    window.focusRecordsPage = page;
-    renderFocusStats();
-  };
-
-  // 渲染历史专注记录抽屉
-  function renderFocusHistoryDrawer() {
-    const container = document.getElementById('focusHistoryList');
-    const records = statsData.focusRecords;
-
-    if (records.length === 0) {
-      container.innerHTML = `
-        <div class="focus-history-empty">
-          <i class="fas fa-hourglass-half opacity-5" style="font-size: 32px; display: block; margin-bottom: 12px;"></i>
-          <p>暂无专注记录</p>
-        </div>`;
-      return;
-    }
-
-    // 按时间倒序排序
-    const sortedRecords = [...records].sort((a, b) => {
-      const dateCompare = b.date.localeCompare(a.date);
-      if (dateCompare !== 0) return dateCompare;
-      return b.time.localeCompare(a.time);
-    });
-
-    // 格式化日期显示
-    const formatDate = (dateStr) => {
-      const d = new Date(dateStr);
-      const month = (d.getMonth() + 1).toString().padStart(2, '0');
-      const day = d.getDate().toString().padStart(2, '0');
-      return `${month}月${day}日`;
-    };
-
-    let html = '';
-    sortedRecords.slice(0, 50).forEach(record => {
-      const minutes = Math.round(record.durationSec / 60);
-      const dateDisplay = formatDate(record.date);
-      html += `
-        <div class="focus-history-item">
-          <div class="focus-history-time">${dateDisplay} ${record.time}</div>
-          <div class="focus-history-dot ${record.owner === 'user' ? 'user-dot' : 'char-dot'}"></div>
-          <div class="focus-history-info">
-            <div class="focus-history-owner">${record.owner === 'user' ? '我的专注' : '角色专注'}</div>
-            <div class="focus-history-activity">${record.activity}</div>
-          </div>
-          <div class="focus-history-duration">${minutes}分钟</div>
-        </div>`;
-    });
-
-    container.innerHTML = html;
-  }
-
-  // 打开/关闭历史专注抽屉
-  function openFocusHistoryDrawer() {
-    renderFocusHistoryDrawer();
-    document.getElementById('focusHistoryDrawer')?.classList.add('open');
-    document.getElementById('focusHistoryOverlay')?.classList.add('show');
-  }
-
-  function closeFocusHistoryDrawer() {
-    document.getElementById('focusHistoryDrawer')?.classList.remove('open');
-    document.getElementById('focusHistoryOverlay')?.classList.remove('show');
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    // 历史专注记录按钮
-    document.getElementById('focusHistoryBtn')?.addEventListener('click', openFocusHistoryDrawer);
-    // 关闭按钮
-    document.getElementById('closeFocusHistoryBtn')?.addEventListener('click', closeFocusHistoryDrawer);
-    // 点击遮罩关闭
-    document.getElementById('focusHistoryOverlay')?.addEventListener('click', closeFocusHistoryDrawer);
-  });
-
-  // 统计栏目切换
-  document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.stats-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        const tabName = tab.dataset.tab;
-
-        // 切换tab按钮样式
-        document.querySelectorAll('.stats-tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-
-        // 切换内容
-        document.querySelectorAll('.stats-content').forEach(content => content.classList.remove('active'));
-        document.getElementById(`stats${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Content`)?.classList.add('active');
-      });
-    });
-  });
-
-  // 添加日程弹窗
-  document.addEventListener('DOMContentLoaded', () => {
-    const addScheduleBtn = document.getElementById('addScheduleBtn');
-    addScheduleBtn?.addEventListener('click', () => {
-      showAddScheduleDialog();
-    });
-  });
-
-  // 预设日程活动列表
-  const presetActivities = [
-    { name: '晨跑', icon: 'fa-running', color: '#0f9960' },
-    { name: '阅读', icon: 'fa-book', color: '#3498db' },
-    { name: '写作', icon: 'fa-pen', color: '#e74c3c' },
-    { name: '冥想', icon: 'fa-spa', color: '#9b59b6' },
-    { name: '学习', icon: 'fa-graduation-cap', color: '#f39c12' },
-    { name: '锻炼', icon: 'fa-dumbbell', color: '#e67e22' },
-    { name: '休息', icon: 'fa-bed', color: '#95a5a6' },
-    { name: '工作', icon: 'fa-briefcase', color: '#34495e' }
-  ];
-
-  function showAddScheduleDialog() {
-    const currentTime = new Date().toTimeString().slice(0, 5);
-
-    // 生成预设卡片HTML
-    const presetCardsHtml = presetActivities.map((act, index) => `
-      <div class="schedule-preset-card" data-activity="${act.name}" data-icon="${act.icon}" data-color="${act.color}" style="--card-color: ${act.color}">
-        <i class="fas ${act.icon}"></i>
-        <span>${act.name}</span>
-      </div>
-    `).join('');
-
-    const formHtml = `
-      <div class="schedule-dialog-container">
-        <!-- 添加对象选择 -->
-        <div class="schedule-form-group">
-          <label>添加对象</label>
-          <div class="schedule-owner-toggle">
-            <button class="schedule-owner-btn active" data-owner="user" type="button">我的日程</button>
-            <button class="schedule-owner-btn char-btn" data-owner="char" type="button">角色日程</button>
-          </div>
-        </div>
-
-        <!-- 预设活动卡片 -->
-        <div class="schedule-preset-section">
-          <label>选择活动</label>
-          <div class="schedule-preset-grid">
-            ${presetCardsHtml}
-          </div>
-          <button class="schedule-custom-btn" id="showCustomForm">
-            <i class="fas fa-plus"></i> 自定义活动
-          </button>
-        </div>
-
-        <!-- 自定义活动表单（默认隐藏） -->
-        <div class="schedule-custom-form" id="customFormSection" style="display: none;">
-          <div class="schedule-form-row">
-            <div class="schedule-form-group">
-              <label>活动名称</label>
-              <input type="text" id="scheduleActivityInput" placeholder="例如：瑜伽、编程...">
-            </div>
-          </div>
-          <div class="schedule-form-row">
-            <div class="schedule-form-group">
-              <label>备注（可选）</label>
-              <input type="text" id="scheduleNoteInput" placeholder="例如：30分钟后休息">
-            </div>
-          </div>
-        </div>
-
-        <!-- 时间选择 -->
-        <div class="schedule-form-group">
-          <label>时间</label>
-          <input type="time" id="scheduleTimeInput" value="${currentTime}">
-        </div>
-      </div>
-    `;
-
-    showCommonDialog({
-      title: '添加日程',
-      message: '',
-      customBody: formHtml,
-      showCancel: true,
-      confirmText: '添加',
-      cancelText: '取消',
-      onConfirm: () => {
-        const activityInput = document.getElementById('scheduleActivityInput');
-        const activity = activityInput?.value.trim() || '';
-        const note = document.getElementById('scheduleNoteInput')?.value.trim() || '';
-        const time = document.getElementById('scheduleTimeInput').value;
-        const ownerBtn = document.querySelector('.schedule-owner-btn.active');
-        const owner = ownerBtn?.dataset.owner || 'user';
-
-        if (!activity) {
-          showToast('请选择或输入活动');
-          return;
-        }
-
-        // 如果有备注，附加到活动名称
-        const finalActivity = note ? `${activity}（${note}）` : activity;
-        addSchedule(owner, finalActivity, time);
-        renderTodaySchedule();
-        showToast('日程已添加');
-      }
-    });
-
-    // 切换日程对象按钮
-    setTimeout(() => {
-      document.querySelectorAll('.schedule-owner-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('.schedule-owner-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-        });
-      });
-
-      // 预设卡片点击
-      document.querySelectorAll('.schedule-preset-card').forEach(card => {
-        card.addEventListener('click', () => {
-          // 移除其他卡片的选中状态
-          document.querySelectorAll('.schedule-preset-card').forEach(c => c.classList.remove('selected'));
-          // 选中当前卡片
-          card.classList.add('selected');
-          // 填充到输入框
-          const activityInput = document.getElementById('scheduleActivityInput');
-          if (activityInput) {
-            activityInput.value = card.dataset.activity;
-          }
-          // 隐藏自定义表单
-          const customForm = document.getElementById('customFormSection');
-          if (customForm) customForm.style.display = 'none';
-        });
-      });
-
-      // 自定义按钮
-      document.getElementById('showCustomForm')?.addEventListener('click', () => {
-        const customForm = document.getElementById('customFormSection');
-        if (customForm) {
-          customForm.style.display = customForm.style.display === 'none' ? 'block' : 'none';
-        }
-        // 取消预设卡片选中
-        document.querySelectorAll('.schedule-preset-card').forEach(c => c.classList.remove('selected'));
-        // 清空输入框并聚焦
-        const activityInput = document.getElementById('scheduleActivityInput');
-        if (activityInput) {
-          activityInput.value = '';
-          activityInput.focus();
-        }
-      });
-    }, 0);
-  }
-
-  function formatCountdown(totalSeconds) {
-    const s = Math.max(0, Math.floor(totalSeconds));
-    const mm = Math.floor(s / 60).toString().padStart(2, '0');
-    const ss = Math.floor(s % 60).toString().padStart(2, '0');
-    return `${mm}:${ss}`;
-  }
-
-  function computeDownRemaining(timer) {
-    if (!timer.running) return Math.max(0, timer.remainingSec || 0);
-    const elapsed = (Date.now() - (timer.lastStartTs || 0)) / 1000;
-    return Math.max(0, (timer.startRemainingSec || 0) - elapsed);
-  }
-
-  function computeUpElapsed(timer) {
-    if (!timer.running) return Math.max(0, timer.elapsedSec || 0);
-    const elapsed = (Date.now() - (timer.lastStartTs || 0)) / 1000;
-    return Math.max(0, (timer.startElapsedSec || 0) + elapsed);
-  }
-
-  function computeTimerSeconds(timer) {
-    return (timer.mode === 'up') ? computeUpElapsed(timer) : computeDownRemaining(timer);
-  }
-
-  function saveFocusState() {
-    try { localStorage.setItem('focus_state', JSON.stringify(focusState)); } catch(e) {}
-  }
-
-  function loadFocusState() {
-    try {
-      const saved = localStorage.getItem('focus_state');
-      if (!saved) return;
-      const parsed = JSON.parse(saved);
-      if (!parsed || typeof parsed !== 'object') return;
-      focusState = {
-        user: { ...focusState.user, ...(parsed.user || {}) },
-        ai: { ...focusState.ai, ...(parsed.ai || {}) }
-      };
-    } catch(e) {}
-  }
-
-  function normalizeFocusAfterLoad() {
-    focusState.user.mode = focusState.user.mode === 'up' ? 'up' : 'down';
-    focusState.ai.mode = focusState.ai.mode === 'up' ? 'up' : 'down';
-    if (typeof focusState.ai.locked !== 'boolean') focusState.ai.locked = false;
-    // 如果AI专注没有在运行，清除locked状态（防止上次会话异常结束导致按钮被锁死）
-    if (!focusState.ai.running) focusState.ai.locked = false;
-
-    focusState.user.durationSec = Math.max(0, Number(focusState.user.durationSec) || 0);
-    focusState.user.remainingSec = Math.max(0, Number(focusState.user.remainingSec) || 0);
-    focusState.user.elapsedSec = Math.max(0, Number(focusState.user.elapsedSec) || 0);
-    focusState.user.startRemainingSec = Math.max(0, Number(focusState.user.startRemainingSec) || 0);
-    focusState.user.startElapsedSec = Math.max(0, Number(focusState.user.startElapsedSec) || 0);
-    focusState.user.lastStartTs = Number(focusState.user.lastStartTs) || 0;
-
-    focusState.ai.durationSec = Math.max(0, Number(focusState.ai.durationSec) || 0);
-    focusState.ai.remainingSec = Math.max(0, Number(focusState.ai.remainingSec) || 0);
-    focusState.ai.elapsedSec = Math.max(0, Number(focusState.ai.elapsedSec) || 0);
-    focusState.ai.startRemainingSec = Math.max(0, Number(focusState.ai.startRemainingSec) || 0);
-    focusState.ai.startElapsedSec = Math.max(0, Number(focusState.ai.startElapsedSec) || 0);
-    focusState.ai.lastStartTs = Number(focusState.ai.lastStartTs) || 0;
-
-    if (focusState.user.durationSec <= 0) focusState.user.durationSec = 25 * 60;
-    if (focusState.ai.durationSec <= 0) focusState.ai.durationSec = focusState.user.durationSec;
-
-    if (focusState.user.mode === 'up') {
-      const uElapsed = computeUpElapsed(focusState.user);
-      focusState.user.elapsedSec = uElapsed;
-      if (focusState.user.running) {
-        focusState.user.startElapsedSec = uElapsed;
-        focusState.user.lastStartTs = Date.now();
-      } else {
-        focusState.user.lastStartTs = 0;
-      }
-    } else {
-      const uRem = computeDownRemaining(focusState.user);
-      if (uRem <= 0) {
-        focusState.user.remainingSec = 0;
-        focusState.user.running = false;
-        focusState.user.lastStartTs = 0;
-        focusState.user.startRemainingSec = 0;
-      } else if (focusState.user.running) {
-        focusState.user.remainingSec = uRem;
-        focusState.user.startRemainingSec = uRem;
-        focusState.user.lastStartTs = Date.now();
-      }
-    }
-
-    if (!focusState.ai.enabled) {
-      focusState.ai.running = false;
-      focusState.ai.lastStartTs = 0;
-    } else if (focusState.ai.mode === 'up') {
-      const aElapsed = computeUpElapsed(focusState.ai);
-      focusState.ai.elapsedSec = aElapsed;
-      if (focusState.ai.running) {
-        focusState.ai.startElapsedSec = aElapsed;
-        focusState.ai.lastStartTs = Date.now();
-      } else {
-        focusState.ai.lastStartTs = 0;
-      }
-    } else {
-      const aRem = computeDownRemaining(focusState.ai);
-      if (aRem <= 0) {
-        focusState.ai.remainingSec = 0;
-        focusState.ai.running = false;
-        focusState.ai.lastStartTs = 0;
-        focusState.ai.startRemainingSec = 0;
-      } else if (focusState.ai.running) {
-        focusState.ai.remainingSec = aRem;
-        focusState.ai.startRemainingSec = aRem;
-        focusState.ai.lastStartTs = Date.now();
-      }
-    }
-  }
-
-  function syncFocusUI() {
-    if (focusUserTimerDisplay) focusUserTimerDisplay.textContent = formatCountdown(computeTimerSeconds(focusState.user));
-    if (focusUserActivityDisplay) focusUserActivityDisplay.textContent = focusState.user.activity || '专注';
-    if (focusModeToggle) {
-      focusModeToggle.classList.toggle('active', focusState.user.mode === 'up');
-      // 专注进行中（running 或已有进度）时，禁用模式切换
-      const isLocked = !!focusState.user.running;
-      focusModeToggle.style.pointerEvents = isLocked ? 'none' : 'auto';
-      focusModeToggle.style.opacity       = isLocked ? '0.4' : '1';
-      focusModeToggle.title               = isLocked ? '专注中无法切换计时模式' : '';
-    }
-
-    if (focusStartBtn) {
-      const hasProgress = focusState.user.mode === 'up'
-        ? (Number(focusState.user.elapsedSec) > 0)
-        : (Number(focusState.user.remainingSec) > 0 && Number(focusState.user.remainingSec) < Number(focusState.user.durationSec || 0));
-
-      if (focusState.user.running) {
-        // 正在运行：按钮变为「暂停」
-        focusStartBtn.innerHTML = `<i class="fas fa-pause mr-8"></i>暂停`;
-        focusStartBtn.classList.remove('btn-primary');
-        focusStartBtn.classList.add('btn-secondary');
-        focusStartBtn.disabled = false;
-      } else if (hasProgress) {
-        // 有进度但已暂停：「继续」
-        focusStartBtn.innerHTML = `<i class="fas fa-play mr-8"></i>继续`;
-        focusStartBtn.classList.remove('btn-secondary');
-        focusStartBtn.classList.add('btn-primary');
-        focusStartBtn.disabled = false;
-      } else {
-        // 未开始：「开始」
-        focusStartBtn.innerHTML = `<i class="fas fa-play mr-8"></i>开始`;
-        focusStartBtn.classList.remove('btn-secondary');
-        focusStartBtn.classList.add('btn-primary');
-        focusStartBtn.disabled = false;
-      }
-    }
-
-    // 结束专注按钮：只有在开始专注后（有进度）才可交互
-    if (focusResetBtn) {
-      const hasProgress = focusState.user.mode === 'up'
-        ? (Number(focusState.user.elapsedSec) > 0)
-        : (Number(focusState.user.startRemainingSec) > 0 && Number(focusState.user.startRemainingSec) < Number(focusState.user.durationSec || 0));
-      const isRunning = !!focusState.user.running;
-      // 可交互：当正在运行 或 有进度（已暂停）
-      focusResetBtn.disabled = !isRunning && !hasProgress;
-    }
-
-    if (focusAiCard) focusAiCard.style.display = focusState.ai.enabled ? 'block' : 'none';
-    if (inviteToggleMain) {
-        inviteToggleMain.classList.toggle('active', focusState.ai.enabled);
-        const disabled = focusState.ai.enabled && focusState.ai.running || !!focusState.ai.locked;
-        inviteToggleMain.style.pointerEvents = disabled ? 'none' : 'auto';
-        inviteToggleMain.style.opacity = disabled ? '0.5' : '1';
-    }
-    if (editAiFocusBtn) editAiFocusBtn.style.display = (focusState.ai.enabled && !focusState.ai.locked) ? 'inline-flex' : 'none';
-    if (endAiFocusBtn) endAiFocusBtn.style.display = (focusState.ai.enabled && focusState.ai.running) ? 'inline-flex' : 'none';
-    // 专注页面内的结束AI专注按钮
-    const endAiFocusBtn2 = document.getElementById('endAiFocusBtn2');
-    if (endAiFocusBtn2) endAiFocusBtn2.style.display = (focusState.ai.enabled && focusState.ai.running) ? 'flex' : 'none';
-    if (focusAiTimerDisplay) focusAiTimerDisplay.textContent = formatCountdown(computeTimerSeconds(focusState.ai));
-    if (focusAiActivityDisplay) focusAiActivityDisplay.textContent = focusState.ai.activity || '专注';
-
-    // ===== 更新专注动画 =====
-    syncFocusAnim();
-  }
-
-  function ensureFocusTicker() {
-    if (focusTickerId) return;
-    focusTickerId = setInterval(() => {
-        const userRunning = !!focusState.user.running;
-        const aiRunning = !!(focusState.ai.enabled && focusState.ai.running);
-
-        // 共同专注时间追踪：每秒滴答时检查是否双方都在专注
-        if (userRunning && aiRunning) {
-          // 双方都在专注，累计重叠时间
-          statsData.totalOverlapSec++;
-          saveStatsData();
-        }
-
-        // 只要还有一个在运行，就继续滴答
-        if (!userRunning && !aiRunning) {
-            clearInterval(focusTickerId);
-            focusTickerId = null;
-            syncFocusUI();
-            saveFocusState();
-            return;
-        }
-
-      if (focusState.user.running && focusState.user.mode !== 'up') {
-        const uRem = computeDownRemaining(focusState.user);
-        if (uRem <= 0) {
-          // 倒计时归零，自动结束并记录
-          focusState.user.running = false;
-          focusState.user.remainingSec = 0;
-          focusState.user.lastStartTs = 0;
-          focusState.user.startRemainingSec = 0;
-          // 触发结束专注流程
-          const elapsed = focusState.user.durationSec || 0;
-          const activity = focusState.user.activity || '专注';
-          addFocusRecord('user', activity, elapsed, 'down');
-          resetUserOnly();
-          // 显示专注结束弹窗
-          const elapsedMin = Math.round(elapsed / 60);
-          const durationMin = Math.round(focusState.user.durationSec / 60);
-          const timeStr = elapsedMin > 0 ? `${elapsedMin}分钟` : `${durationMin}分钟`;
-          showCommonDialog({
-            title: '⭐专注结束',
-            message: `${activity} · ${timeStr}`,
-            showCancel: false,
-            confirmText: '好的',
-            onConfirm: null
-          });
-        }
-      }
-
-      if (focusState.ai.enabled && focusState.ai.running && focusState.ai.mode !== 'up') {
-        const aRem = computeDownRemaining(focusState.ai);
-        if (aRem <= 0) {
-            // 计算AI专注时长并记录
-            const elapsed = focusState.ai.durationSec || 0;
-            const activity = focusState.ai.activity || '专注';
-            addFocusRecord('char', activity, elapsed, 'down');
-
-            focusState.ai.running = false;
-            focusState.ai.remainingSec = 0;
-            focusState.ai.lastStartTs = 0;
-            focusState.ai.startRemainingSec = 0;
-            // 对方专注结束，发送消息
-            sendFocusEndMessage();
-            // 倒计时归零，自动退出邀请（需用户重新邀请）
-            focusState.ai.enabled = false;
-            focusState.ai.locked = false;
-            saveFocusState();
-            syncFocusUI();
-        }
-      }
-
-      // 上限检查（3小时）
-    function enforceTimeLimit(timer, owner) {
-        const maxSec = 3 * 60 * 60;
-        let elapsed = 0;
-        if (timer.mode === 'up') {
-            elapsed = computeUpElapsed(timer);
-        } else {
-            elapsed = (timer.durationSec || 0) - (timer.running ? computeDownRemaining(timer) : timer.remainingSec);
-        }
-        if (elapsed >= maxSec) {
-            timer.running = false;
-            timer.lastStartTs = 0;
-            if (timer.mode === 'up') {
-                timer.elapsedSec = maxSec;
-                timer.startElapsedSec = maxSec;
-            } else {
-                timer.remainingSec = 0;
-                timer.startRemainingSec = 0;
-            }
-            if (owner === 'ai') {
-                sendFocusEndMessage();
-            }
-            saveFocusState();
-            return true; // 表示已强制结束
-        }
-        return false;
-    }
-
-    // 在 setInterval 回调中调用
-    if (focusState.user.running) enforceTimeLimit(focusState.user, 'user');
-    if (focusState.ai.enabled && focusState.ai.running) enforceTimeLimit(focusState.ai, 'ai');
-
-      syncFocusUI();
-    }, 250);
-  }
-
-  function startAiFocusAuto() {
-    if (focusState.ai.running) return;
-    focusState.ai.enabled = true;
-    focusState.ai.locked = true;
-    focusState.ai.mode = focusState.user.mode;
-    focusState.ai.activity = (focusState.ai.activity || '').trim() || `陪你一起${focusState.user.activity || '专注'}`;
-    if (!focusState.ai.durationSec || focusState.ai.durationSec <= 0) focusState.ai.durationSec = focusState.user.durationSec;
-    // 上限3小时
-    const maxSec = 3 * 60 * 60;
-    if (focusState.ai.durationSec > maxSec) focusState.ai.durationSec = maxSec;
-
-    focusState.ai.running = true;
-    focusState.ai.lastStartTs = Date.now();
-    if (focusState.ai.mode === 'up') {
-      focusState.ai.elapsedSec = 0;
-      focusState.ai.startElapsedSec = 0;
-    } else {
-      focusState.ai.remainingSec = focusState.ai.durationSec;
-      focusState.ai.startRemainingSec = focusState.ai.remainingSec;
-    }
-  }
-
-  function startUserFocus() {
-    if (focusState.user.running) return;
-
-    focusState.user.running = true;
-    focusState.user.lastStartTs = Date.now();
-    if (focusState.user.mode === 'up') {
-        focusState.user.startElapsedSec = Math.max(0, focusState.user.elapsedSec || 0);
-    } else {
-        const rem = computeDownRemaining(focusState.user);
-        if (rem <= 0) focusState.user.remainingSec = focusState.user.durationSec;
-        focusState.user.startRemainingSec = focusState.user.remainingSec;
-    }
-
-    if (focusState.ai.enabled) startAiFocusAuto();
-
-    saveFocusState();
-    syncFocusUI();
-    ensureFocusTicker();
-  }
-
-  function stopUserFocus() {
-    if (!focusState.user.running) return;
-    if (focusState.user.mode === 'up') focusState.user.elapsedSec = computeUpElapsed(focusState.user);
-    else focusState.user.remainingSec = computeDownRemaining(focusState.user);
-    focusState.user.running = false;
-    focusState.user.lastStartTs = 0;
-    focusState.user.startRemainingSec = focusState.user.remainingSec;
-    focusState.user.startElapsedSec = focusState.user.elapsedSec || 0;
-    // 注意：这里不停止对方的计时，对方继续自主运行
-    saveFocusState();
-    syncFocusUI();
-  }
-
-  function endUserFocus() {
-    // 计算专注时长（使用实时计算值，而不是存储值）
-    const elapsed = focusState.user.mode === 'up'
-      ? Math.round(computeUpElapsed(focusState.user))
-      : Math.round(focusState.user.startRemainingSec - computeDownRemaining(focusState.user));
-    const duration = focusState.user.durationSec || 0;
-    const activity = focusState.user.activity || '专注';
-
-    const MINute = 60;
-    const FIVE_MINUTES = 5 * 60;
-
-    // 判断是否需要确认弹窗
-    if (focusState.user.mode === 'up') {
-      // 正计时模式
-      if (elapsed < MINute) {
-        // 小于1分钟：不记录
-        resetUserOnly();
-        showToast('专注时长不足1分钟，不计入记录');
-        return;
-      }
-      if (elapsed < FIVE_MINUTES) {
-        // 大于等于1分钟但小于5分钟：需要确认
-        showCommonDialog({
-          title: '⚠️ 确认结束',
-          message: '此次专注未满五分钟将不会被计入专注统计，是否确认结束？',
-          showCancel: true,
-          confirmText: '确认结束',
-          cancelText: '继续专注',
-          onConfirm: () => {
-            resetUserOnly();
-            showToast('本次专注不计入记录');
-          }
-        });
-        return;
-      }
-      // 大于等于5分钟：正常记录
-    } else {
-      // 倒计时模式：提前结束需要确认
-      const remaining = focusState.user.remainingSec || 0;
-      if (remaining > 0) {
-        showCommonDialog({
-          title: '⚠️ 确认结束',
-          message: '提前结束专注将不会计入专注统计，是否确认结束？',
-          showCancel: true,
-          confirmText: '确认结束',
-          cancelText: '继续专注',
-          onConfirm: () => {
-            resetUserOnly();
-            showToast('本次专注不计入记录');
-          }
-        });
-        return;
-      }
-      // 正常结束：正常记录
-    }
-
-    // 正常结束，记录并显示弹窗
-    const elapsedMin = Math.round(elapsed / 60);
-    const durationMin = Math.round(duration / 60);
-    const timeStr = elapsedMin > 0 ? `${elapsedMin}分钟` : `${durationMin}分钟`;
-    const message = `${activity} · ${timeStr}`;
-
-    // 记录到统计数据
-    addFocusRecord('user', activity, elapsed, focusState.user.mode);
-
-    resetUserOnly();
-    showCommonDialog({
-      title: '⭐专注结束',
-      message: message,
-      showCancel: false,
-      confirmText: '好的',
-      onConfirm: null
-    });
-  }
-
-  function resetUserOnly() {
-    focusState.user.running = false;
-    focusState.user.lastStartTs = 0;
-    if (focusState.user.mode === 'up') {
-        focusState.user.elapsedSec = 0;
-        focusState.user.startElapsedSec = 0;
-    } else {
-        focusState.user.remainingSec = focusState.user.durationSec;
-        focusState.user.startRemainingSec = focusState.user.remainingSec;
-    }
-    // 不碰 AI 的任何状态
-    saveFocusState();
-    syncFocusUI();
-  }
-
-  function endAiFocus() {
-    if (!focusState.ai.enabled) return;
-
-    // 计算AI专注时长并记录
-    const elapsed = Math.round(computeUpElapsed(focusState.ai));
-    const activity = focusState.ai.activity || '专注';
-    // AI专注也记录（和用户专注一样判断条件）
-    if (elapsed >= 5 * 60 || (focusState.ai.mode === 'down' && elapsed > 0)) {
-      addFocusRecord('char', activity, elapsed, focusState.ai.mode);
-    }
-
-    focusState.ai.running = false;
-    focusState.ai.lastStartTs = 0;
-    // 重置计时（无论是否运行，直接归零）
-    if (focusState.ai.mode === 'up') {
-        focusState.ai.elapsedSec = 0;
-        focusState.ai.startElapsedSec = 0;
-    } else {
-        focusState.ai.remainingSec = focusState.ai.durationSec;
-        focusState.ai.startRemainingSec = focusState.ai.remainingSec;
-    }
-    focusState.ai.enabled = false;   // 卡片隐藏
-    focusState.ai.locked = false;    // 解锁，下次可重新设置
-
-    // 添加分割线标识
-    const now = new Date();
-    const timeStr = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
-    messages.push({
-      role: 'assistant',
-      content: `对方专注结束 · ${timeStr}`,
-      timestamp: Date.now(),
-      isReset: true
-    });
-    saveMessagesToStorage();
-    renderMessages();
-
-    saveFocusState();
-    syncFocusUI();
-  }
-
-  function resetUserFocus() {
-    focusState.user.running = false;
-    focusState.user.lastStartTs = 0;
-    if (focusState.user.mode === 'up') {
-        focusState.user.elapsedSec = 0;
-        focusState.user.startElapsedSec = 0;
-    } else {
-        focusState.user.remainingSec = focusState.user.durationSec;
-        focusState.user.startRemainingSec = focusState.user.remainingSec;
-    }
-
-    // 重置对方（停止并恢复初始状态）
-    if (focusState.ai.enabled) {
-        focusState.ai.running = false;
-        focusState.ai.lastStartTs = 0;
-        if (focusState.ai.mode === 'up') {
-            focusState.ai.elapsedSec = 0;
-            focusState.ai.startElapsedSec = 0;
-        } else {
-            focusState.ai.remainingSec = focusState.ai.durationSec;
-            focusState.ai.startRemainingSec = focusState.ai.remainingSec;
-        }
-    }
-    saveFocusState();
-    syncFocusUI();
-  }
-
-  async function generateAiFocusActivity() {
-    // 收集最近20条消息作为聊天上下文
-    const recentMsgs = messages.slice(-20)
-        .filter(m => m.role === 'user' || m.role === 'assistant')
-        .map(m => `[${m.role === 'user' ? '用户' : '角色'}] ${m.content}`)
-        .join('\n');
-
-    const prompt = `你是一个角色扮演AI，请根据以下信息推荐一个专注活动名称和时长（分钟）。
-  近期聊天记录：
-  ${recentMsgs || '无'}
-
-  你的角色设定：
-  - 姓名：${charNameInput.value}
-  - 性格：${charPersonalityInput.value}
-  - 经历：${charBackstoryInput.value}
-  - 当前用户的活动是：${focusState.user.activity}（${focusState.user.durationSec ? Math.round(focusState.user.durationSec/60) + '分钟' : '未设置'}）
-
-  请综合考虑：
-  - 如果近期聊天中提到了具体的活动（如阅读、运动、写作等），优先采用（约50%权重）。
-  - 其次基于角色设定、习惯推荐合适的活动（45%权重）。
-  - 极少数情况下可以模仿用户的活动（5%权重）。
-
-  返回严格JSON格式，不要任何其他文字：
-  {"activity":"活动名称","minutes":数字}
-
-  活动名称应简短（2-4字），分钟数在10-180之间。`;
-
-    const reply = await callAI(prompt, '你是一个专注活动推荐助手，只输出JSON。');
-    try {
-        const json = JSON.parse(reply.trim());
-        if (json.activity && typeof json.minutes === 'number') {
-            return {
-                activity: json.activity,
-                minutes: Math.max(10, Math.min(180, json.minutes))
-            };
-        }
-    } catch(e) {}
-    // 后备
-    return {
-        activity: '陪你专注',
-        minutes: 25
-    };
-  }
-
-  function sendFocusEndMessage() {
-    // 当对方自主完成专注时，添加带时间的分割线标识
-    const now = new Date();
-    const timeStr = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
-    // 添加分割线消息，标记为 reset 类型
-    messages.push({
-      role: 'assistant',
-      content: `对方专注结束 · ${timeStr}`,
-      timestamp: Date.now(),
-      isReset: true
-    });
-    saveMessagesToStorage();
-    renderMessages();
-  }
-
-  function setUserFocusActivity(activity) {
-    focusState.user.activity = (activity || '').trim() || '专注';
-    saveFocusState();
-    syncFocusUI();
-  }
-
-  function setUserFocusMinutes(minutes) {
-    const m = Math.max(1, Math.min(180, Number(minutes) || 25)); // 限制最大180分钟
-    stopUserFocus();
-    focusState.user.durationSec = Math.round(m * 60);
-    if (focusState.user.mode === 'up') {
-      focusState.user.elapsedSec = 0;
-      focusState.user.startElapsedSec = 0;
-    } else {
-      focusState.user.remainingSec = focusState.user.durationSec;
-      focusState.user.startRemainingSec = focusState.user.remainingSec;
-    }
-    saveFocusState();
-    syncFocusUI();
-  }
-
-  function setUserFocusMode(mode) {
-    const next = mode === 'up' ? 'up' : 'down';
-    if (focusState.user.mode === next) return;
-    stopUserFocus();
-    focusState.user.mode = next;
-    resetUserFocus();
-    saveFocusState();
-    syncFocusUI();
-  }
-
-  function openFocusSettingsDialog() {
-    const activitySelectId = 'focusActivitySelectModal';
-    const activityCustomId = 'focusActivityCustomModal';
-    const minutesId = 'focusMinutesModal';
-
-    // 根据正计时/倒计时决定是否显示时间设置
-    const showMinutes = focusState.user.mode !== 'up';
-
-    const body = `
-      <div class="config-group">
-        <label>我的活动</label>
-        <select id="${activitySelectId}">
-          <option value="学习">学习</option>
-          <option value="阅读">阅读</option>
-          <option value="写作">写作</option>
-          <option value="工作">工作</option>
-          <option value="运动">运动</option>
-          <option value="冥想">冥想</option>
-          <option value="自定义">自定义…</option>
-        </select>
-        <input type="text" id="${activityCustomId}" class="hidden" placeholder="输入自定义活动…">
-      </div>
-      ${showMinutes ? `
-      <div class="config-group" id="focusMinutesGroup">
-        <label>我的时间（分钟）</label>
-        <input type="number" id="${minutesId}" min="1" max="180">
-      </div>` : ''}
-      <div class="mt-8 fs-13 text-secondary">对方专注请在主界面"邀请对方一起"中设置。</div>
-    `;
-
-    showCommonDialog({
-        title: '专注设置',
-        customBody: body,
-        confirmText: '保存',
-        onConfirm: () => {
-            const sel = document.getElementById(activitySelectId);
-            const custom = document.getElementById(activityCustomId);
-            const mins = Number(document.getElementById(minutesId)?.value || 25);
-            const activity = (sel?.value === '自定义' ? (custom?.value || '') : (sel?.value || '')).trim();
-
-            setUserFocusActivity(activity || '专注');
-            if (showMinutes) setUserFocusMinutes(mins);
-
-            saveFocusState();
-            syncFocusUI();
-        }
-    });
-
-    setTimeout(() => {
-        const sel = document.getElementById(activitySelectId);
-        const custom = document.getElementById(activityCustomId);
-        const minsEl = document.getElementById(minutesId);
-
-        const presets = ['学习','阅读','写作','工作','运动','冥想'];
-        const currentActivity = (focusState.user.activity || '').trim();
-        const matched = presets.includes(currentActivity);
-        if (sel) sel.value = matched ? currentActivity : '自定义';
-        if (custom) {
-            custom.classList.toggle('hidden', matched);
-            custom.value = matched ? '' : currentActivity;
-        }
-        if (minsEl) minsEl.value = String(Math.max(1, Math.round((focusState.user.durationSec || 1500) / 60)));
-
-        sel?.addEventListener('change', () => {
-            if (!custom) return;
-            const isCustom = sel.value === '自定义';
-            custom.classList.toggle('hidden', !isCustom);
-            if (isCustom) custom.focus();
-        });
-    }, 0);
-  }
-
-  function openAiInviteDialog({ autoGenerate = false, onCancel = null } = {}) {
-    const aiActivityId = 'aiInviteActivityInput';
-    const aiMinutesId = 'aiInviteMinutesInput';
-    const aiSuggestedTimeDisplayId = 'aiInviteTimeDisplay';
-    const aiSuggestBtnId = 'aiInviteSuggestBtn';
-
-    // 正计时模式下不显示时间输入框
-    const showMinutes = focusState.user.mode !== 'up';
-
-    const body = `
-      <div class="config-group">
-        <label>对方活动（可手动修改）</label>
-        <input type="text" id="${aiActivityId}" placeholder="例如：陪你专注 / 看书 / 写作">
-        <button class="btn btn-sm btn-secondary mt-8" id="${aiSuggestBtnId}" type="button"><i class="fas fa-magic"></i> AI 生成</button>
-      </div>
-      ${showMinutes ? `
-      <div class="config-group">
-        <label>对方时间（分钟）</label>
-        <input type="number" id="${aiMinutesId}" min="1" max="180">
-      </div>
-      <div class="mt-8 fs-13 text-secondary" id="${aiSuggestedTimeDisplayId}">对方预计时长：未设置</div>
-      ` : ''}
-    `;
-
-    showCommonDialog({
-      title: '对方专注',
-      customBody: body,
-      confirmText: '确认',
-      onConfirm: () => {
-        const aiActivity = (document.getElementById(aiActivityId)?.value || '').trim() || '陪你专注';
-        const aiMinsRaw = Number(document.getElementById(aiMinutesId)?.value || 25);
-        const aiMins = Math.max(1, Math.min(180, aiMinsRaw || 25));
-
-        focusState.ai.enabled = true;
-        focusState.ai.locked = false;
-        focusState.ai.running = false;
-        focusState.ai.lastStartTs = 0;
-        focusState.ai.mode = focusState.user.mode;
-        focusState.ai.activity = aiActivity;
-        // 正计时模式下时间框不存在，使用当前已存的时长或默认
-        if (showMinutes) {
-          focusState.ai.durationSec = Math.round(aiMins * 60);
-        } else {
-          if (!focusState.ai.durationSec || focusState.ai.durationSec <= 0) {
-            focusState.ai.durationSec = 25 * 60;
-          }
-        }
-        if (focusState.ai.mode === 'up') {
-          focusState.ai.elapsedSec = 0;
-          focusState.ai.startElapsedSec = 0;
-        } else {
-          focusState.ai.remainingSec = focusState.ai.durationSec;
-          focusState.ai.startRemainingSec = focusState.ai.remainingSec;
-        }
-
-        saveFocusState();
-        syncFocusUI();
-      }
-    });
-
-    const closeAndCancel = () => {
-      commonDialogOverlay.classList.remove('show');
-      if (onCancel) onCancel();
-    };
-    dialogCancelBtn.onclick = closeAndCancel;
-    closeCommonDialog.onclick = closeAndCancel;
-    commonDialogOverlay.onclick = (e) => { if (e.target === commonDialogOverlay) closeAndCancel(); };
-
-    setTimeout(() => {
-      const actEl = document.getElementById(aiActivityId);
-      const minsEl = document.getElementById(aiMinutesId);
-      const timeDisplay = document.getElementById(aiSuggestedTimeDisplayId);
-      const suggestBtn = document.getElementById(aiSuggestBtnId);
-
-      if (actEl) actEl.value = (focusState.ai.activity || '').trim();
-      if (minsEl) minsEl.value = String(Math.max(1, Math.round((focusState.ai.durationSec || 1500) / 60)));
-      if (timeDisplay) {
-        const mins = focusState.ai.durationSec ? Math.round(focusState.ai.durationSec / 60) : null;
-        timeDisplay.textContent = mins ? `对方预计时长：${mins} 分钟` : '对方预计时长：未设置';
-      }
-
-      const runSuggest = async () => {
-        if (!actEl) return;
-        if (suggestBtn) suggestBtn.disabled = true;
-        actEl.disabled = true;
-        const oldVal = actEl.value;
-        actEl.value = '生成中…';
-        try {
-          const result = await generateAiFocusActivity();
-          if (result) {
-            actEl.value = result.activity;
-            if (minsEl) minsEl.value = String(result.minutes);
-            if (timeDisplay) timeDisplay.textContent = `对方预计时长：${result.minutes} 分钟`;
-          } else {
-            actEl.value = oldVal || '陪你专注';
-          }
-        } catch (e) {
-          actEl.value = oldVal || '陪你专注';
-          if (minsEl) minsEl.value = '25';
-          if (timeDisplay) timeDisplay.textContent = '对方预计时长：25 分钟';
-        } finally {
-          actEl.disabled = false;
-          if (suggestBtn) suggestBtn.disabled = false;
-        }
-      };
-
-      if (suggestBtn) suggestBtn.addEventListener('click', runSuggest);
-
-      const shouldAuto = autoGenerate || !(focusState.ai.activity || '').trim() || !focusState.ai.durationSec;
-      if (shouldAuto) runSuggest();
-    }, 0);
-  }
-
-  // ---------- 通用弹窗逻辑 ----------
-  function showCommonDialog({ title = '提示', message = '', customBody = '', confirmText = '确定', cancelText = '取消', showCancel = true, onConfirm = null }) {
-    dialogTitle.textContent = title;
-    dialogMessage.textContent = message;
-    dialogMessage.style.display = message ? 'block' : 'none';
-    dialogCustomBody.innerHTML = customBody;
-    dialogConfirmBtn.textContent = confirmText;
-    dialogCancelBtn.textContent = cancelText;
-    dialogCancelBtn.style.display = showCancel ? 'inline-block' : 'none';
-
-    commonDialogOverlay.classList.add('show');
-
-    const close = () => { commonDialogOverlay.classList.remove('show'); };
-
-    dialogConfirmBtn.onclick = () => {
-      if (onConfirm) onConfirm();
-      close();
-    };
-    dialogCancelBtn.onclick = close;
-    closeCommonDialog.onclick = close;
-    commonDialogOverlay.onclick = (e) => { if (e.target === commonDialogOverlay) close(); };
-  }
-
-  // ---------- 数据管理 ----------
-  function getByteSize(str) { return new Blob([str]).size; }
-  function formatSize(bytes) {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024*1024) return (bytes/1024).toFixed(2) + ' KB';
-    return (bytes/(1024*1024)).toFixed(2) + ' MB';
-  }
-  function refreshStorageStats() {
-    try {
-      let totalBytes = 0;
-      const items = [];
-      for (let i=0; i<localStorage.length; i++) {
-        const key = localStorage.key(i);
-        const val = localStorage.getItem(key);
-        const bytes = getByteSize(key)+getByteSize(val);
-        totalBytes += bytes;
-        let displayName = key;
-        if (key.startsWith('chat_roleplay_config')) displayName='API配置';
-        else if (key==='character_data') displayName='人物设定';
-        else if (key==='chat_theme') displayName='主题设置';
-        else if (key==='profile_name'||key==='profile_bio') displayName='个人资料';
-        else if (key==='user_avatar'||key==='user_cover') displayName='图片数据';
-        else if (key==='chat_messages') displayName='聊天记录';
-        items.push({key,displayName,bytes});
-      }
-      const merged = {};
-      items.forEach(item => {
-        if (!merged[item.displayName]) merged[item.displayName] = {displayName:item.displayName, bytes:0, count:0};
-        merged[item.displayName].bytes += item.bytes;
-        merged[item.displayName].count++;
-      });
-      const list = Object.values(merged).sort((a,b)=>b.bytes-a.bytes);
-      const totalEl = document.getElementById('totalStorageSize');
-      const itemsEl = document.getElementById('totalStorageItems');
-      const tbody = document.getElementById('storageDetailsTable');
-      if (totalEl) totalEl.textContent = formatSize(totalBytes);
-      if (itemsEl) itemsEl.textContent = localStorage.length;
-      if (tbody) {
-        tbody.innerHTML = '';
-        list.forEach(item => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${item.displayName} ${item.count>1?'('+item.count+'项)':''}</td><td class="text-right">${formatSize(item.bytes)}</td>`;
-          tbody.appendChild(tr);
-        });
-      }
-    } catch(e) {}
-  }
-
-  function exportAllData() {
-    const obj = {};
-    for (let i=0; i<localStorage.length; i++) obj[localStorage.key(i)] = localStorage.getItem(localStorage.key(i));
-    const blob = new Blob([JSON.stringify(obj,null,2)], {type:'application/json'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `acorner_backup_${new Date().toISOString().slice(0,10)}.json`;
-    a.click();
-  }
-
-  function importDataFromFile(file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const data = JSON.parse(e.target.result);
-        showCommonDialog({
-          title: '导入数据',
-          message: '导入将覆盖当前所有数据，确定继续吗？',
-          confirmText: '确定导入',
-          onConfirm: () => {
-            localStorage.clear();
-            Object.entries(data).forEach(([k,v])=>localStorage.setItem(k,v));
-            alert('导入成功，页面将刷新。');
-            location.reload();
-          }
-        });
-      } catch(err) { alert('导入失败：'+err.message); }
-    };
-    reader.readAsText(file);
-  }
-
-  // ---------- Supabase 云端备份 ----------
-  let supabaseClient = null;
-  let supabaseConnected = false;
-
-  function getSupabaseConfig() {
-    return {
-      url: localStorage.getItem('supabase_url') || '',
-      key: localStorage.getItem('supabase_key') || '',
-      lastBackup: localStorage.getItem('supabase_last_backup') || ''
-    };
-  }
-
-  function saveSupabaseConfig(url, key) {
-    if (url) localStorage.setItem('supabase_url', url.trim());
-    if (key) localStorage.setItem('supabase_key', key.trim());
-  }
-
-  function removeSupabaseConfig() {
-    localStorage.removeItem('supabase_url');
-    localStorage.removeItem('supabase_key');
-    localStorage.removeItem('supabase_last_backup');
-  }
-
-  function updateCloudUI(connected, lastBackup) {
-    const connectBtn = document.getElementById('cloudConnectBtn');
-    const disconnectBtn = document.getElementById('cloudDisconnectBtn');
-    const uploadBtn = document.getElementById('cloudUploadBtn');
-    const downloadBtn = document.getElementById('cloudDownloadBtn');
-    const refreshBtn = document.getElementById('cloudRefreshBtn');
-    const statusText = document.getElementById('cloudStatusText');
-    const lastBackupText = document.getElementById('cloudLastBackupText');
-
-    if (connected) {
-      if (connectBtn) connectBtn.style.display = 'none';
-      if (disconnectBtn) disconnectBtn.style.display = '';
-      if (uploadBtn) uploadBtn.style.display = '';
-      if (downloadBtn) downloadBtn.style.display = '';
-      if (refreshBtn) refreshBtn.style.display = '';
-      if (statusText) statusText.innerHTML = '<i class="fas fa-circle" style="color:#0f9960;"></i> 已连接';
-    } else {
-      if (connectBtn) connectBtn.style.display = '';
-      if (disconnectBtn) disconnectBtn.style.display = 'none';
-      if (uploadBtn) uploadBtn.style.display = 'none';
-      if (downloadBtn) downloadBtn.style.display = 'none';
-      if (refreshBtn) refreshBtn.style.display = 'none';
-      if (statusText) statusText.innerHTML = '<i class="fas fa-circle" style="color:#888;"></i> 未连接';
-    }
-
-    if (lastBackupText) {
-      lastBackupText.textContent = lastBackup ? `上次备份：${new Date(lastBackup).toLocaleString('zh-CN')}` : '上次备份：暂无记录';
-    }
-  }
-
-  async function connectSupabase() {
-    const urlInput = document.getElementById('supabaseUrlInput');
-    const keyInput = document.getElementById('supabaseKeyInput');
-    const url = urlInput?.value.trim() || '';
-    const key = keyInput?.value.trim() || '';
-
-    if (!url || !key) {
-      showToast('请填写 Supabase URL 和 Anon Key');
-      return;
-    }
-
-    try {
-      // 测试连接：直接查询 backups 表验证权限是否正常
-      const response = await fetch(`${url}/rest/v1/backups?select=id&limit=1`, {
-        headers: {
-          'apikey': key,
-          'Authorization': `Bearer ${key}`
-        }
-      });
-
-      if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`连接失败 (${response.status}): ${errText.slice(0, 100)}`);
-      }
-
-      saveSupabaseConfig(url, key);
-      supabaseConnected = true;
-      updateCloudUI(true, localStorage.getItem('supabase_last_backup'));
-      showToast('Supabase 连接成功');
-    } catch (e) {
-      let msg = e.message;
-      if (msg === '连接失败 (403)') {
-        msg = '连接失败 (403)：可能是 RLS 权限未正确设置，请在 SQL Editor 重新执行建表 SQL';
-      }
-      showToast(msg);
-    }
-  }
-
-  function disconnectSupabase() {
-    supabaseClient = null;
-    supabaseConnected = false;
-    removeSupabaseConfig();
-    updateCloudUI(false, '');
-    showToast('已断开 Supabase 连接');
-  }
-
-  async function uploadBackup() {
-    const config = getSupabaseConfig();
-    if (!config.url || !config.key) {
-      showToast('请先连接 Supabase');
-      return;
-    }
-
-    try {
-      // 收集所有本地数据
-      const backupData = {};
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        backupData[key] = localStorage.getItem(key);
-      }
-
-      const deviceId = btoa(config.url + config.key).replace(/[^a-zA-Z0-9]/g, '').slice(0, 50);
-      const now = new Date().toISOString();
-
-      // 先检查是否已有备份
-      const checkResp = await fetch(`${config.url}/rest/v1/backups?device_id=eq.${deviceId}`, {
-        headers: {
-          'apikey': config.key,
-          'Authorization': `Bearer ${config.key}`
-        }
-      });
-
-      const existing = await checkResp.json();
-
-      if (existing && existing.length > 0) {
-        // 更新现有备份
-        await fetch(`${config.url}/rest/v1/backups?device_id=eq.${deviceId}`, {
-          method: 'PATCH',
-          headers: {
-            'apikey': config.key,
-            'Authorization': `Bearer ${config.key}`,
-            'Content-Type': 'application/json',
-            'Prefer': 'return=minimal'
-          },
-          body: JSON.stringify({
-            backup_data: JSON.stringify(backupData),
-            updated_at: now
-          })
-        });
-      } else {
-        // 创建新备份
-        await fetch(`${config.url}/rest/v1/backups`, {
-          method: 'POST',
-          headers: {
-            'apikey': config.key,
-            'Authorization': `Bearer ${config.key}`,
-            'Content-Type': 'application/json',
-            'Prefer': 'return=minimal'
-          },
-          body: JSON.stringify({
-            device_id: deviceId,
-            backup_data: JSON.stringify(backupData),
-            created_at: now,
-            updated_at: now
-          })
-        });
-      }
-
-      localStorage.setItem('supabase_last_backup', now);
-      updateCloudUI(true, now);
-      showToast('备份上传成功');
-    } catch (e) {
-      showToast('上传失败：' + e.message);
-    }
-  }
-
-  async function downloadBackup() {
-    const config = getSupabaseConfig();
-    if (!config.url || !config.key) {
-      showToast('请先连接 Supabase');
-      return;
-    }
-
-    try {
-      const deviceId = btoa(config.url + config.key).replace(/[^a-zA-Z0-9]/g, '').slice(0, 50);
-
-      const response = await fetch(`${config.url}/rest/v1/backups?device_id=eq.${deviceId}`, {
-        headers: {
-          'apikey': config.key,
-          'Authorization': `Bearer ${config.key}`
-        }
-      });
-
-      const backups = await response.json();
-
-      if (!backups || backups.length === 0) {
-        showToast('没有找到云端备份');
-        return;
-      }
-
-      showCommonDialog({
-        title: '恢复备份',
-        message: '将从云端下载备份并覆盖本地数据，确定继续吗？',
-        confirmText: '确定恢复',
-        onConfirm: () => {
-          const backupData = JSON.parse(backups[0].backup_data);
-          localStorage.clear();
-          Object.entries(backupData).forEach(([k, v]) => localStorage.setItem(k, v));
-          showToast('恢复成功，页面将刷新');
-          setTimeout(() => location.reload(), 800);
-        }
-      });
-    } catch (e) {
-      showToast('下载失败：' + e.message);
-    }
-  }
-
-  async function refreshCloudStatus() {
-    const config = getSupabaseConfig();
-    if (!config.url || !config.key) {
-      showToast('请先连接 Supabase');
-      return;
-    }
-
-    try {
-      const response = await fetch(`${config.url}/rest/v1/`, {
-        headers: {
-          'apikey': config.key,
-          'Authorization': `Bearer ${config.key}`
-        }
-      });
-
-      if (response.ok) {
-        supabaseConnected = true;
-        updateCloudUI(true, config.lastBackup);
-        showToast('云端状态正常');
-      } else {
-        throw new Error('连接异常');
-      }
-    } catch (e) {
-      supabaseConnected = false;
-      updateCloudUI(false, '');
-      showToast('云端连接异常：' + e.message);
-    }
-  }
-
-  function initCloudBackup() {
-    const config = getSupabaseConfig();
-    const urlInput = document.getElementById('supabaseUrlInput');
-    const keyInput = document.getElementById('supabaseKeyInput');
-
-    if (urlInput && config.url) urlInput.value = config.url;
-    if (keyInput && config.key) keyInput.value = config.key;
-
-    if (config.url && config.key) {
-      // 尝试自动连接
-      connectSupabase();
-    } else {
-      updateCloudUI(false, config.lastBackup);
-    }
-  }
-
-  // ---------- 分模块导入导出 ----------
-  function downloadJSON(filename, obj) {
-    const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(a.href);
-  }
-
-  function readJSONFile(file, callback) {
-    const reader = new FileReader();
-    reader.onload = e => {
-      try { callback(JSON.parse(e.target.result)); }
-      catch(err) { showToast('文件解析失败：' + err.message); }
-    };
-    reader.readAsText(file);
-  }
-
-  // 聊天数据 + 控制中心配置
-  function exportChatData() {
-    const obj = {
-      chat_messages: localStorage.getItem('chat_messages'),
-      chat_preferences: localStorage.getItem('chat_preferences'),
-      chat_roleplay_config_v2: localStorage.getItem('chat_roleplay_config_v2'),
-      proactive_msg_prefs: localStorage.getItem('proactive_msg_prefs'),
-      notification_prefs: localStorage.getItem('notification_prefs'),
-      learned_traits: localStorage.getItem('learned_traits'),
-    };
-    downloadJSON(`corner_chat_${new Date().toISOString().slice(0,10)}.json`, obj);
-  }
-
-  function importChatData(file) {
-    readJSONFile(file, data => {
-      showCommonDialog({
-        title: '导入聊天数据',
-        message: '将覆盖当前聊天记录和控制中心配置，确定继续？',
-        confirmText: '确定导入',
-        onConfirm: () => {
-          const keys = ['chat_messages','chat_preferences','chat_roleplay_config_v2','proactive_msg_prefs','notification_prefs','learned_traits'];
-          keys.forEach(k => { if (data[k] != null) localStorage.setItem(k, data[k]); });
-          showToast('导入成功，页面即将刷新');
-          setTimeout(() => location.reload(), 800);
-        }
-      });
-    });
-  }
-
-  // 人物设定
-  function exportCharacterData() {
-    const obj = {
-      character_data: localStorage.getItem('character_data'),
-    };
-    downloadJSON(`corner_character_${new Date().toISOString().slice(0,10)}.json`, obj);
-  }
-
-  function importCharacterData(file) {
-    readJSONFile(file, data => {
-      showCommonDialog({
-        title: '导入人物设定',
-        message: '将覆盖当前人物设定，确定继续？',
-        confirmText: '确定导入',
-        onConfirm: () => {
-          if (data.character_data != null) localStorage.setItem('character_data', data.character_data);
-          showToast('导入成功，页面即将刷新');
-          setTimeout(() => location.reload(), 800);
-        }
-      });
-    });
-  }
-
-  // 用户个人资料
-  function exportProfileData() {
-    const obj = {
-      profile_name: localStorage.getItem('profile_name'),
-      profile_bio: localStorage.getItem('profile_bio'),
-      profile_cid: localStorage.getItem('profile_cid'),
-      profile_region: localStorage.getItem('profile_region'),
-      profile_self_intro: localStorage.getItem('profile_self_intro'),
-      user_avatar: localStorage.getItem('user_avatar'),
-      user_cover: localStorage.getItem('user_cover'),
-    };
-    downloadJSON(`corner_profile_${new Date().toISOString().slice(0,10)}.json`, obj);
-  }
-
-  function importProfileData(file) {
-    readJSONFile(file, data => {
-      showCommonDialog({
-        title: '导入个人资料',
-        message: '将覆盖当前个人资料，确定继续？',
-        confirmText: '确定导入',
-        onConfirm: () => {
-          ['profile_name','profile_bio','profile_cid','profile_region','profile_self_intro','user_avatar','user_cover'].forEach(k => {
-            if (data[k] != null) localStorage.setItem(k, data[k]);
-          });
-          showToast('导入成功，页面即将刷新');
-          setTimeout(() => location.reload(), 800);
-        }
-      });
-    });
-  }
-
-  // 统计数据
-  function exportStatsData() {
-    const obj = { stats_data: localStorage.getItem('stats_data') };
-    downloadJSON(`corner_stats_${new Date().toISOString().slice(0,10)}.json`, obj);
-  }
-
-  function importStatsData(file) {
-    readJSONFile(file, data => {
-      showCommonDialog({
-        title: '导入统计数据',
-        message: '将覆盖当前统计数据，确定继续？',
-        confirmText: '确定导入',
-        onConfirm: () => {
-          if (data.stats_data != null) localStorage.setItem('stats_data', data.stats_data);
-          showToast('导入成功，页面即将刷新');
-          setTimeout(() => location.reload(), 800);
-        }
-      });
-    });
-  }
-
-  // 设置界面数据（主题、API配置）
-  function exportSettingsData() {
-    const obj = {
-      chat_theme: localStorage.getItem('chat_theme'),
-      chat_roleplay_config_v2: localStorage.getItem('chat_roleplay_config_v2'),
-    };
-    downloadJSON(`corner_settings_${new Date().toISOString().slice(0,10)}.json`, obj);
-  }
-
-  function importSettingsData(file) {
-    readJSONFile(file, data => {
-      showCommonDialog({
-        title: '导入设置',
-        message: '将覆盖当前设置，确定继续？',
-        confirmText: '确定导入',
-        onConfirm: () => {
-          ['chat_theme','chat_roleplay_config_v2'].forEach(k => {
-            if (data[k] != null) localStorage.setItem(k, data[k]);
-          });
-          showToast('导入成功，页面即将刷新');
-          setTimeout(() => location.reload(), 800);
-        }
-      });
-    });
-  }
-
-  // ============================================================
-  // =================== 朋友圈核心功能 =========================
-  // ============================================================
-
-  // ---------- 加载朋友圈数据 ----------
-  function loadMomentsPosts() {
-    try {
-      const saved = localStorage.getItem('moments_posts');
-      if (saved) {
-        let parsed = JSON.parse(saved);
-        // 过滤掉旧的示例数据
-        parsed = parsed.filter(p => p.id !== 'sample_1' && p.id !== 'sample_2');
-        momentsPosts = parsed;
-      } else {
-        momentsPosts = [];
-      }
-    } catch(e) {
-      momentsPosts = [];
-    }
-  }
-
-  // ---------- 朋友圈角色设置 ----------
-  function loadMomentsAiSettings() {
-    try {
-      const saved = localStorage.getItem('moments_ai_settings');
-      if (saved) {
-        momentsAiSettings = { ...momentsAiSettings, ...JSON.parse(saved) };
-      }
-    } catch(e) {}
-
-    // 填充表单
-    const likeToggle = document.getElementById('momentsAiLikeToggle');
-    const commentToggle = document.getElementById('momentsAiCommentToggle');
-    const likeProb = document.getElementById('momentsAiLikeProb');
-    const commentProb = document.getElementById('momentsAiCommentProb');
-    const replyProb = document.getElementById('momentsAiReplyProb');
-
-    if (likeToggle) likeToggle.classList.toggle('active', momentsAiSettings.autoLikeEnabled);
-    if (commentToggle) commentToggle.classList.toggle('active', momentsAiSettings.autoCommentEnabled);
-
-    // 辅助：更新滑块渐变背景 + 数值显示
-    function syncSlider(slider, valId, value) {
-      if (!slider) return;
-      slider.value = value;
-      const el = document.getElementById(valId);
-      if (el) el.textContent = value + '%';
-      slider.style.background = `linear-gradient(to right,var(--accent) ${value}%,var(--border-strong) ${value}%)`;
-    }
-
-    syncSlider(likeProb,    'momentsAiLikeProbVal',    momentsAiSettings.autoLikeProb);
-    syncSlider(commentProb, 'momentsAiCommentProbVal', momentsAiSettings.autoCommentProb);
-    syncSlider(replyProb,   'momentsAiReplyProbVal',   momentsAiSettings.autoReplyProb);
-  }
-
-  function updateSliderValue(id, value) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = value + '%';
-  }
-
-  function saveMomentsAiSettings() {
-    const likeToggle = document.getElementById('momentsAiLikeToggle');
-    const commentToggle = document.getElementById('momentsAiCommentToggle');
-    const likeProb = document.getElementById('momentsAiLikeProb');
-    const commentProb = document.getElementById('momentsAiCommentProb');
-    const replyProb = document.getElementById('momentsAiReplyProb');
-
-    momentsAiSettings.autoLikeEnabled = likeToggle?.classList.contains('active') || false;
-    momentsAiSettings.autoCommentEnabled = commentToggle?.classList.contains('active') || false;
-    momentsAiSettings.autoLikeProb = parseInt(likeProb?.value) || 30;
-    momentsAiSettings.autoCommentProb = parseInt(commentProb?.value) || 20;
-    momentsAiSettings.autoReplyProb = parseInt(replyProb?.value) || 40;
-
-    try {
-      localStorage.setItem('moments_ai_settings', JSON.stringify(momentsAiSettings));
-    } catch(e) {}
-
-    closeMomentsSettingsModalFn();
-    showToast('角色行为设置已保存');
-  }
-
-  function openMomentsSettingsModal() {
-    loadMomentsAiSettings();
-    momentsSettingsModalOverlay?.classList.add('show');
-    // 绑定 apple-toggle 点击
-    ['momentsAiLikeToggle','momentsAiCommentToggle'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el && !el.dataset.toggleBound) {
-        el.addEventListener('click', () => el.classList.toggle('active'));
-        el.dataset.toggleBound = '1';
-      }
-    });
-  }
-
-  function closeMomentsSettingsModalFn() {
-    momentsSettingsModalOverlay?.classList.remove('show');
-  }
-
-  // 生成示例朋友圈数据
-  function generateSampleMomentsPosts() {
-    // 不生成示例数据，返回空数组
-    return [];
-  }
-
-  // 保存朋友圈数据
-  function saveMomentsPosts() {
-    try {
-      localStorage.setItem('moments_posts', JSON.stringify(momentsPosts));
-    } catch(e) {
-      console.error('保存朋友圈数据失败:', e);
-    }
-  }
-
-  // ---------- 渲染朋友圈动态 ----------
-  function renderMomentsFeed() {
-    if (!momentsFeed) return;
-    loadMomentsPosts();
-
-    // 根据 tab 过滤
-    let filteredPosts = momentsPosts;
-    if (currentMomentsTab === 'user') {
-      filteredPosts = momentsPosts.filter(p => p.authorType === 'user');
-    } else if (currentMomentsTab === 'char') {
-      filteredPosts = momentsPosts.filter(p => p.authorType === 'char');
-    }
-
-    // 根据筛选条件过滤
-    if (momentsFilter === 'user') {
-      filteredPosts = filteredPosts.filter(p => p.authorType === 'user');
-    } else if (momentsFilter === 'char') {
-      filteredPosts = filteredPosts.filter(p => p.authorType === 'char');
-    } else if (momentsFilter === 'favorites') {
-      filteredPosts = filteredPosts.filter(p => p.isFavorited);
-    }
-
-    // 搜索过滤
-    if (momentsSearch) {
-      filteredPosts = filteredPosts.filter(p => 
-        p.content.toLowerCase().includes(momentsSearch) || 
-        p.authorName.toLowerCase().includes(momentsSearch)
-      );
-    }
-
-    // 按时间排序（最新或最老）
-    filteredPosts.sort((a, b) => momentsSort === 'oldest' 
-      ? a.timestamp - b.timestamp 
-      : b.timestamp - a.timestamp);
-
-    if (filteredPosts.length === 0) {
-      momentsFeed.innerHTML = `
-        <div class="moments-empty">
-          <i class="fas fa-inbox"></i>
-          <p>${momentsFilter === 'favorites' ? '还没有收藏的动态' : momentsSearch ? '没有找到相关动态' : '还没有动态，快来发布第一条吧'}</p>
-        </div>
-      `;
-      return;
-    }
-
-    const html = filteredPosts.map(post => renderMomentsPost(post)).join('');
-    momentsFeed.innerHTML = html;
-
-    // 绑定事件
-    bindMomentsPostEvents();
-  }
-
-  // 渲染单个帖子
-  function renderMomentsPost(post) {
-    const userProfile = loadProfile();
-    const charData = loadCharacterFromStorage();
-    const isOwnPost = (post.authorType === 'user' || post.authorType === 'char');
-    const hasLiked = post.likes.some(l => l.userId === getCurrentUserId(post.authorType));
-    const timeAgo = getTimeAgo(post.timestamp);
-    const mediaHtml = renderMomentsMedia(post.media);
-
-    // 获取当前账号的点赞信息
-    const currentUserId = post.authorType === 'user' ? 'user' : 'char_1';
-    const currentUserName = post.authorType === 'user' ? (userProfile.name || '我') : (charData.name || 'AI');
-
-    // 头像：优先使用帖子作者头像，否则使用用户/角色头像，否则显示默认图标
-    const authorAvatar = post.authorAvatar || (post.authorType === 'user' ? userProfile.avatar : charData.avatar);
-    const avatarIcon = post.authorType === 'user' ? 'fa-user' : 'fa-user-astronaut';
-    const avatarHtml = authorAvatar 
-      ? `<img src="${authorAvatar}" alt="">` 
-      : `<i class="fas ${avatarIcon}"></i>`;
-
-    // 生成点赞列表显示
-    let likesDisplay = '';
-    if (post.likes.length > 0) {
-      const names = post.likes.map(l => l.userName).join('、');
-      likesDisplay = `<div class="mp-likes"><i class="fas fa-heart"></i> ${names}</div>`;
-    }
-
-    // 生成评论预览
-    let commentsPreview = '';
-    if (post.comments.length > 0) {
-      const previewComments = post.comments.slice(0, 2);
-      commentsPreview = `
-        <div class="mp-comments-preview">
-          ${previewComments.map(c => `
-            <div class="mcp-item">
-              <span class="mcp-author">${c.userName}:</span>
-              <span class="mcp-content">${escapeHtml(c.content)}</span>
-            </div>
-          `).join('')}
-          ${post.comments.length > 2 ? `<div class="mcp-more">共 ${post.comments.length} 条评论</div>` : ''}
-        </div>
-      `;
-    }
-
-    return `
-      <div class="moments-post" data-post-id="${post.id}" onclick="openPostDetail('${post.id}')">
-        <div class="mp-author">
-          <div class="mp-avatar" onclick="openMomentsAuthorProfile(event,'${post.authorType}')">
-            ${avatarHtml}
-          </div>
-          <div class="mp-author-info">
-            <span class="mp-author-name">${escapeHtml(post.authorName || currentUserName)}</span>
-            <span class="mp-time">${timeAgo}</span>
-          </div>
-          ${isOwnPost ? `
-            <div class="mp-actions-dropdown" onclick="event.stopPropagation()">
-              <button class="mp-action-btn" data-action="more"><i class="fas fa-ellipsis-h"></i></button>
-              <div class="mp-dropdown-menu" style="display:none;">
-                <button class="mp-dropdown-item" data-action="edit"><i class="fas fa-edit"></i> 编辑</button>
-                <button class="mp-dropdown-item" data-action="favorite"><i class="${post.isFavorited ? 'fas' : 'far'} fa-star"></i> ${post.isFavorited ? '取消收藏' : '收藏'}</button>
-                <button class="mp-dropdown-item danger" data-action="delete"><i class="fas fa-trash"></i> 删除</button>
-              </div>
-            </div>
-          ` : `
-            <div class="mp-actions-dropdown" onclick="event.stopPropagation()">
-              <button class="mp-action-btn" data-action="more"><i class="fas fa-ellipsis-h"></i></button>
-              <div class="mp-dropdown-menu" style="display:none;">
-                <button class="mp-dropdown-item" data-action="favorite"><i class="${post.isFavorited ? 'fas' : 'far'} fa-star"></i> ${post.isFavorited ? '取消收藏' : '收藏'}</button>
-              </div>
-            </div>
-          `}
-        </div>
-        <div class="mp-content">${escapeHtml(post.content)}</div>
-        ${mediaHtml}
-        ${likesDisplay}
-        ${commentsPreview}
-        <div class="mp-actions">
-          <button class="mp-action-like ${hasLiked ? 'liked' : ''}" data-action="like" onclick="event.stopPropagation()">
-            <i class="${hasLiked ? 'fas' : 'far'} fa-heart"></i>
-            <span>${post.likes.length || ''}</span>
-          </button>
-          <button class="mp-action-comment" data-action="comment" onclick="event.stopPropagation()">
-            <i class="far fa-comment"></i>
-            <span>${post.comments.length || ''}</span>
-          </button>
-          <button class="mp-action-repost" data-action="repost" onclick="event.stopPropagation()">
-            <i class="fas fa-share"></i>
-          </button>
-        </div>
-      </div>
-    `;
-  }
-  function renderMomentsMedia(media) {
-    if (!media || media.length === 0) return '';
-
-    const images = media.filter(m => m.type === 'image');
-    const videos = media.filter(m => m.type === 'video');
-
-    let html = '<div class="mp-media">';
-
-    // 图片网格
-    if (images.length > 0) {
-      if (images.length === 1) {
-        html += `<div class="mp-media-single"><img src="${images[0].url}" alt=""></div>`;
-      } else {
-        html += `<div class="mp-media-grid cols-${Math.min(images.length, 3)}">`;
-        images.forEach(img => {
-          html += `<div class="mp-media-item"><img src="${img.url}" alt="" onclick="previewMomentsImage('${img.url}')"></div>`;
-        });
-        html += '</div>';
-      }
-    }
-
-    // 视频
-    if (videos.length > 0) {
-      videos.forEach(vid => {
-        html += `<div class="mp-media-video"><video src="${vid.url}" controls></video></div>`;
-      });
-    }
-
-    html += '</div>';
-    return html;
-  }
-
-  // 绑定帖子事件
-  function bindMomentsPostEvents() {
-    // 点赞
-    document.querySelectorAll('.mp-action-like').forEach(btn => {
-      btn.addEventListener('click', handleMomentsLike);
-    });
-
-    // 评论
-    document.querySelectorAll('.mp-action-comment').forEach(btn => {
-      btn.addEventListener('click', handleMomentsComment);
-    });
-
-    // 转发
-    document.querySelectorAll('.mp-action-repost').forEach(btn => {
-      btn.addEventListener('click', handleMomentsRepost);
-    });
-
-    // 更多按钮（下拉菜单）
-    document.querySelectorAll('.mp-action-btn[data-action="more"]').forEach(btn => {
-      btn.addEventListener('click', e => {
-        e.stopPropagation();
-        const menu = btn.nextElementSibling;
-        const isVisible = menu.style.display === 'block';
-        // 关闭所有其他菜单
-        document.querySelectorAll('.mp-dropdown-menu').forEach(m => m.style.display = 'none');
-        menu.style.display = isVisible ? 'none' : 'block';
-      });
-    });
-
-    // 编辑/删除
-    document.querySelectorAll('.mp-dropdown-item').forEach(item => {
-      item.addEventListener('click', handleMomentsEditDelete);
-    });
-
-    // 点击其他地方关闭菜单
-    document.addEventListener('click', () => {
-      document.querySelectorAll('.mp-dropdown-menu').forEach(m => m.style.display = 'none');
-    });
-  }
-
-  // 获取当前用户ID
-  function getCurrentUserId(authorType) {
-    return authorType === 'user' ? 'user' : 'char_1';
-  }
-
-  // 处理点赞
-  function handleMomentsLike(e) {
-    const btn = e.currentTarget;
-    const postEl = btn.closest('.moments-post');
-    const postId = postEl.dataset.postId;
-    const post = momentsPosts.find(p => p.id === postId);
-    if (!post) return;
-
-    const userId = 'user';  // 当前默认用户点赞
-    const userProfile = loadProfile();
-    const userName = userProfile.name || '我';
-
-    const existingLikeIndex = post.likes.findIndex(l => l.userId === userId);
-
-    if (existingLikeIndex >= 0) {
-      post.likes.splice(existingLikeIndex, 1);
-      btn.classList.remove('liked');
-      btn.querySelector('i').className = 'far fa-heart';
-    } else {
-      post.likes.push({ userId, userName, type: 'user' });
-      btn.classList.add('liked');
-      btn.querySelector('i').className = 'fas fa-heart';
-    }
-
-    const count = post.likes.length;
-    btn.querySelector('span').textContent = count || '';
-    btn.querySelector('span').style.display = count ? 'inline' : 'none';
-
-    saveMomentsPosts();
-
-    // 更新点赞显示
-    const postHtml = postEl.closest('.moments-post');
-    const likesDisplay = postHtml.querySelector('.mp-likes');
-    if (post.likes.length > 0) {
-      const names = post.likes.map(l => l.userName).join('、');
-      if (likesDisplay) {
-        likesDisplay.innerHTML = `<i class="fas fa-heart"></i> ${names}`;
-      } else {
-        const contentEl = postHtml.querySelector('.mp-content');
-        contentEl.insertAdjacentHTML('afterend', `<div class="mp-likes"><i class="fas fa-heart"></i> ${names}</div>`);
-      }
-    } else if (likesDisplay) {
-      likesDisplay.remove();
-    }
-  }
-
-  // 处理评论（进入推文详情页）
-  function handleMomentsComment(e) {
-    const postEl = e.currentTarget.closest('.moments-post');
-    const postId = postEl.dataset.postId;
-    openPostDetail(postId, 'momentsFeed');
-  }
-
-  // 处理转发
-  function handleMomentsRepost(e) {
-    const postEl = e.currentTarget.closest('.moments-post');
-    const postId = postEl.dataset.postId;
-    const post = momentsPosts.find(p => p.id === postId);
-    if (!post) return;
-
-    showCommonDialog({
-      title: '转发',
-      message: `确定要转发 ${post.authorName} 的这条动态吗？`,
-      onConfirm: () => {
-        post.reposts = (post.reposts || 0) + 1;
-        saveMomentsPosts();
-        renderMomentsFeed();
-        showToast('转发成功');
-      }
-    });
-  }
-
-  // 处理编辑/删除/收藏
-  function handleMomentsEditDelete(e) {
-    const action = e.currentTarget.dataset.action;
-    const postEl = e.currentTarget.closest('.moments-post');
-    const postId = postEl.dataset.postId;
-    const post = momentsPosts.find(p => p.id === postId);
-    if (!post) return;
-
-    document.querySelectorAll('.mp-dropdown-menu').forEach(m => m.style.display = 'none');
-
-    if (action === 'delete') {
-      showCommonDialog({
-        title: '删除动态',
-        message: '确定要删除这条动态吗？',
-        onConfirm: () => {
-          momentsPosts = momentsPosts.filter(p => p.id !== postId);
-          saveMomentsPosts();
-          renderMomentsFeed();
-          showToast('已删除');
-        }
-      });
-    } else if (action === 'edit') {
-      openMomentsEditModal(post);
-    } else if (action === 'favorite') {
-      post.isFavorited = !post.isFavorited;
-      saveMomentsPosts();
-      renderMomentsFeed();
-      showToast(post.isFavorited ? '已收藏' : '已取消收藏');
-    }
-  }
-
-  // 打开评论区弹窗
-  function openMomentsCommentModal(postId) {
-    currentCommentPostId = postId;
-    const post = momentsPosts.find(p => p.id === postId);
-    if (!post) return;
-
-    // 帖子预览
-    momentsCommentPostPreview.innerHTML = `
-      <div class="mcp-preview-author">
-        <span class="mcp-preview-name">${escapeHtml(post.authorName)}:</span>
-        <span class="mcp-preview-content">${escapeHtml(post.content)}</span>
-      </div>
-    `;
-
-    // 评论列表
-    if (post.comments.length === 0) {
-      momentsCommentList.innerHTML = '<div class="moments-empty-comments">还没有评论，快来抢沙发~</div>';
-    } else {
-      momentsCommentList.innerHTML = post.comments.map(c => `
-        <div class="mcl-item">
-          <span class="mcl-author">${escapeHtml(c.userName)}:</span>
-          <span class="mcl-content">${escapeHtml(c.content)}</span>
-        </div>
-      `).join('');
-    }
-
-    momentsCommentModalOverlay.classList.add('show');
-    momentsCommentInput.value = '';
-    momentsCommentInput.focus();
-  }
-
-  // 发送评论
-  function sendMomentsComment() {
-    const content = momentsCommentInput.value.trim();
-    if (!content || !currentCommentPostId) return;
-
-    const post = momentsPosts.find(p => p.id === currentCommentPostId);
-    if (!post) return;
-
-    const userProfile = loadProfile();
-    post.comments.push({
-      id: 'c_' + Date.now(),
-      userId: 'user',
-      userName: userProfile.name || '我',
-      type: 'user',
-      content: content
-    });
-
-    saveMomentsPosts();
-    momentsCommentInput.value = '';
-
-    // 更新评论列表
-    if (post.comments.length === 1) {
-      momentsCommentList.innerHTML = '';
-    }
-    const newComment = document.createElement('div');
-    newComment.className = 'mcl-item';
-    newComment.innerHTML = `<span class="mcl-author">${escapeHtml(userProfile.name || '我')}:</span><span class="mcl-content">${escapeHtml(content)}</span>`;
-    momentsCommentList.appendChild(newComment);
-
-    // 自动关闭弹窗
-    momentsCommentModalOverlay.classList.remove('show');
-
-    // 如果推文详情页正打开同一帖子，刷新它
-    const detailView = document.getElementById('postDetailView');
-    if (detailView.style.display !== 'none' && typeof openPostDetail === 'function') {
-      openPostDetail(postId, 'momentsFeed');
-    }
-
-    // 更新帖子显示
-    renderMomentsFeed();
-  }
-
-  // 打开编辑弹窗
-  function openMomentsEditModal(post) {
-    momentsPostText.value = post.content;
-    momentsMediaFiles = post.media ? [...post.media] : [];
-    renderMomentsMediaPreview();
-    momentsPublishBtn.textContent = '保存修改';
-    momentsPublishBtn.dataset.editId = post.id;
-    openMomentsPostModal();
-  }
-
-  // 打开发帖弹窗
-  function openMomentsPostModal() {
-    if (!momentsPostModalOverlay) return;
-    momentsPostModalOverlay.classList.add('show');
-    momentsPostText.focus();
-  }
-
-  // 关闭发帖弹窗
-  function closeMomentsPostModalFn() {
-    momentsPostModalOverlay.classList.remove('show');
-    resetMomentsPostForm();
-  }
-
-  // 重置发帖表单
-  function resetMomentsPostForm() {
-    momentsPostText.value = '';
-    momentsMediaFiles = [];
-    renderMomentsMediaPreview();
-    momentsPublishBtn.textContent = '发布';
-    delete momentsPublishBtn.dataset.editId;
-    currentMomentsPostAccount = 'user';
-    updateMomentsAccountSwitcher();
-  }
-
-  // 渲染媒体预览
-  function renderMomentsMediaPreview() {
-    if (momentsMediaFiles.length === 0) {
-      momentsMediaPreview.innerHTML = '';
-      momentsMediaPreview.style.display = 'none';
-    } else {
-      momentsMediaPreview.style.display = 'grid';
-      momentsMediaPreview.innerHTML = momentsMediaFiles.map((file, index) => `
-        <div class="mmp-item" data-index="${index}">
-          ${file.type === 'image' ? `<img src="${file.url}" alt="">` : `<video src="${file.url}" controls></video>`}
-          <button class="mmp-remove" onclick="removeMomentsMedia(${index})"><i class="fas fa-times"></i></button>
-        </div>
-      `).join('');
-    }
-    momentsMediaCount.textContent = `${momentsMediaFiles.length}/9`;
-  }
-
-  // 移除媒体
-  window.removeMomentsMedia = function(index) {
-    momentsMediaFiles.splice(index, 1);
-    renderMomentsMediaPreview();
-  };
-
-  // 发布/编辑帖子
-  function publishMomentsPost() {
-    const content = momentsPostText.value.trim();
-    if (!content && momentsMediaFiles.length === 0) {
-      showToast('请输入内容或添加媒体');
-      return;
-    }
-
-    const userProfile = loadProfile();
-    const charData = loadCharacterFromStorage();
-    const editId = momentsPublishBtn.dataset.editId;
-
-    if (editId) {
-      // 编辑模式
-      const post = momentsPosts.find(p => p.id === editId);
-      if (post) {
-        post.content = content;
-        post.media = [...momentsMediaFiles];
-        post.timestamp = Date.now();
-      }
-      showToast('已保存修改');
-    } else {
-      // 新发布
-      const newPost = {
-        id: 'post_' + Date.now(),
-        authorType: currentMomentsPostAccount,
-        authorName: currentMomentsPostAccount === 'user' ? (userProfile.name || '我') : (charData.name || 'AI'),
-        authorAvatar: currentMomentsPostAccount === 'user' ? (userProfile.avatar || null) : (charData.avatar || null),
-        content: content,
-        media: [...momentsMediaFiles],
-        likes: [],
-        comments: [],
-        reposts: 0,
-        timestamp: Date.now(),
-        isAIGenerated: false
-      };
-      momentsPosts.unshift(newPost);
-      showToast('发布成功');
-    }
-
-    saveMomentsPosts();
-    closeMomentsPostModalFn();
-    renderMomentsFeed();
-  }
-
-  // 更新账号切换器状态
-  function updateMomentsAccountSwitcher() {
-    momentsAccountSwitcher.querySelectorAll('.moments-account-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.account === currentMomentsPostAccount);
-    });
-  }
-
-  // 处理图片添加
-  function handleMomentsAddImage() {
-    momentsImageInput.click();
-  }
-
-  // 处理图片选择
-  function handleMomentsImageSelect(e) {
-    const files = Array.from(e.target.files);
-    if (momentsMediaFiles.length + files.length > 9) {
-      showToast('最多只能添加9张图片');
-      return;
-    }
-    files.forEach(file => {
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = ev => {
-          momentsMediaFiles.push({
-            type: 'image',
-            url: ev.target.result
-          });
-          renderMomentsMediaPreview();
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-    e.target.value = '';
-  }
-
-  // 预览朋友圈图片
-  window.previewMomentsImage = function(url) {
-    // 简单实现：打开新窗口或显示提示
-    window.open(url, '_blank');
-  };
-
-  // 打开作者主页弹窗（朋友圈头像点击）
-  // 复用 showCharProfilePopup / showUserProfilePopup 的定位逻辑
-  window.openMomentsAuthorProfile = function(event, authorType) {
-    event.stopPropagation();
-    const POP_W = 268;
-
-    // 辅助：计算并设置弹窗位置（紧贴头像元素右侧，右侧不够则放左侧）
-    function positionPopup(popup, triggerEl) {
-      popup.classList.add('visible');
-      const rect = triggerEl.getBoundingClientRect();
-      const POP_H = popup.offsetHeight || 340;
-
-      let left = rect.right + 10;
-      let top  = rect.top;
-
-      if (left + POP_W > window.innerWidth - 8) left = rect.left - POP_W - 10;
-      if (left < 8) left = 8;
-      if (top + POP_H > window.innerHeight - 8) top = window.innerHeight - POP_H - 8;
-      if (top < 8) top = 8;
-
-      popup.style.left = left + 'px';
-      popup.style.top  = top  + 'px';
-
-      // 点击弹窗外部关闭
-      const closeHandler = function(ev) {
-        if (!popup.contains(ev.target)) {
-          popup.classList.add('closing');
-          setTimeout(() => { popup.classList.remove('visible', 'closing'); }, 150);
-          document.removeEventListener('click', closeHandler);
-        }
-      };
-      setTimeout(() => document.addEventListener('click', closeHandler), 0);
-    }
-
-    const triggerEl = event.currentTarget || event.target;
-
-    if (authorType === 'user') {
-      const popup = document.getElementById('userProfilePopup');
-      if (!popup) return;
-
-      // toggle：已打开则关闭
-      if (popup.classList.contains('visible')) {
-        popup.classList.add('closing');
-        setTimeout(() => popup.classList.remove('visible', 'closing'), 150);
-        return;
-      }
-      closeAllProfilePopups(popup);
-
-      // 填充用户数据
-      const userName = localStorage.getItem('profile_name') || '用户';
-      const userBio = localStorage.getItem('profile_bio') || '';
-      const userCid = localStorage.getItem('profile_cid') || '—';
-      const userRegion = localStorage.getItem('profile_region') || '—';
-      const userSelfIntro = localStorage.getItem('profile_self_intro') || '—';
-
-      const upAvatar = document.getElementById('upAvatar');
-      const userAvatar = localStorage.getItem('user_avatar') || '';
-      upAvatar.innerHTML = userAvatar ? `<img src="${userAvatar}" alt="">` : '<i class="fas fa-user"></i>';
-
-      const upCover = document.getElementById('upCover');
-      const userCover = localStorage.getItem('user_cover') || '';
-      upCover.style.backgroundImage = userCover ? `url(${userCover})` : '';
-      if (userCover) { upCover.style.backgroundSize = 'cover'; upCover.style.backgroundPosition = 'center'; }
-
-      document.getElementById('upName').textContent = userName;
-      document.getElementById('upBio').textContent = userBio || '暂无个性签名';
-      document.getElementById('upCid').textContent = userCid;
-      document.getElementById('upRegion').textContent = userRegion;
-      document.getElementById('upSelfIntro').textContent = userSelfIntro;
-
-      const upOnlineIndicator = document.getElementById('upOnlineIndicator');
-      if (upOnlineIndicator) {
-        const statusClass = aiRealOfflineStatus ? 'offline' : (onlineStatus ? 'online' : 'offline');
-        upOnlineIndicator.className = 'online-status-text ' + statusClass;
-      }
-
-      positionPopup(popup, triggerEl);
-
-    } else {
-      const popup = document.getElementById('charProfilePopup');
-      if (!popup) return;
-
-      // toggle：已打开则关闭
-      if (popup.classList.contains('visible')) {
-        popup.classList.add('closing');
-        setTimeout(() => popup.classList.remove('visible', 'closing'), 150);
-        return;
-      }
-      closeAllProfilePopups(popup);
-
-      const charSaved = localStorage.getItem('character_data');
-      const charData = charSaved ? JSON.parse(charSaved) : {};
-      const charName = charData.name || characterData.name || '角色名称';
-      const charBio = charData.bio || characterData.bio || '';
-      const charCid = charData.cid || characterData.cid || '—';
-      const charRegion = charData.region || characterData.region || '—';
-      const charSelfIntro = charData.selfIntro || characterData.selfIntro || '—';
-      const charAvatar = charData.avatar || characterData.avatar || '';
-      const charCover = charData.cover || characterData.cover || '';
-
-      const cppAvatar = document.getElementById('cppAvatar');
-      cppAvatar.innerHTML = charAvatar ? `<img src="${charAvatar}" alt="">` : '<i class="fas fa-user-astronaut"></i>';
-
-      const cppCover = document.getElementById('cppCover');
-      cppCover.style.backgroundImage = charCover ? `url(${charCover})` : '';
-      if (charCover) { cppCover.style.backgroundSize = 'cover'; cppCover.style.backgroundPosition = 'center'; }
-
-      document.getElementById('cppName').textContent = charName;
-      document.getElementById('cppBio').textContent = charBio || '暂无个性签名';
-      document.getElementById('cppCid').textContent = charCid;
-      document.getElementById('cppRegion').textContent = charRegion;
-      document.getElementById('cppNote').textContent = charSelfIntro;
-
-      const cppOnlineIndicator = document.getElementById('cppOnlineIndicator');
-      if (cppOnlineIndicator) {
-        cppOnlineIndicator.className = 'online-status-text ' + (aiRealOfflineStatus ? 'offline' : 'online');
-      }
-
-      positionPopup(popup, triggerEl);
-    }
-  };
-
-  // 初始化朋友圈 Tab 切换
-  function initMomentsTabs() {
-    document.querySelectorAll('.moments-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.moments-tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        currentMomentsTab = tab.dataset.tab;
-        renderMomentsFeed();
-      });
-    });
-  }
-
-  // ---------- 初始化朋友圈 ----------
-  function initMoments() {
-    loadMomentsPosts();
-    renderMomentsFeed();
-    loadMomentsAiSettings();
-
-    // 发帖按钮
-    momentsPostBtn?.addEventListener('click', openMomentsPostModal);
-
-    // 设置按钮
-    momentsSettingsBtn?.addEventListener('click', openMomentsSettingsModal);
-
-    // 筛选按钮
-    const momentsFilterBtn = document.getElementById('momentsFilterBtn');
-    const momentsFilterMenu = document.getElementById('momentsFilterMenu');
-    momentsFilterBtn?.addEventListener('click', () => {
-      const isVisible = momentsFilterMenu.style.display !== 'none';
-      momentsFilterMenu.style.display = isVisible ? 'none' : 'flex';
-      document.getElementById('momentsSearchBar').style.display = 'none';
-    });
-
-    // 搜索按钮
-    const momentsSearchBtn = document.getElementById('momentsSearchBtn');
-    const momentsSearchBar = document.getElementById('momentsSearchBar');
-    const momentsSearchInput = document.getElementById('momentsSearchInput');
-    const momentsSearchClose = document.getElementById('momentsSearchClose');
-    momentsSearchBtn?.addEventListener('click', () => {
-      const isVisible = momentsSearchBar.style.display !== 'none';
-      momentsSearchBar.style.display = isVisible ? 'none' : 'flex';
-      momentsFilterMenu.style.display = 'none';
-      if (!isVisible) {
-        setTimeout(() => momentsSearchInput?.focus(), 100);
-      }
-    });
-    momentsSearchClose?.addEventListener('click', () => {
-      momentsSearchBar.style.display = 'none';
-      momentsSearch = '';
-      momentsSearchInput.value = '';
-      renderMomentsFeed();
-    });
-
-    // 排序按钮（事件委托处理）
-    document.addEventListener('click', (e) => {
-      const sortBtn = e.target.closest('.moments-filter-btn[data-sort]');
-      if (!sortBtn) return;
-      momentsSort = sortBtn.dataset.sort;
-      document.querySelectorAll('.moments-filter-btn[data-sort]').forEach(b => b.classList.remove('active'));
-      sortBtn.classList.add('active');
-      renderMomentsFeed();
-    });
-
-    // 关闭设置弹窗
-    closeMomentsSettingsModal?.addEventListener('click', closeMomentsSettingsModalFn);
-    momentsSettingsModalOverlay?.addEventListener('click', e => {
-      if (e.target === momentsSettingsModalOverlay) closeMomentsSettingsModalFn();
-    });
-    saveMomentsSettingsBtn?.addEventListener('click', saveMomentsAiSettings);
-
-    // 设置弹窗开关点击
-    document.getElementById('momentsAiLikeToggle')?.addEventListener('click', function() {
-      this.classList.toggle('active');
-      updateSliderValue('momentsAiLikeProbVal', document.getElementById('momentsAiLikeProb')?.value || 30);
-    });
-    document.getElementById('momentsAiCommentToggle')?.addEventListener('click', function() {
-      this.classList.toggle('active');
-    });
-
-    // 设置弹窗滑块实时更新数值
-    document.getElementById('momentsAiLikeProb')?.addEventListener('input', function() {
-      updateSliderValue('momentsAiLikeProbVal', this.value);
-    });
-    document.getElementById('momentsAiCommentProb')?.addEventListener('input', function() {
-      updateSliderValue('momentsAiCommentProbVal', this.value);
-    });
-    document.getElementById('momentsAiReplyProb')?.addEventListener('input', function() {
-      updateSliderValue('momentsAiReplyProbVal', this.value);
-    });
-
-    // 关闭发帖弹窗
-    closeMomentsPostModal?.addEventListener('click', closeMomentsPostModalFn);
-    momentsPostModalOverlay?.addEventListener('click', e => {
-      if (e.target === momentsPostModalOverlay) closeMomentsPostModalFn();
-    });
-
-    // 账号切换
-    momentsAccountSwitcher?.addEventListener('click', e => {
-      const btn = e.target.closest('.moments-account-btn');
-      if (btn) {
-        currentMomentsPostAccount = btn.dataset.account;
-        updateMomentsAccountSwitcher();
-      }
-    });
-
-    // 添加图片
-    momentsAddImageBtn?.addEventListener('click', handleMomentsAddImage);
-    momentsImageInput?.addEventListener('change', handleMomentsImageSelect);
-
-    // 添加视频（暂不支持）
-    momentsAddVideoBtn?.addEventListener('click', () => {
-      showToast('视频功能即将上线');
-    });
-
-    // 发布
-    momentsPublishBtn?.addEventListener('click', publishMomentsPost);
-
-    // 评论弹窗
-    closeMomentsCommentModal?.addEventListener('click', () => {
-      momentsCommentModalOverlay.classList.remove('show');
-    });
-    momentsCommentModalOverlay?.addEventListener('click', e => {
-      if (e.target === momentsCommentModalOverlay) {
-        momentsCommentModalOverlay.classList.remove('show');
-      }
-    });
-    momentsSendCommentBtn?.addEventListener('click', sendMomentsComment);
-    momentsCommentInput?.addEventListener('keydown', e => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        sendMomentsComment();
-      }
-    });
-  }
-
-  // ---------- 工具函数 ----------
-  function getTimeAgo(timestamp) {
-    const diff = Date.now() - timestamp;
-    const minute = 60 * 1000;
-    const hour = 60 * minute;
-    const day = 24 * hour;
-
-    if (diff < minute) return '刚刚';
-    if (diff < hour) return Math.floor(diff / minute) + '分钟前';
-    if (diff < day) return Math.floor(diff / hour) + '小时前';
-    if (diff < 7 * day) return Math.floor(diff / day) + '天前';
-    return new Date(timestamp).toLocaleDateString('zh-CN');
-  }
-
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
-
-  // ---------- 初始化 ----------
-  async function init() {
-    loadTheme();
-    loadConfigFromStorage();
-    loadCharacterFromStorage();
-    loadLearnedTraits();
-    loadProfile();
-    loadCharNoteAndDesc(); // 加载备注和描述
-    loadUserImages();
-    loadFocusState();
-    loadStatsData();  // 加载统计数据
-    rebuildChatStatsFromHistory(); // 根据历史消息重建聊天统计（防止遗漏）
-    await loadFocusAnimData();   // IndexedDB 异步读取
-    normalizeFocusAfterLoad();
-    renderMessages();
-    buildChatPreferencesUI();
-    initOnlineStatusToggle(); // 初始化在线状态
-    loadProactiveMsgPrefs();
-    loadAiRealOfflinePrefs();  // 加载真实不在线状态设置
-    if (aiRealOfflineEnabled) startAiOfflineTicker();  // 如果已开启，启动刷新定时器
-    renderLearnedTraits();
-    syncFocusUI();
-    if (focusState.user.running || (focusState.ai.enabled && focusState.ai.running)) ensureFocusTicker();
-
-    if (themeToggleSettings) themeToggleSettings.addEventListener('click', toggleTheme);
-    sendBtn.addEventListener('click', handleSendMessage);
-    messageInput.addEventListener('keydown', e => { if (e.key==='Enter'&&!e.shiftKey) { e.preventDefault(); handleSendMessage(); } });
-    messageInput.addEventListener('input', ()=>{ messageInput.style.height='auto'; messageInput.style.height=Math.min(messageInput.scrollHeight,120)+'px'; });
-
-    // ===== 继续说按钮 =====
-    const continueBtn = document.getElementById('continueBtn');
-    if (continueBtn) {
-      continueBtn.addEventListener('click', handleContinueReply);
-    }
-    configBtn.addEventListener('click', openDrawer);
-    closeDrawerBtn.addEventListener('click', closeDrawer);
-    overlay.addEventListener('click', closeDrawer);
-    globalMenuBtn?.addEventListener('click', toggleSidebar);
-    sidebarOverlay?.addEventListener('click', closeSidebar);
-    sidebar?.addEventListener('click', (e) => {
-      const icon = e.target.closest('.sidebar-icon');
-      const avatar = e.target.closest('#userAvatarBtn');
-      if (icon || avatar) closeSidebar();
-    });
-
-    // ===== 备注与描述输入框事件 - 手动保存 =====
-    const saveCharNoteBtn = document.getElementById('saveCharNoteBtn');
-    saveCharNoteBtn?.addEventListener('click', () => {
-      saveCharNote();
-      showToast('备注和描述已保存');
-    });
-
-    // ===== 角色主页信息折叠卡 =====
-    const charProfileInfoHeader = document.getElementById('charProfileInfoHeader');
-    const charProfileInfoCard = document.getElementById('charProfileInfoCard');
-    if (charProfileInfoHeader && charProfileInfoCard) {
-      charProfileInfoHeader.addEventListener('click', () => {
-        charProfileInfoCard.classList.toggle('open');
-      });
-    }
-
-    // ===== 快速回到底部按钮 =====
-    const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
-    if (messagesArea && scrollToBottomBtn) {
-      // 滚动监听：距离底部超过 120px 时显示按钮
-      messagesArea.addEventListener('scroll', () => {
-        const distFromBottom = messagesArea.scrollHeight - messagesArea.scrollTop - messagesArea.clientHeight;
-        if (distFromBottom > 120) {
-          scrollToBottomBtn.classList.add('visible');
-          scrollToBottomBtn.style.display = '';
-        } else {
-          scrollToBottomBtn.classList.remove('visible');
-          // 动画结束后再 display:none，防止闪烁
-          setTimeout(() => {
-            if (!scrollToBottomBtn.classList.contains('visible')) {
-              scrollToBottomBtn.style.display = 'none';
-            }
-          }, 260);
-        }
-      });
-      // 点击回到底部
-      scrollToBottomBtn.addEventListener('click', () => {
-        messagesArea.scrollTo({ top: messagesArea.scrollHeight, behavior: 'smooth' });
-      });
-    }
-    saveConfigBtn.addEventListener('click', ()=>{ applyConfig(); closeDrawer(); });
-    testConnectionBtn.addEventListener('click', testConnection);
-    clearChatBtn.addEventListener('click', ()=>{
-      showCommonDialog({
-        title: '清空对话',
-        message: '确定要清空所有对话记录吗？此操作不可撤销。',
-        confirmText: '清空',
-        onConfirm: () => resetConversation()
-      });
-    });
-    apiProviderSelect.addEventListener('change', () => {
-      updateApiUrlFromProvider();
-      updateModelVisibility();
-    });
-    modelSelect.addEventListener('change', updateModelInputFromSelect);
-
-    chatIcon.addEventListener('click', ()=>setActiveView('chat'));
-    gearIcon.addEventListener('click', ()=>setActiveView('settings'));
-    userAvatarBtn.addEventListener('click', ()=>setActiveView('profile'));
-    focusIcon?.addEventListener('click', ()=>setActiveView('focus'));
-    characterIcon.addEventListener('click', ()=>setActiveView('character'));
-    statsIcon?.addEventListener('click', ()=>setActiveView('stats'));
-    dataManagerIcon.addEventListener('click', ()=>setActiveView('data'));
-
-    focusSettingsBtn?.addEventListener('click', openFocusSettingsDialog);
-    focusModeToggle?.addEventListener('click', () => {
-      focusModeToggle.classList.toggle('active');
-      setUserFocusMode(focusModeToggle.classList.contains('active') ? 'up' : 'down');
-    });
-    // 开始按钮：三态切换（开始 → 暂停 → 继续）
-    focusStartBtn?.addEventListener('click', () => {
-      if (focusState.user.running) {
-        stopUserFocus();
-      } else {
-        startUserFocus();
-      }
-    });
-    focusResetBtn?.addEventListener('click', endUserFocus);
-    // 结束对方专注
-    endAiFocusBtn?.addEventListener('click', () => {
-      endAiFocus();
-    });
-    // 专注页面内的结束对方专注按钮
-    const endAiFocusBtn2 = document.getElementById('endAiFocusBtn2');
-    endAiFocusBtn2?.addEventListener('click', () => {
-      endAiFocus();
-    });
-    inviteToggleMain?.addEventListener('click', () => {
-      const enabling = !focusState.ai.enabled;
-      if (!enabling) {
-        focusState.ai.enabled = false;
-        focusState.ai.running = false;
-        focusState.ai.locked = false;
-        saveFocusState();
-        syncFocusUI();
-        return;
-      }
-
-      inviteToggleMain.classList.add('active');
-      openAiInviteDialog({
-        autoGenerate: true,
-        onCancel: () => {
-          inviteToggleMain.classList.remove('active');
-          focusState.ai.enabled = false;
-          focusState.ai.running = false;
-          focusState.ai.locked = false;
-          saveFocusState();
-          syncFocusUI();
-        }
-      });
-    });
-    editAiFocusBtn?.addEventListener('click', () => {
-      if (!focusState.ai.enabled || focusState.ai.locked) return;
-      openAiInviteDialog({ autoGenerate: false });
-    });
-
-    saveCharacterBtn.addEventListener('click', saveCharacterToStorage);
-
-    // ---------- 分模块导入导出按钮绑定 ----------
-    // 控制中心：聊天数据
-    document.getElementById('chatDataExportBtn')?.addEventListener('click', exportChatData);
-    document.getElementById('chatDataImportBtn')?.addEventListener('click', () => document.getElementById('chatDataImportInput').click());
-    document.getElementById('chatDataImportInput')?.addEventListener('change', e => { if(e.target.files[0]) { importChatData(e.target.files[0]); e.target.value=''; } });
-
-    // 人物设定
-    document.getElementById('characterExportBtn')?.addEventListener('click', exportCharacterData);
-    document.getElementById('characterImportBtn')?.addEventListener('click', () => document.getElementById('characterImportInput').click());
-    document.getElementById('characterImportInput')?.addEventListener('change', e => { if(e.target.files[0]) { importCharacterData(e.target.files[0]); e.target.value=''; } });
-
-    // 个人资料
-    document.getElementById('profileExportBtn')?.addEventListener('click', exportProfileData);
-    document.getElementById('profileImportBtn')?.addEventListener('click', () => document.getElementById('profileImportInput').click());
-    document.getElementById('profileImportInput')?.addEventListener('change', e => { if(e.target.files[0]) { importProfileData(e.target.files[0]); e.target.value=''; } });
-
-    // 统计数据
-    document.getElementById('statsExportBtn')?.addEventListener('click', exportStatsData);
-    document.getElementById('statsImportBtn')?.addEventListener('click', () => document.getElementById('statsImportInput').click());
-    document.getElementById('statsImportInput')?.addEventListener('change', e => { if(e.target.files[0]) { importStatsData(e.target.files[0]); e.target.value=''; } });
-
-    // 设置界面
-    document.getElementById('settingsExportBtn')?.addEventListener('click', exportSettingsData);
-    document.getElementById('settingsImportBtn')?.addEventListener('click', () => document.getElementById('settingsImportInput').click());
-    document.getElementById('settingsImportInput')?.addEventListener('change', e => { if(e.target.files[0]) { importSettingsData(e.target.files[0]); e.target.value=''; } });
-
-    // 云端备份 (Supabase)
-    initCloudBackup();
-    document.getElementById('cloudConnectBtn')?.addEventListener('click', connectSupabase);
-    document.getElementById('cloudDisconnectBtn')?.addEventListener('click', disconnectSupabase);
-    document.getElementById('cloudUploadBtn')?.addEventListener('click', uploadBackup);
-    document.getElementById('cloudDownloadBtn')?.addEventListener('click', downloadBackup);
-    document.getElementById('cloudRefreshBtn')?.addEventListener('click', refreshCloudStatus);
-
-    // 云端备份教程弹窗
-    const cloudTutorialOverlay = document.getElementById('cloudTutorialOverlay');
-    document.getElementById('cloudBackupHelpBtn')?.addEventListener('click', () => {
-        cloudTutorialOverlay.classList.add('show');
-    });
-    document.getElementById('closeCloudTutorialBtn')?.addEventListener('click', () => {
-        cloudTutorialOverlay.classList.remove('show');
-    });
-    document.getElementById('closeCloudTutorialFooterBtn')?.addEventListener('click', () => {
-        cloudTutorialOverlay.classList.remove('show');
-    });
-    cloudTutorialOverlay?.addEventListener('click', (e) => {
-        if (e.target === cloudTutorialOverlay) cloudTutorialOverlay.classList.remove('show');
-    });
-    // 复制代码按钮
-    document.querySelectorAll('.tutorial-copy-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const text = btn.dataset.copy;
-            navigator.clipboard.writeText(text).then(() => {
-                btn.classList.add('copied');
-                btn.innerHTML = '<i class="fas fa-check"></i> 已复制';
-                setTimeout(() => {
-                    btn.classList.remove('copied');
-                    btn.innerHTML = '<i class="fas fa-copy"></i> 复制';
-                }, 2000);
-            }).catch(() => {
-                // 降级方案
-                const ta = document.createElement('textarea');
-                ta.value = text;
-                ta.style.position = 'fixed';
-                ta.style.opacity = '0';
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand('copy');
-                document.body.removeChild(ta);
-                btn.classList.add('copied');
-                btn.innerHTML = '<i class="fas fa-check"></i> 已复制';
-                setTimeout(() => {
-                    btn.classList.remove('copied');
-                    btn.innerHTML = '<i class="fas fa-copy"></i> 复制';
-                }, 2000);
-            });
-        });
-    });
-
-    resetCharacterBtn.addEventListener('click', ()=>{
-      showCommonDialog({
-        title: '重置设定',
-        message: '确定要重置所有人物设定吗？',
-        confirmText: '重置',
-        onConfirm: () => {
-          localStorage.removeItem('character_data');
-          localStorage.removeItem('learned_traits');
-          localStorage.removeItem('char_note');
-          localStorage.removeItem('char_desc');
-          characterData = { worldBook:'',name:'',avatar:'',cover:'',bio:'',age:'',gender:'',appearance:'',personality:'',backstory:'',memories:'',style:'',examples:'',cid:'',region:'',selfIntro:'',charNote:'',charDesc:'' };
-          learnedTraits = [];
-          loadCharacterFromStorage();
-          loadCharNoteAndDesc();
-          renderLearnedTraits();
-        }
-      });
-    });
-
-    editCharacterAvatarBtn.addEventListener('click', ()=>{
-      const inp = document.createElement('input');
-      inp.type='file'; inp.accept='image/*';
-      inp.onchange = e => { const f=e.target.files[0]; if(f) openCropModalForCharacter(f,'avatar'); };
-      inp.click();
-    });
-    editCharacterCoverBtn.addEventListener('click', ()=>{
-      const inp = document.createElement('input');
-      inp.type='file'; inp.accept='image/*';
-      inp.onchange = e => { const f=e.target.files[0]; if(f) openCropModalForCharacter(f,'cover'); };
-      inp.click();
-    });
-
-    charNameInput.addEventListener('input', updateCharacterPreview);
-    characterBioInput.addEventListener('input', updateCharacterPreview);
-    charAgeInput.addEventListener('input', updateCharacterPreview);
-    charGenderInput.addEventListener('input', updateCharacterPreview);
-
-    const editProfileBtn = document.getElementById('editProfileBtn');
-    const editProfileModalOverlay = document.getElementById('editProfileModalOverlay');
-    const closeEditProfileModal = document.getElementById('closeEditProfileModal');
-    const cancelEditProfileBtn = document.getElementById('cancelEditProfileBtn');
-    const saveEditProfileBtn = document.getElementById('saveEditProfileBtn');
-
-    const closeEditModal = () => { editProfileModalOverlay.classList.remove('show'); };
-    editProfileBtn?.addEventListener('click', ()=> editProfileModalOverlay.classList.add('show'));
-    closeEditProfileModal?.addEventListener('click', closeEditModal);
-    cancelEditProfileBtn?.addEventListener('click', closeEditModal);
-    editProfileModalOverlay?.addEventListener('click', e => { if(e.target===editProfileModalOverlay) closeEditModal(); });
-    saveEditProfileBtn?.addEventListener('click', ()=>{
-      const name = editProfileNameInput.value.trim()||'用户';
-      const bio = editProfileBioInput.value.trim()||'在一隅，遇见自己。';
-      const cid = editProfileCidInput?.value.trim()||'';
-      const region = editProfileRegionInput?.value.trim()||'';
-      const selfIntro = editProfileSelfIntroInput?.value.trim()||'';
-      localStorage.setItem('profile_name', name);
-      localStorage.setItem('profile_bio', bio);
-      localStorage.setItem('profile_cid', cid);
-      localStorage.setItem('profile_region', region);
-      localStorage.setItem('profile_self_intro', selfIntro);
-      profileDisplayName.textContent = name;
-      profileBioDisplay.innerHTML = `<i class="fas fa-quote-left mr-8"></i>${bio}`;
-      closeEditModal();
-    });
-
-    document.getElementById('exportDataBtn')?.addEventListener('click', exportAllData);
-    const importFileInput = document.getElementById('importFileInput');
-    document.getElementById('importDataBtn')?.addEventListener('click', ()=> importFileInput.click());
-    importFileInput?.addEventListener('change', e => {
-      const file = e.target.files[0];
-      if (file) { importDataFromFile(file); importFileInput.value=''; }
-    });
-
-    // ===== 清除所有数据按钮 =====
-    document.getElementById('clearAllDataBtn')?.addEventListener('click', openClearAllConfirm);
-
-    setTimeout(refreshStorageStats, 100);
-    initUploadButtons();
-    updateCharacterPreview();
-    updateModelVisibility();
-
-    // 批量发送相关（使用事件委托，确保切换视图后仍可用）
-    function closeBatchModal() {
-      const overlay = document.getElementById('batchSendModalOverlay');
-      if (overlay) overlay.classList.remove('show');
-    }
-
-    function openBatchModal() {
-      const overlay = document.getElementById('batchSendModalOverlay');
-      const input = document.getElementById('batchMessageInput');
-      const msgInput = document.getElementById('messageInput');
-      if (!overlay || !input) return;
-      // 如果输入框有内容，剪切到批量发送
-      if (msgInput && msgInput.value.trim()) {
-        input.value = msgInput.value;
-        msgInput.value = '';
-        msgInput.style.height = 'auto';
-        // 保存原内容供取消还原
-        overlay.dataset.prevContent = input.value;
-      } else {
-        overlay.dataset.prevContent = '';
-      }
-      overlay.classList.add('show');
-      setTimeout(() => input.focus(), 100);
-    }
-
-    function handleBatchSend() {
-      const input = document.getElementById('batchMessageInput');
-      if (!input) return;
-      const content = input.value.trim();
-      if (!content) return;
-      const lines = content.split('\n').map(l => l.trim()).filter(l => l !== '');
-      if (lines.length > 0) {
-        handleSendMessage(lines);
-        input.value = '';
-        closeBatchModal();
-      }
-    }
-
-    function handleBatchCancel() {
-      const overlay = document.getElementById('batchSendModalOverlay');
-      const input = document.getElementById('batchMessageInput');
-      const msgInput = document.getElementById('messageInput');
-      // 如果有暂存内容，还原到输入框
-      if (overlay && overlay.dataset.prevContent && msgInput) {
-        msgInput.value = overlay.dataset.prevContent;
-        // 触发auto-resize
-        msgInput.dispatchEvent(new Event('input'));
-      }
-      if (input) input.value = '';
-      closeBatchModal();
-    }
-
-    // 使用事件委托确保切换视图后仍可用
-    document.addEventListener('click', (e) => {
-      const batchBtn = e.target.closest('#batchSendBtn');
-      const closeBtn = e.target.closest('#closeBatchSendModal');
-      const cancelBtn = e.target.closest('#cancelBatchSendBtn');
-      const confirmBtn = e.target.closest('#confirmBatchSendBtn');
-      const overlay = document.getElementById('batchSendModalOverlay');
-
-      if (batchBtn) { openBatchModal(); return; }
-      if (closeBtn) { handleBatchCancel(); return; }
-      if (cancelBtn) { handleBatchCancel(); return; }
-      if (confirmBtn) { handleBatchSend(); return; }
-      // 点击遮罩外部关闭
-      if (overlay && e.target === overlay && overlay.classList.contains('show')) {
-        handleBatchCancel();
-      }
-    });
-
-    // ===== 专注动画自定义按钮 =====
-    document.getElementById('focusAnimCustomizeBtn')?.addEventListener('click', openFocusAnimManager);
-
-    // 占位区快速上传按钮（默认上传用户动画）
-    document.getElementById('focusAnimQuickUploadBtn')?.addEventListener('click', e => {
-      e.stopPropagation();
-      triggerFocusAnimUpload('user');
-    });
-
-    // ===== 朋友圈初始化 =====
-    initMoments();
-    momentsIcon?.addEventListener('click', () => setActiveView('moments'));
-  }
-
-  // ============================================================
-  // ===== IndexedDB 动画存储系统 =====
-  // 替代 localStorage，突破 5MB 限制，支持存储更大文件
-  // ============================================================
-
-  const DB_NAME = 'focus_anim_db';
-  const DB_VERSION = 1;
-  const STORE_NAME = 'anims';
-  let dbInstance = null;
-
-  function openAnimDB() {
-    return new Promise((resolve, reject) => {
-      if (dbInstance) { resolve(dbInstance); return; }
-      const req = indexedDB.open(DB_NAME, DB_VERSION);
-      req.onerror = () => reject(req.error);
-      req.onsuccess = () => { dbInstance = req.result; resolve(dbInstance); };
-      req.onupgradeneeded = e => {
-        const db = e.target.result;
-        if (!db.objectStoreNames.contains(STORE_NAME)) {
-          db.createObjectStore(STORE_NAME, { keyPath: 'id' });
-        }
-      };
-    });
-  }
-
-  /** 保存动画数据到 IndexedDB */
-  async function saveAnimToDB(id, data) {
-    const db = await openAnimDB();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE_NAME, 'readwrite');
-      tx.objectStore(STORE_NAME).put({ id, data, updatedAt: Date.now() });
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-  }
-
-  /** 从 IndexedDB 读取所有动画数据 */
-  async function loadAnimsFromDB() {
-    const db = await openAnimDB();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE_NAME, 'readonly');
-      const req = tx.objectStore(STORE_NAME).getAll();
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
-  }
-
-  /** 删除单个动画 */
-  async function deleteAnimFromDB(id) {
-    const db = await openAnimDB();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE_NAME, 'readwrite');
-      tx.objectStore(STORE_NAME).delete(id);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-  }
-
-  /** 清除所有动画数据 */
-  async function clearAnimsFromDB() {
-    const db = await openAnimDB();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE_NAME, 'readwrite');
-      tx.objectStore(STORE_NAME).clear();
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-  }
-
-  /** 获取 IndexedDB 总存储用量（估算） */
-  async function getAnimDBUsage() {
-    try {
-      const animes = await loadAnimsFromDB();
-      let total = 0;
-      animes.forEach(a => {
-        total += a.data.library ? JSON.stringify(a.data.library).length : 0;
-      });
-      return { count: animes.length, size: total };
-    } catch(e) { return { count: 0, size: 0 }; }
-  }
-
-  // ============================================================
-  // ===== 专注动画系统 v2 =====
-  // ============================================================
-  //
-  // 3个分类: user=用户专注 / character=AI角色专注 / duo=双人
-  // 双人模式: duoMode='single'(播一个双人GIF) | 'dual'(同时播两个单人GIF)
-  // 匹配逻辑: 谁在专注就播放谁的动画
-  //
-
-  let focusAnimLibrary  = { user: [], character: [], duo: [] };
-  let focusAnimSelected = { user: null, character: null, duo: null };
-  let focusAnimDuoMode  = 'single'; // 'single' | 'dual'
-
-  // ===== AI学习词条系统 =====
-  let learnedTraits = []; // { id, text, selected, timestamp }
-
-  function loadLearnedTraits() {
-    try {
-      const raw = localStorage.getItem('learned_traits');
-      if (raw) learnedTraits = JSON.parse(raw);
-    } catch(e) {}
-  }
-
-  function saveLearnedTraits() {
-    localStorage.setItem('learned_traits', JSON.stringify(learnedTraits));
-  }
-
-  function renderLearnedTraits() {
-    const container = document.getElementById('learnedTraitsContainer');
-    const countEl = document.getElementById('learnedTraitsCount');
-    if (!container) return;
-
-    if (learnedTraits.length === 0) {
-      container.innerHTML = '<div class="learned-traits-empty text-secondary fs-13">暂无AI学习的词条</div>';
-      if (countEl) countEl.textContent = '（0/5）';
-      // 同时隐藏确认按钮
-      const confirmBtn = document.getElementById('confirmAddTraitsBtn');
-      if (confirmBtn) confirmBtn.style.display = 'none';
-      return;
-    }
-
-    container.innerHTML = '';
-    learnedTraits.forEach(trait => {
-      const tag = document.createElement('div');
-      tag.className = 'learned-trait-tag';
-      tag.innerHTML = `
-        <span class="trait-text">${trait.text}</span>
-        <button class="trait-add-btn" title="添加到风格描述">＋</button>
-        <span class="trait-remove" title="删除">×</span>
-      `;
-      tag.querySelector('.trait-add-btn').addEventListener('click', () => {
-        // 添加到风格描述底部
-        if (charStyleInput) {
-          const current = charStyleInput.value.trim();
-          charStyleInput.value = current + (current ? '\n' : '') + trait.text;
-          saveCharacterToStorage();
-          showToast('已添加到风格描述');
-        }
-        // 从词条列表中删除
-        learnedTraits = learnedTraits.filter(t => t.id !== trait.id);
-        saveLearnedTraits();
-        renderLearnedTraits();
-      });
-      tag.querySelector('.trait-remove').addEventListener('click', e => {
-        e.stopPropagation();
-        learnedTraits = learnedTraits.filter(t => t.id !== trait.id);
-        saveLearnedTraits();
-        renderLearnedTraits();
-      });
-      container.appendChild(tag);
-    });
-
-    if (countEl) countEl.textContent = `（${learnedTraits.length}/5）`;
-  }
-
-  function updateStyleFromTraits() {
-    if (!charStyleInput) return;
-    // 获取用户手动输入的风格描述（非AI学习部分）
-    const manualStyle = charStyleInput.value.split('* AI学习：').filter((_, i) => i === 0)[0] || charStyleInput.value;
-    const manualLines = manualStyle.split('\n').filter(l => l.trim());
-    // 获取选中的词条
-    const selectedTraits = learnedTraits.filter(t => t.selected).map(t => `* AI学习：${t.text}`);
-    const allLines = [...manualLines.filter(l => l.trim()), ...selectedTraits].filter(l => l.trim());
-    charStyleInput.value = allLines.join('\n');
-    saveCharacterToStorage();
-  }
-
-  async function summarizeTraitsToStyle() {
-    if (learnedTraits.length < 5) return;
-    const traitsText = learnedTraits.map(t => t.text).join('\n');
-    try {
-      const prompt = `请将以下5条对话风格词条总结为1条综合的对话风格描述：
-
-${traitsText}
-
-要求：
-1. 保留核心要点，去除冗余
-2. 简洁明了，直接以指令形式输出
-3. 不要输出其他废话`;
-
-      const result = await callAI(prompt, "你是一个对话风格分析助手。");
-      if (result && result.trim()) {
-        const summary = result.trim();
-        // 直接追加到对话风格结尾（不保留在AI学习词条中）
-        if (charStyleInput) {
-          const current = charStyleInput.value.trim();
-          charStyleInput.value = current + (current ? '\n' : '') + summary;
-        }
-        // 清空学习词条（从AI学习词条框里消失）
-        learnedTraits = [];
-        saveLearnedTraits();
-        renderLearnedTraits();
-        // 保存到角色数据
-        saveCharacterToStorage();
-        showToast('已自动总结并保存到对话风格');
-      }
-    } catch(e) {
-      console.error('Summarize traits error:', e);
-    }
-  }
-
-  /** 异步加载动画数据（优先 IndexedDB，兼容旧 localStorage） */
-  async function loadFocusAnimData() {
-    try {
-      // 优先从 IndexedDB 加载
-      const dbRecords = await loadAnimsFromDB();
-      if (dbRecords.length > 0) {
-        const latest = dbRecords.sort((a, b) => b.updatedAt - a.updatedAt)[0];
-        if (latest.data) {
-          focusAnimLibrary  = latest.data.library  || { user: [], character: [], duo: [] };
-          focusAnimSelected = latest.data.selected || { user: null, character: null, duo: null };
-          focusAnimDuoMode  = latest.data.duoMode || 'single';
-          return;
-        }
-      }
-      // 兼容旧 localStorage 数据（首次迁移）
-      const raw = localStorage.getItem('focus_anim_data');
-      if (raw) {
-        const data = JSON.parse(raw);
-        focusAnimLibrary  = data.library  || { user: [], character: [], duo: [] };
-        focusAnimSelected = data.selected || { user: null, character: null, duo: null };
-        focusAnimDuoMode  = data.duoMode || 'single';
-        // 迁移到 IndexedDB
-        await saveFocusAnimData();
-        localStorage.removeItem('focus_anim_data');
-      }
-    } catch(e) {
-      console.error('Load anim data error:', e);
-    }
-  }
-
-  /** 异步保存动画数据到 IndexedDB */
-  async function saveFocusAnimData() {
-    try {
-      const data = {
-        library:  focusAnimLibrary,
-        selected: focusAnimSelected,
-        duoMode:  focusAnimDuoMode
-      };
-      await saveAnimToDB('main', data);
-      // 清理旧 localStorage
-      localStorage.removeItem('focus_anim_data');
-    } catch(e) {
-      console.error('Save anim data error:', e);
-      // 降级：仍尝试存 localStorage（可能存不下）
-      try {
-        localStorage.setItem('focus_anim_data', JSON.stringify({
-          library:  focusAnimLibrary,
-          selected: focusAnimSelected,
-          duoMode:  focusAnimDuoMode
-        }));
-      } catch(e2) {
-        console.error('localStorage also failed:', e2);
-      }
-    }
-  }
-
-  /** 取某个分类当前选中动画的src，没有则自动选第一个 */
-  function getAnimSrc(category) {
-    const list = focusAnimLibrary[category] || [];
-    let id = focusAnimSelected[category];
-    if (!id && list.length > 0) {
-      id = list[0].id;
-      focusAnimSelected[category] = id;
-    }
-    if (!id) return null;
-    const found = list.find(a => a.id === id);
-    return found ? found.src : (list[0] ? (focusAnimSelected[category] = list[0].id, list[0].src) : null);
-  }
-
-  /** 根据专注状态决定显示哪些动画 */
-  function syncFocusAnim() {
-    const placeholder  = document.getElementById('focusAnimPlaceholder');
-    const singleVideo   = document.getElementById('focusAnimSingle');
-    const duoContainer  = document.getElementById('focusAnimDuoContainer');
-    const duoUserVideo  = document.getElementById('focusAnimDuoUser');
-    const duoCharVideo  = document.getElementById('focusAnimDuoChar');
-    if (!placeholder || !singleVideo || !duoContainer) return;
-
-    const userRunning = !!focusState.user.running;
-    const charRunning = !!(focusState.ai.enabled && focusState.ai.running);
-    const bothRunning = userRunning && charRunning;
-
-    // 无人在专注：停止所有动画
-    if (!userRunning && !charRunning) {
-      stopAndHide(singleVideo);
-      stopAndHide(duoUserVideo);
-      stopAndHide(duoCharVideo);
-      duoContainer.style.display = 'none';
-      placeholder.style.display = 'none';
-      return;
-    }
-
-    // === 双人均专注 ===
-    if (bothRunning) {
-      stopAndHide(singleVideo); // 停止单人视频
-      duoContainer.style.display = 'flex';
-      placeholder.style.display = 'none';
-      if (focusAnimDuoMode === 'single') {
-        const src = getAnimSrc('duo');
-        if (src) {
-          showDuoSingle(src);
-        } else {
-          showDuoDual();
-        }
-      } else {
-        showDuoDual();
-      }
-      return;
-    }
-
-    // === 单人专注 ===
-    duoContainer.style.display = 'none';
-    const src = userRunning ? getAnimSrc('user') : getAnimSrc('character');
-    if (src) {
-      loadAndPlay(singleVideo, src);
-      placeholder.style.display = 'none';
-    } else {
-      stopAndHide(singleVideo);
-      placeholder.style.display = 'flex';
-    }
-  }
-
-  /** 隐藏动画元素并清空 src */
-  function stopAndHide(el) {
-    if (!el) return;
-    el.src = '';
-    el.style.display = 'none';
-  }
-
-  /** 显示动画（img.src 直接赋值，GIF/PNG/WEBP 全支持） */
-  function loadAndPlay(el, src) {
-    if (!el || !src) return;
-    // 已经在显示同一张，不重复赋值
-    if (el.src === src) {
-      el.style.display = 'block';
-      return;
-    }
-    el.src = src;
-    el.style.display = 'block';
-  }
-
-  function showDuoDual() {
-    const duoContainer = document.getElementById('focusAnimDuoContainer');
-    const duoUserEl    = document.getElementById('focusAnimDuoUser');
-    const duoCharEl    = document.getElementById('focusAnimDuoChar');
-    duoContainer.style.display = 'flex';
-    const userRunning = !!focusState.user.running;
-    const charRunning = !!(focusState.ai.enabled && focusState.ai.running);
-    if (userRunning) {
-      const src = getAnimSrc('user');
-      if (src) loadAndPlay(duoUserEl, src); else stopAndHide(duoUserEl);
-    } else {
-      stopAndHide(duoUserEl);
-    }
-    if (charRunning) {
-      const src = getAnimSrc('character');
-      if (src) loadAndPlay(duoCharEl, src); else stopAndHide(duoCharEl);
-    } else {
-      stopAndHide(duoCharEl);
-    }
-  }
-
-  function showDuoSingle(duoSrc) {
-    const duoContainer = document.getElementById('focusAnimDuoContainer');
-    const duoUserEl    = document.getElementById('focusAnimDuoUser');
-    const duoCharEl    = document.getElementById('focusAnimDuoChar');
-    duoContainer.style.display = 'flex';
-    loadAndPlay(duoUserEl, duoSrc);
-    stopAndHide(duoCharEl);
-  }
-
-
-
-  /**
-   * 压缩图片到指定大小（仅限非 GIF，GIF 直接存原文件）
-   * 目标：<2MB，quality 逐步降低直到满足要求
-   */
-  function compressImageFile(file) {
-    return new Promise(resolve => {
-      // GIF 无法通过 Canvas 保留动画，直接原样返回
-      if (file.type === 'image/gif') {
-        const reader = new FileReader();
-        reader.onload = e => resolve(e.target.result);
-        reader.readAsDataURL(file);
-        return;
-      }
-      // 其他格式（PNG/JPEG/WEBP）用 Canvas 压缩
-      const img = new Image();
-      const url = URL.createObjectURL(file);
-      img.onload = () => {
-        URL.revokeObjectURL(url);
-        const MAX_PX = 1200; // 最长边限制
-        let { width, height } = img;
-        if (width > MAX_PX || height > MAX_PX) {
-          const ratio = Math.min(MAX_PX / width, MAX_PX / height);
-          width  = Math.round(width  * ratio);
-          height = Math.round(height * ratio);
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width  = width;
-        canvas.height = height;
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-
-        // 逐级降低质量，目标 2MB dataURL（约 1.5MB 原文件）
-        const TARGET = 2 * 1024 * 1024;
-        let quality = 0.9;
-        let dataURL;
-        do {
-          dataURL = canvas.toDataURL('image/webp', quality);
-          quality -= 0.1;
-        } while (dataURL.length > TARGET && quality > 0.1);
-
-        resolve(dataURL);
-      };
-      img.onerror = () => {
-        const reader = new FileReader();
-        reader.onload = e => resolve(e.target.result);
-        reader.readAsDataURL(file);
-      };
-      img.src = url;
-    });
-  }
-
-  /** 直接触发上传到指定分类（无大小限制，自动压缩非GIF图片） */
-  function triggerFocusAnimUpload(category) {
-    const inp = document.createElement('input');
-    inp.type = 'file';
-    inp.accept = 'image/gif,image/png,image/jpeg,image/webp,image/apng';
-    inp.multiple = true;
-    inp.onchange = async e => {
-      const files = Array.from(e.target.files);
-      if (files.length === 0) return;
-
-      for (const file of files) {
-        const isGif = file.type === 'image/gif';
-        const sizeMB = (file.size / 1024 / 1024).toFixed(1);
-        // GIF 超过 10MB 给提示，但还是允许存（IndexedDB 能承受）
-        if (isGif && file.size > 10 * 1024 * 1024) {
-          const ok = confirm(`GIF "${file.name}"（${sizeMB}MB）较大，可能加载较慢。\n继续添加？`);
-          if (!ok) continue;
-        }
-
-        // 自动压缩（非GIF）或直接读取（GIF）
-        const src = await compressImageFile(file);
-        const id = 'anim_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
-        const entry = { id, name: file.name.replace(/\.[^.]+$/, ''), src };
-        if (!focusAnimLibrary[category]) focusAnimLibrary[category] = [];
-        focusAnimLibrary[category].push(entry);
-        if (focusAnimSelected[category] === null) focusAnimSelected[category] = id;
-      }
-
-      await saveFocusAnimData();
-      renderFocusAnimGrid();
-      syncFocusAnim();
-    };
-    inp.click();
-  }
-
-  // ---------- 动画管理弹窗 ----------
-  let focusAnimManagerTab = 'user';
-
-  function openFocusAnimManager() {
-    let overlay = document.getElementById('focusAnimManagerOverlay');
-    if (!overlay) {
-      overlay = document.createElement('div');
-      overlay.id = 'focusAnimManagerOverlay';
-      overlay.className = 'modal-overlay focus-anim-modal';
-      overlay.innerHTML = `
-        <div class="modal-container">
-          <div class="modal-header">
-            <h3><i class="fas fa-images mr-8"></i>专注动画管理</h3>
-            <button class="modal-close" id="closeFocusAnimModal">&times;</button>
-          </div>
-          <div class="modal-body">
-            <div class="focus-anim-tabs" id="focusAnimTabs">
-              <button class="focus-anim-tab active" data-cat="user">用户动画</button>
-              <button class="focus-anim-tab" data-cat="character">角色动画</button>
-              <button class="focus-anim-tab" data-cat="duo">双人动画</button>
-            </div>
-            <div class="focus-anim-grid" id="focusAnimGrid"></div>
-            <!-- 双人模式切换（仅在双人tab时显示） -->
-            <div class="focus-anim-duo-toggle" id="focusAnimDuoToggle" style="display:none;">
-              <div class="focus-anim-duo-mode-label">双人模式</div>
-              <div class="focus-anim-mode-btns">
-                <button class="focus-anim-mode-btn active" id="duoModeSingleBtn" data-mode="single">
-                  <i class="fas fa-user-friends mr-4"></i>一个双人GIF
-                </button>
-                <button class="focus-anim-mode-btn" id="duoModeDualBtn" data-mode="dual">
-                  <i class="fas fa-columns mr-4"></i>两个单人GIF并排
-                </button>
-              </div>
-            </div>
-
-          </div>
-          <div class="modal-footer">
-            <button class="btn btn-secondary" id="closeFocusAnimModalBtn">关闭</button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(overlay);
-
-      const close = () => overlay.classList.remove('show');
-      overlay.querySelector('#closeFocusAnimModal').addEventListener('click', close);
-      overlay.querySelector('#closeFocusAnimModalBtn').addEventListener('click', close);
-      overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
-
-      // tab 切换
-      overlay.querySelector('#focusAnimTabs').addEventListener('click', e => {
-        const tab = e.target.closest('[data-cat]');
-        if (!tab) return;
-        focusAnimManagerTab = tab.dataset.cat;
-        overlay.querySelectorAll('.focus-anim-tab').forEach(t => t.classList.toggle('active', t.dataset.cat === focusAnimManagerTab));
-        renderFocusAnimGrid();
-        // 显示/隐藏双人模式切换器
-        const toggle = document.getElementById('focusAnimDuoToggle');
-        if (toggle) {
-          toggle.style.display = focusAnimManagerTab === 'duo' ? 'flex' : 'none';
-          document.getElementById('duoModeSingleBtn')?.classList.toggle('active', focusAnimDuoMode === 'single');
-          document.getElementById('duoModeDualBtn')?.classList.toggle('active', focusAnimDuoMode === 'dual');
-        }
-      });
-
-      // 双人模式切换
-      overlay.querySelector('#focusAnimDuoToggle').addEventListener('click', async e => {
-        const btn = e.target.closest('[data-mode]');
-        if (!btn) return;
-        focusAnimDuoMode = btn.dataset.mode;
-        await saveFocusAnimData();
-        syncFocusAnim();
-        overlay.querySelectorAll('.focus-anim-mode-btn').forEach(b => {
-          b.classList.toggle('active', b.dataset.mode === focusAnimDuoMode);
-        });
-      });
-    }
-
-    focusAnimManagerTab = 'user';
-    overlay.querySelectorAll('.focus-anim-tab').forEach(t => t.classList.toggle('active', t.dataset.cat === 'user'));
-    renderFocusAnimGrid();
-
-    const toggle = document.getElementById('focusAnimDuoToggle');
-    if (toggle) {
-      toggle.style.display = 'none';
-    }
-
-    overlay.classList.add('show');
-  }
-
-  function renderFocusAnimGrid() {
-    const grid = document.getElementById('focusAnimGrid');
-    if (!grid) return;
-    const cat = focusAnimManagerTab;
-    const list = focusAnimLibrary[cat] || [];
-    const selectedId = focusAnimSelected[cat];
-
-    grid.innerHTML = '';
-
-    const catLabel = { user: '用户动画', character: '角色动画', duo: '双人动画' }[cat] || '动画';
-
-    if (list.length === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'focus-anim-empty';
-      empty.innerHTML = `<i class="fas fa-film fa-2x mb-8" style="display:block;opacity:0.3;"></i>暂无${catLabel}，点击 + 上传`;
-      grid.appendChild(empty);
-    } else {
-      list.forEach(anim => {
-        const item = document.createElement('div');
-        item.className = 'focus-anim-item' + (anim.id === selectedId ? ' selected' : '');
-        item.title = anim.name;
-
-        const imgEl = document.createElement('img');
-        imgEl.src = anim.src;
-        imgEl.alt = anim.name;
-
-        const delBtn = document.createElement('button');
-        delBtn.className = 'focus-anim-item-del';
-        delBtn.title = '删除';
-        delBtn.innerHTML = '&times;';
-        delBtn.addEventListener('click', async e => {
-          e.stopPropagation();
-          focusAnimLibrary[cat] = focusAnimLibrary[cat].filter(a => a.id !== anim.id);
-          if (focusAnimSelected[cat] === anim.id) focusAnimSelected[cat] = null;
-          await saveFocusAnimData();
-          syncFocusAnim();
-          renderFocusAnimGrid();
-        });
-
-        item.appendChild(imgEl);
-        item.appendChild(delBtn);
-        item.addEventListener('click', async () => {
-          focusAnimSelected[cat] = anim.id;
-          await saveFocusAnimData();
-          syncFocusAnim();
-          renderFocusAnimGrid();
-        });
-
-        grid.appendChild(item);
-      });
-    }
-
-    const addBtn = document.createElement('button');
-    addBtn.className = 'focus-anim-add-btn';
-    addBtn.title = '上传动画（GIF/图片，自动压缩）';
-    addBtn.innerHTML = '<i class="fas fa-plus"></i>';
-    addBtn.addEventListener('click', () => {
-      triggerFocusAnimUpload(cat);
-    });
-    grid.appendChild(addBtn);
-  }
-
-  // ============================================================
-  // ===== 清除所有数据确认弹窗 =====
-  // ============================================================
-  let clearConfirmStep = 1;
-
-  function openClearAllConfirm() {
-    let overlay = document.getElementById('clearAllConfirmOverlay');
-    if (!overlay) {
-      overlay = document.createElement('div');
-      overlay.id = 'clearAllConfirmOverlay';
-      overlay.className = 'modal-overlay clear-confirm-modal';
-      document.body.appendChild(overlay);
-    }
-
-    function renderStep(step) {
-      clearConfirmStep = step;
-      if (step === 1) {
-        overlay.innerHTML = `
-          <div class="modal-container">
-            <div class="modal-header">
-              <h3><i class="fas fa-exclamation-triangle mr-8" style="color:#e05555;"></i>确认清除</h3>
-              <button class="modal-close" onclick="closeClearConfirm()">&times;</button>
-            </div>
-            <div class="modal-body">
-              <div class="clear-confirm-icon"><i class="fas fa-skull-crossbones"></i></div>
-              <p class="clear-confirm-text">
-                确定要清除 <strong>所有本地数据</strong> 吗？<br>
-                包括：消息记录、角色设定、专注数据、上传的动画等。<br>
-                此操作 <strong>不可恢复</strong>。
-              </p>
-              <button class="btn btn-danger-outline w-full" id="clearConfirmStep2Btn">
-                <i class="fas fa-arrow-right mr-6"></i>是的，继续
-              </button>
-            </div>
-            <div class="modal-footer">
-              <button class="btn btn-secondary w-full" onclick="closeClearConfirm()">取消</button>
-            </div>
-          </div>
-        `;
-        overlay.querySelector('#clearConfirmStep2Btn').addEventListener('click', () => renderStep(2));
-      } else {
-        overlay.innerHTML = `
-          <div class="modal-container">
-            <div class="modal-header">
-              <h3><i class="fas fa-skull-crossbones mr-8" style="color:#e05555;"></i>最后确认</h3>
-              <button class="modal-close" onclick="closeClearConfirm()">&times;</button>
-            </div>
-            <div class="modal-body">
-              <div class="clear-confirm-icon"><i class="fas fa-fire-alt"></i></div>
-              <p class="clear-confirm-text">
-                如果你确定要清除一切，<br>请在下方输入 <strong>我确认</strong> 并点击删除。
-              </p>
-              <input type="text" id="clearConfirmInput" class="modal-input" placeholder="请输入：我确认" autocomplete="off">
-            </div>
-            <div class="modal-footer" style="flex-direction:column;gap:8px;">
-              <button class="btn btn-danger-solid w-full" id="clearConfirmExecuteBtn" disabled>
-                <i class="fas fa-trash-alt mr-6"></i>删除所有数据
-              </button>
-              <button class="btn btn-secondary w-full" onclick="closeClearConfirm()">取消</button>
-            </div>
-          </div>
-        `;
-        const inp = overlay.querySelector('#clearConfirmInput');
-        const execBtn = overlay.querySelector('#clearConfirmExecuteBtn');
-        inp.addEventListener('input', () => {
-          execBtn.disabled = inp.value.trim() !== '我确认';
-        });
-        execBtn.addEventListener('click', executeClearAllData);
-      }
-      overlay.classList.add('show');
-    }
-
-    window.closeClearConfirm = () => overlay.classList.remove('show');
-    overlay.onclick = e => { if (e.target === overlay) window.closeClearConfirm(); };
-    renderStep(1);
-  }
-
-  function executeClearAllData() {
-    localStorage.clear();
-    if (typeof focusState !== 'undefined') {
-      focusState.user = { running: false, remainingSeconds: 0, startTime: null, activity: '学习', mode: 'countdown' };
-      focusState.ai   = { enabled: false, running: false, remainingSeconds: 0, startTime: null, activity: '专注' };
-    }
-    focusAnimLibrary  = { user: [], character: [], duo: [] };
-    focusAnimSelected = { user: null, character: null, duo: null };
-    focusAnimDuoMode  = 'single';
-    if (typeof resetAppState === 'function') resetAppState();
-    if (window.closeClearConfirm) window.closeClearConfirm();
-    setTimeout(() => location.reload(), 300);
-  }
-
-  // ============================================================
-  // 个人主页 & 角色主页 推文九宫格
-  // ============================================================
-
-  // 格式化相对时间
-  function formatRelativeTime(ts) {
-    const diff = Date.now() - ts;
-    if (diff < 60000) return '刚刚';
-    if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
-    if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
-    if (diff < 2592000000) return Math.floor(diff / 86400000) + '天前';
-    const d = new Date(ts);
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  }
-
-  // 渲染九宫格（type: 'user' | 'char'，containerId: 网格容器id）
-  function renderPostsGrid(authorType, containerId) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    loadMomentsPosts();
-    const posts = momentsPosts
-      .filter(p => p.authorType === authorType)
-      .sort((a, b) => b.timestamp - a.timestamp);
-
-    if (posts.length === 0) {
-      container.innerHTML = `<div class="profile-empty"><i class="fas fa-feather-alt"></i><span>还没有发过推文</span></div>`;
-      return;
-    }
-
-    container.innerHTML = posts.map(post => {
-      const hasMedia = post.media && post.media.length > 0;
-      const safeId = escapeHtml(post.id);
-      if (hasMedia) {
-        const firstImg = post.media.find(m => m.type === 'image' || !m.type);
-        const firstVid = post.media.find(m => m.type === 'video');
-        const imgSrc = firstImg ? firstImg.url : (firstVid ? firstVid.url : '');
-        const countBadge = post.media.length > 1 ? `<span class="pgi-img-count"><i class="fas fa-images"></i> ${post.media.length}</span>` : '';
-        const textPart = post.content ? `<div class="pgi-text">${escapeHtml(post.content)}</div>` : '';
-        return `<div class="post-grid-item has-media" data-post-id="${safeId}" data-from="${containerId}">
-          <div class="pgi-img-wrap">
-            ${firstVid && !firstImg ? `<video src="${imgSrc}" muted playsinline></video>` : `<img src="${imgSrc}" alt="">`}
-            ${countBadge}
-          </div>
-          ${textPart}
-        </div>`;
-      } else {
-        return `<div class="post-grid-item text-only" data-post-id="${safeId}" data-from="${containerId}">
-          <div class="pgi-text-content">${escapeHtml(post.content || '')}</div>
-          <div class="pgi-time">${formatRelativeTime(post.timestamp)}</div>
-        </div>`;
-      }
-    }).join('');
-  }
-
-  // 渲染用户个人主页九宫格
-  function renderProfilePostsGrid() {
-    renderPostsGrid('user', 'profilePostsGrid');
-  }
-
-  // 九宫格点击事件委托（统一处理 profilePostsGrid 和 charHomePostsGrid）
-  document.addEventListener('click', (e) => {
-    const item = e.target.closest('.post-grid-item[data-post-id]');
-    if (!item) return;
-    const postId = item.dataset.postId;
-    const fromId = item.dataset.from || 'profilePostsGrid';
-    openPostDetail(postId, fromId);
-  });
-
-  // ============================================================
-  // 单条推文详情页
-  // ============================================================
-  let postDetailReturnTarget = null; // 从哪里来的（'profile' | 'charHome'）
-
-  function openPostDetail(postId, fromContainerId) {
-    loadMomentsPosts();
-    const post = momentsPosts.find(p => p.id === postId);
-    if (!post) return;
-
-    postDetailReturnTarget = fromContainerId === 'charHomePostsGrid' ? 'charHome' : fromContainerId === 'profilePostsGrid' ? 'profile' : 'moments';
-
-    const userProfile = loadProfile();
-    const charData = loadCharacterFromStorage();
-
-    // 头像
-    const avatarHtml = post.authorAvatar
-      ? `<img src="${post.authorAvatar}" alt="">`
-      : `<i class="fas fa-${post.authorType === 'char' ? 'user-astronaut' : 'user'}"></i>`;
-
-    // 媒体
-    let mediaHtml = '';
-    if (post.media && post.media.length > 0) {
-      const cols = post.media.length === 1 ? 'cols-1' : post.media.length === 2 ? 'cols-2' : 'cols-3';
-      const items = post.media.map(m => {
-        if (m.type === 'video') return `<video src="${m.url}" controls playsinline></video>`;
-        return `<img src="${m.url}" alt="">`;
-      }).join('');
-      mediaHtml = `<div class="pd-media-grid ${cols}">${items}</div>`;
-    }
-
-    // 点赞状态
-    const isLiked = post.likes && post.likes.some(l => l.userId === 'current_user');
-    const likedClass = isLiked ? 'liked' : '';
-
-    // 评论 HTML
-    const commentsHtml = post.comments && post.comments.length > 0
-      ? `<div class="pd-comment-title">评论 ${post.comments.length}</div>` +
-        post.comments.map(c => {
-          const isChar = c.type === 'char';
-          const avatar = isChar
-            ? (charData.avatar ? `<img src="${charData.avatar}" alt="">` : '<i class="fas fa-user-astronaut"></i>')
-            : (userProfile.avatar ? `<img src="${userProfile.avatar}" alt="">` : '<i class="fas fa-user"></i>');
-          return `<div class="pd-comment-item">
-            <div class="pd-comment-avatar">${avatar}</div>
-            <div class="pd-comment-body">
-              <div class="pd-comment-author">${escapeHtml(c.userName)}</div>
-              <div class="pd-comment-text">${escapeHtml(c.content)}</div>
-            </div>
-          </div>`;
-        }).join('')
-      : '<div class="pd-comment-title" style="color:var(--text-secondary);font-weight:400;">还没有评论</div>';
-
-    const body = `
-      <div class="pd-author-row">
-        <div class="pd-avatar">${avatarHtml}</div>
-        <div>
-          <div class="pd-name">${escapeHtml(post.authorName)}</div>
-          <div class="pd-time">${formatRelativeTime(post.timestamp)}</div>
-        </div>
-      </div>
-      <div class="pd-content">${escapeHtml(post.content || '')}</div>
-      ${mediaHtml}
-      <div class="pd-stats">
-        <span><strong>${post.likes ? post.likes.length : 0}</strong> 喜欢</span>
-        <span><strong>${post.comments ? post.comments.length : 0}</strong> 评论</span>
-        <span><strong>${post.reposts || 0}</strong> 转发</span>
-      </div>
-      <div class="pd-actions">
-        <button class="pd-action-btn ${likedClass}" data-action="like" data-post-id="${postId}">
-          <i class="fas fa-heart"></i><span>${isLiked ? '已喜欢' : '喜欢'}</span>
-        </button>
-        <button class="pd-action-btn" data-action="comment" data-post-id="${postId}">
-          <i class="fas fa-comment"></i><span>评论</span>
-        </button>
-        <button class="pd-action-btn" data-action="repost" data-post-id="${postId}">
-          <i class="fas fa-retweet"></i><span>转发</span>
-        </button>
-      </div>
-      ${commentsHtml}
-    `;
-
-    const detailBody = document.getElementById('postDetailBody');
-    if (detailBody) detailBody.innerHTML = body;
-
-    const detailView = document.getElementById('postDetailView');
-    if (detailView) detailView.style.display = 'flex';
-  }
-
-  // 绑定详情页返回按钮
-  document.getElementById('postDetailBackBtn')?.addEventListener('click', () => {
-    const detailView = document.getElementById('postDetailView');
-    if (detailView) detailView.style.display = 'none';
-    // 根据来源刷新对应视图
-    if (postDetailReturnTarget === 'moments') {
-      renderMomentsFeed();
-    } else if (postDetailReturnTarget === 'charHome') {
-      openCharHome();
-    } else if (postDetailReturnTarget === 'profile') {
-      renderProfilePostsGrid();
-      const profileView = document.querySelector('.profile-view') || document.getElementById('profilePostsGrid')?.closest('.profile-content')?.parentElement;
-      if (profileView) profileView.style.display = '';
-    }
-  });
-
-  // 详情页互动按钮（点赞/评论/转发 — 复用朋友圈逻辑）
-  document.getElementById('postDetailBody')?.addEventListener('click', e => {
-    const btn = e.target.closest('[data-action]');
-    if (!btn) return;
-    const action = btn.dataset.action;
-    const postId = btn.dataset.postId;
-    if (action === 'like') {
-      const idx = momentsPosts.findIndex(p => p.id === postId);
-      if (idx < 0) return;
-      const post = momentsPosts[idx];
-      const likedIdx = post.likes.findIndex(l => l.userId === 'current_user');
-      if (likedIdx >= 0) {
-        post.likes.splice(likedIdx, 1);
-        btn.classList.remove('liked');
-        btn.querySelector('span').textContent = '喜欢';
-      } else {
-        post.likes.push({ userId: 'current_user', userName: '我', type: 'user' });
-        btn.classList.add('liked');
-        btn.querySelector('span').textContent = '已喜欢';
-      }
-      saveMomentsPosts();
-      // 更新喜欢数
-      const statsEl = btn.closest('.pd-actions')?.previousElementSibling;
-      if (statsEl && statsEl.classList.contains('pd-stats')) {
-        statsEl.querySelector('span:first-child strong').textContent = post.likes.length;
-      }
-    } else if (action === 'comment') {
-      openMomentsCommentModal(postId);
-    } else if (action === 'repost') {
-      const idx = momentsPosts.findIndex(p => p.id === postId);
-      if (idx >= 0) {
-        momentsPosts[idx].reposts = (momentsPosts[idx].reposts || 0) + 1;
-        saveMomentsPosts();
-        btn.querySelector('span').textContent = '已转发';
-      }
-    }
-  });
-
-  // ============================================================
-  // 朋友圈筛选与收藏状态
-  // ============================================================
-  let momentsFilter = 'all'; // 'all' | 'user' | 'char' | 'favorites'
-  let momentsSearch = '';
-  let momentsSort = 'newest'; // 'newest' | 'oldest'
-
-  // 筛选按钮点击（使用事件委托）
-  document.addEventListener('click', (e) => {
-    const filterBtn = e.target.closest('.moments-filter-btn');
-    if (!filterBtn) return;
-    const filter = filterBtn.dataset.filter;
-    if (!filter) return;
-    momentsFilter = filter;
-    // 更新按钮状态
-    document.querySelectorAll('.moments-filter-btn').forEach(b => b.classList.remove('active'));
-    filterBtn.classList.add('active');
-    // 重新渲染
-    renderMomentsFeed();
-  });
-
-  // 搜索输入
-  document.addEventListener('input', (e) => {
-    if (e.target.classList.contains('moments-search-input')) {
-      momentsSearch = e.target.value.trim().toLowerCase();
-      renderMomentsFeed();
-    }
-  });
-
-  // ============================================================
-  // 角色个人主页
-  // ============================================================
-  function openCharHome() {
-    loadMomentsPosts();
-    closeSidebar();
-    const charData = loadCharacterFromStorage();
-    const charName = charData.name || '角色名称';
-    const charBio = charData.bio || '暂无个性签名';
-    const charAvatar = charData.avatar || '';
-    const charCover = charData.cover || '';
-
-    // 设置头像
-    const avatarEl = document.getElementById('charHomeAvatarLarge');
-    if (avatarEl) {
-      avatarEl.innerHTML = charAvatar ? `<img src="${charAvatar}" alt="">` : '<i class="fas fa-user-astronaut"></i>';
-    }
-
-    // 设置背景图
-    const bannerEl = document.querySelector('#charHomeView .profile-banner');
-    if (bannerEl) {
-      bannerEl.style.backgroundImage = charCover ? `url(${charCover})` : '';
-      if (charCover) { bannerEl.style.backgroundSize = 'cover'; bannerEl.style.backgroundPosition = 'center'; }
-    }
-
-    // 设置名字和签名
-    const nameEl = document.getElementById('charHomeDisplayName');
-    if (nameEl) {
-      const indicator = nameEl.querySelector('#charHomeOnlineIndicator');
-      nameEl.textContent = charName;
-      if (indicator) nameEl.appendChild(indicator);
-    }
-    document.getElementById('charHomeBioDisplay').innerHTML = `<i class="fas fa-quote-left mr-8"></i>${escapeHtml(charBio)}`;
-
-    // 设置在线状态
-    const onlineEl = document.getElementById('charHomeOnlineIndicator');
-    if (onlineEl) {
-      const statusClass = aiRealOfflineStatus ? 'offline' : 'online';
-      onlineEl.className = 'online-status-text ' + statusClass;
-    }
-
-    // 渲染推文九宫格
-    renderPostsGrid('char', 'charHomePostsGrid');
-
-    // 显示角色主页
-    const view = document.getElementById('charHomeView');
-    if (view) view.style.display = 'flex';
-  }
-
-  function closeCharHome() {
-    const view = document.getElementById('charHomeView');
-    if (view) view.style.display = 'none';
-  }
-
-  // 返回按钮（角色主页）
-  document.getElementById('charHomeBackBtn')?.addEventListener('click', closeCharHome);
-
-  // 弹窗"进入角色主页"按钮
-  document.addEventListener('click', (e) => {
-    if (e.target.closest('#cppViewBtn')) {
-      const popup = document.getElementById('charProfilePopup');
-      if (popup) { popup.classList.remove('visible'); }
-      openCharHome();
-    }
-  });
-
-  init();
-})();
+/* 内容层置于蒙版之上 */
+.profile-banner-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 24px 32px;
+    height: 100%;
+    min-height: 110px;
+}
+
+/* 个人主页操作按钮（移到卡片内容下方） */
+.profile-banner-actions {
+    position: relative;
+    z-index: 2;
+    padding: 0 32px 20px;
+    display: flex;
+    justify-content: center;
+}
+
+/* 角色卡片操作按钮（移到卡片内容下方） */
+.character-preview-actions {
+    position: relative;
+    z-index: 2;
+    padding: 0 24px 16px;
+    display: flex;
+    justify-content: center;
+}
+
+/* 大头像：圆形 + 描边 + 阴影，更醒目 */
+.profile-avatar-large {
+    position: relative;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    color: white;
+    border: 4px solid var(--accent);
+    box-shadow: 0 0 0 3px var(--bg-chat-main), 0 4px 12px rgba(0,0,0,0.3);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+.profile-avatar-large img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* 文字信息区域 */
+.profile-info {
+    flex: 1;
+}
+.profile-info h2 {
+    font-size: 28px;
+    margin-bottom: 6px;
+    color: #ffffff;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+.profile-info p {
+    font-size: 15px;
+    color: rgba(255,255,255,0.9);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+body.light-theme .profile-info h2,
+body.light-theme .profile-info p {
+    color: #1e2b34;
+    text-shadow: 0 1px 4px rgba(255,255,255,0.7);
+}
+
+/* 编辑按钮优化 —— 与主题协调 */
+.profile-banner .btn-secondary {
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    font-weight: 500;
+    padding: 10px 18px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+.profile-banner .btn-secondary:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+body.light-theme .profile-banner .btn-secondary {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(0,0,0,0.1);
+    color: #1e2b34;
+}
+body.light-theme .profile-banner .btn-secondary:hover {
+    background: var(--accent);
+    color: white;
+}
+
+/* 左下角小头像也加描边（保持统一） */
+.user-avatar {
+    border: 2px solid var(--accent) !important;
+    box-shadow: 0 0 0 2px var(--bg-sidebar);
+}
+.user-avatar.active {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent);
+}
+
+/* 下方内容区域（待开发） */
+.profile-content {
+    flex: 1;
+    background: var(--bg-chat-main);
+    padding: 24px 32px;
+}
+
+/* 清理旧的重复样式，确保没有冲突 */
+.profile-header,
+.profile-view .profile-header,
+.profile-view::before {
+    display: none !important;
+}
+
+/* 保持视图切换逻辑不变 */
+.chat-main.profile-hidden .chat-view,
+.chat-main.profile-hidden .settings-view {
+    display: none;
+}
+.chat-main.profile-hidden .profile-view {
+    display: flex;
+}
+
+.chat-main.chat-hidden .chat-view,
+.chat-main.chat-hidden .profile-view {
+  display: none;
+}
+.chat-main.chat-hidden .settings-view {
+  display: block;
+}
+
+.chat-main.profile-hidden .chat-view,
+.chat-main.profile-hidden .settings-view {
+  display: none;
+}
+.chat-main.profile-hidden .profile-view {
+  display: block;
+}
+
+
+.crop-container img {
+    max-width: 100%;
+    max-height: 300px;
+    display: block;
+}
+.modal-footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border-light);
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+/* 统一交互光标样式 */
+.chat-title,
+.sidebar-icon,
+.menu-btn,
+.send-btn,
+.user-avatar,
+.btn,
+.close-drawer,
+.modal-close {
+    user-select: none;
+}
+
+/* 可点击元素保留手型指针（如果希望） */
+.sidebar-icon,
+.menu-btn,
+.send-btn,
+.user-avatar,
+.btn,
+.close-drawer,
+.modal-close {
+    cursor: pointer;
+}
+
+/* 如果希望标题栏文字显示默认箭头，单独设置 */
+.chat-title {
+    cursor: default;
+}
+
+/* 人物管理视图 */
+.character-view {
+    flex: 1;
+    background: var(--bg-chat-main);
+    padding: 24px 32px;
+    overflow-y: auto;
+    color: var(--text-primary);
+    display: none;
+}
+/* ===== 角色预览卡片 ===== */
+.character-preview-card {
+    position: relative;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    overflow: hidden;
+    border: 1px solid var(--border-light);
+    background-color: var(--bg-header);
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+}
+
+.character-preview-bg {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: var(--bg-header);
+    z-index: 0;
+}
+
+.character-preview-bg::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1;
+}
+
+body.light-theme .character-preview-bg::after {
+    background: rgba(255, 255, 255, 0.6);
+}
+
+.character-preview-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px 24px;
+}
+
+.character-preview-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    color: white;
+    border: 3px solid rgba(255,255,255,0.3);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.character-preview-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.character-preview-info {
+    flex: 1;
+}
+
+.character-preview-info h3 {
+    font-size: 24px;
+    font-weight: 600;
+    color: white;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    margin-bottom: 6px;
+}
+
+.character-preview-info p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.9);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+body.light-theme .character-preview-info h3,
+body.light-theme .character-preview-info p {
+    color: #1e2b34;
+    text-shadow: 0 1px 4px rgba(255,255,255,0.7);
+}
+
+.character-preview-content .btn-secondary {
+    background: rgba(0,0,0,0.3);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    font-weight: 500;
+    padding: 10px 18px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.character-preview-content .btn-secondary:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+
+body.light-theme .character-preview-content .btn-secondary {
+    background: rgba(255,255,255,0.6);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(0,0,0,0.1);
+    color: #1e2b34;
+}
+
+body.light-theme .character-preview-content .btn-secondary:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+}
+.character-view.active {
+    display: block;
+}
+.chat-main.character-hidden .chat-view,
+.chat-main.character-hidden .settings-view,
+.chat-main.character-hidden .profile-view,
+.chat-main.character-hidden .focus-view {
+    display: none;
+}
+.chat-main.character-hidden .character-view {
+    display: block;
+}
+/* 统计视图显示控制 */
+.chat-main.stats-hidden .chat-view,
+.chat-main.stats-hidden .settings-view,
+.chat-main.stats-hidden .profile-view,
+.chat-main.stats-hidden .character-view,
+.chat-main.stats-hidden .focus-view,
+.chat-main.stats-hidden .data-manager-view,
+.chat-main.stats-hidden .moments-view {
+    display: none;
+}
+.chat-main.stats-hidden .stats-view {
+    display: block;
+}
+/* 专注视图显示控制 */
+.chat-main.focus-hidden .chat-view,
+.chat-main.focus-hidden .settings-view,
+.chat-main.focus-hidden .profile-view,
+.chat-main.focus-hidden .character-view,
+.chat-main.focus-hidden .data-manager-view {
+    display: none;
+}
+.chat-main.focus-hidden .focus-view {
+    display: block;
+}
+        /* 数据管理视图显示控制 */
+.chat-main.data-hidden .chat-view,
+.chat-main.data-hidden .settings-view,
+.chat-main.data-hidden .profile-view,
+.chat-main.data-hidden .character-view,
+.chat-main.data-hidden .focus-view {
+    display: none;
+}
+.chat-main.data-hidden .data-manager-view {
+    display: block;
+}
+.data-manager-view {
+    display: none;
+}
+
+.focus-view {
+    flex: 1;
+    background: var(--bg-chat-main);
+    padding: 24px 32px;
+    overflow-y: auto;
+    color: var(--text-primary);
+    display: none;
+}
+/* 专注页面标题，和设置/人物/数据管理页面标题风格统一 */
+/* (已在上方 .focus-page-title 统一定义) */
+.focus-view .settings-card {
+    margin-bottom: 24px;
+}
+
+/* ===== 对方专注置顶条 ===== */
+.ai-focus-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-header);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    padding: 8px 14px;
+    margin-bottom: 12px;
+    gap: 8px;
+    transition: background 0.2s;
+}
+.ai-focus-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+}
+.ai-focus-topbar-icon {
+    color: var(--accent);
+    font-size: 14px;
+    flex-shrink: 0;
+}
+.ai-focus-topbar-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+    min-width: 0;
+}
+.ai-focus-topbar-timer {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 1px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.ai-focus-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+.ai-focus-topbar-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.15s, color 0.15s;
+}
+.ai-focus-topbar-btn:hover {
+    background: var(--menu-btn-hover);
+    color: var(--text-primary);
+}
+.ai-focus-topbar-btn.danger:hover {
+    background: rgba(176, 46, 46, 0.12);
+    color: #e05555;
+}
+
+/* ===== 专注动画区域 ===== */
+.focus-anim-section {
+    position: relative;
+    margin-top: 4px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60px;
+}
+.focus-anim-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ===== AI学习词条区域 ===== */
+.learned-traits-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 36px;
+    padding: 8px;
+    background: var(--bg-chat-main);
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+}
+.learned-traits-empty {
+    width: 100%;
+    text-align: center;
+    padding: 8px 0;
+}
+.learned-trait-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 16px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1.5px solid var(--border-strong);
+    background: transparent;
+    color: var(--text-secondary);
+}
+.learned-trait-tag:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+.learned-trait-tag.selected {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+}
+.learned-trait-tag .trait-text {
+    /* 自动换行，不省略显示 */
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+}
+.learned-trait-tag .trait-remove {
+    font-size: 14px;
+    opacity: 0.7;
+    cursor: pointer;
+    padding: 0 2px;
+}
+.learned-trait-tag .trait-remove:hover {
+    opacity: 1;
+}
+.learned-trait-tag .trait-add-btn {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0 4px;
+    opacity: 0.7;
+    transition: opacity 0.15s;
+}
+.learned-trait-tag .trait-add-btn:hover {
+    opacity: 1;
+}
+.focus-anim-video {
+    display: block;
+    max-width: 100%;
+    max-height: 180px;
+    min-width: 80px;
+    object-fit: contain;
+    border-radius: 8px;
+    /* 卡片样式 */
+    border: 1px solid var(--border-light);
+    background-color: var(--bg-header);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+@keyframes focusAnimFadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+/* 双人双图并排 */
+.focus-anim-duo-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    max-height: 200px;
+}
+.focus-anim-duo-container .focus-anim-video {
+    max-height: 180px;
+    width: 100%;
+}
+
+.focus-anim-customize-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: rgba(0,0,0,0.4);
+    border: none;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 13px;
+    z-index: 2;
+    transition: background 0.15s;
+    backdrop-filter: blur(4px);
+}
+.focus-anim-customize-btn:hover {
+    background: rgba(15,153,96,0.7);
+}
+/* 专注动画管理弹窗 */
+.focus-anim-modal .modal-container {
+    max-width: 520px;
+    width: 96%;
+}
+.focus-anim-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+.focus-anim-tab {
+    flex: 1;
+    padding: 7px 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+}
+.focus-anim-tab.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+    font-weight: 600;
+}
+.focus-anim-tab:hover:not(.active) {
+    background: var(--menu-btn-hover);
+    color: var(--text-primary);
+}
+.focus-anim-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 10px;
+    min-height: 80px;
+    max-height: 320px;
+    overflow-y: auto;
+    padding: 4px;
+}
+.focus-anim-grid::-webkit-scrollbar { width: 4px; }
+.focus-anim-grid::-webkit-scrollbar-track { background: transparent; }
+.focus-anim-grid::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+
+/* 双人模式切换器 */
+.focus-anim-duo-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: var(--bg-header);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+}
+.focus-anim-duo-mode-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    font-weight: 500;
+}
+.focus-anim-mode-btns {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.focus-anim-mode-btn {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+.focus-anim-mode-btn:hover:not(.active) {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+.focus-anim-mode-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    font-weight: 600;
+}
+.focus-anim-item {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid var(--border-light);
+    cursor: pointer;
+    background: var(--bg-header);
+    transition: border-color 0.15s, transform 0.15s;
+    /* 使用 padding-bottom 保持正方形比例 */
+    width: 100%;
+    padding-bottom: 100%;
+}
+.focus-anim-item:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+}
+.focus-anim-item.selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent);
+}
+.focus-anim-item img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.focus-anim-item-del {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: rgba(0,0,0,0.5);
+    border: none;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+.focus-anim-item:hover .focus-anim-item-del {
+    opacity: 1;
+}
+.focus-anim-item-del:hover {
+    background: rgba(176,46,46,0.8);
+}
+.focus-anim-add-btn {
+    border-radius: 12px;
+    border: 2px dashed var(--border-strong);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 24px;
+    cursor: pointer;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+    min-height: 80px;
+}
+.focus-anim-add-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(15,153,96,0.07);
+}
+.focus-anim-empty {
+    grid-column: 1/-1;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 13px;
+    padding: 24px 0;
+}
+.focus-main {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+}
+.focus-timer {
+    font-size: 44px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 16px 18px;
+    border-radius: 14px;
+    background: var(--bg-header);
+    border: 1px solid var(--border-light);
+    min-width: 160px;
+    text-align: center;
+    color: var(--text-primary);
+}
+.focus-meta {
+    flex: 1;
+    min-width: 0;
+}
+.focus-activity {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* 专注界面操作按钮右侧对齐 */
+.focus-meta .flex-gap-12 {
+    justify-content: flex-end;
+}
+.flex-end {
+    justify-content: flex-end;
+}
+.align-center {
+    align-items: center;
+}
+.gap-8 {
+    gap: 8px;
+}
+
+/* 邀请说明文字 */
+.invite-label-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+.focus-mode-hint {
+    font-size: 10px;
+    color: var(--text-secondary);
+    opacity: 0.7;
+    line-height: 1.3;
+}
+
+/* AI专注结束按钮 */
+.ai-focus-end-btn {
+    background: transparent;
+    border: none;
+    color: #e05555;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.15s;
+}
+.ai-focus-end-btn:hover {
+    background: rgba(176, 46, 46, 0.15);
+}
+
+@media (max-width: 600px) {
+    .focus-view {
+        padding: 16px 14px;
+    }
+    .focus-page-title {
+        padding-left: 44px;
+        margin-bottom: 16px;
+    }
+    .focus-main {
+        flex-direction: column;
+        gap: 14px;
+    }
+    .focus-timer {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+#cropModalOverlay {
+    z-index: 2100;
+}
+
+.reset-separator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 30px 0;
+    opacity: 0.8;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+.reset-separator .line {
+    flex: 1;
+    height: 1px;
+}
+.reset-separator .line-left {
+    background: linear-gradient(to right, transparent, var(--border-light));
+    margin-right: 15px;
+}
+.reset-separator .line-right {
+    background: linear-gradient(to left, transparent, var(--border-light));
+    margin-left: 15px;
+}
+
+/* ===== 快速回到底部按钮 ===== */
+.scroll-to-bottom-btn {
+    position: absolute;
+    bottom: 90px;
+    right: 20px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: none;
+    color: white;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.35);
+    z-index: 50;
+    transition: transform 0.15s, background 0.15s, opacity 0.25s;
+    opacity: 0;
+    pointer-events: none;
+}
+.scroll-to-bottom-btn.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+.scroll-to-bottom-btn:hover {
+    background: var(--accent-hover);
+    transform: translateY(-2px);
+}
+.scroll-to-bottom-btn:active {
+    transform: scale(0.92);
+}
+
+/* ===== 统计视图 ===== */
+.stats-view {
+    flex: 1;
+    background: var(--bg-chat-main);
+    padding: 24px 32px;
+    overflow-y: auto;
+    color: var(--text-primary);
+    display: none;
+}
+.stats-view.active {
+    display: block;
+}
+.chat-main.stats-hidden .chat-view,
+.chat-main.stats-hidden .settings-view,
+.chat-main.stats-hidden .profile-view,
+.chat-main.stats-hidden .character-view,
+.chat-main.stats-hidden .focus-view,
+.chat-main.stats-hidden .data-manager-view {
+    display: none;
+}
+.chat-main.stats-hidden .stats-view {
+    display: block;
+}
+
+/* ========== 朋友圈视图 ========== */
+/* 视图切换规则：moments-hidden 时显示朋友圈，隐藏其它 */
+.chat-main.moments-hidden .chat-view,
+.chat-main.moments-hidden .settings-view,
+.chat-main.moments-hidden .profile-view,
+.chat-main.moments-hidden .character-view,
+.chat-main.moments-hidden .focus-view,
+.chat-main.moments-hidden .stats-view,
+.chat-main.moments-hidden .data-manager-view {
+    display: none;
+}
+.chat-main.moments-hidden .moments-view {
+    display: flex;
+}
+
+/* 朋友圈视图容器 */
+.moments-view {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+    padding: 24px 32px;
+    background: var(--bg-chat-main);
+    overflow-y: auto;
+}
+.moments-settings-btn {
+    background: var(--bg-header);
+    border: 1px solid var(--border-light);
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+.moments-settings-btn:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    transform: scale(1.05);
+}
+.moments-settings-btn:active {
+    transform: scale(0.95);
+}
+.moments-feed {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 0 20px;
+}
+/* 帖子卡片 */
+.moments-post {
+    background: var(--bg-header);
+    border-bottom: 1px solid var(--border-light);
+    padding: 16px 20px;
+}
+.mp-author {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.mp-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bg-header);
+    overflow: hidden;
+    flex-shrink: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.mp-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.mp-avatar i {
+    font-size: 18px;
+    color: var(--text-secondary);
+}
+.mp-author-info {
+    display: flex;
+    flex-direction: column;
+}
+.mp-author-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+}
+.mp-author-name:hover { color: var(--accent); }
+.mp-timestamp {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+.mp-content {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+/* 图片网格 */
+.mp-media {
+    display: grid;
+    gap: 3px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.mp-media.grid-1 { grid-template-columns: 1fr; }
+.mp-media.grid-2 { grid-template-columns: 1fr 1fr; }
+.mp-media.grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+.mp-media.grid-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.mp-media.grid-5, .mp-media.grid-6 { grid-template-columns: 1fr 1fr 1fr; }
+.mp-media-item {
+    width: 100%;
+    aspect-ratio: 1;
+    background: var(--input-bg);
+    overflow: hidden;
+    cursor: pointer;
+}
+.mp-media-item img, .mp-media-item video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+/* 操作按钮行 */
+.mp-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 6px 0;
+    border-top: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-light);
+    margin-bottom: 6px;
+}
+.mp-action-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 2px;
+    transition: color 0.15s;
+}
+.mp-action-btn:hover { color: var(--accent); }
+.mp-action-btn.liked { color: #e74c3c; }
+.mp-action-btn.liked i { font-weight: 900; }
+
+/* 朋友圈上传卡片 */
+.moments-upload-card {
+    width: 72px;
+    height: 72px;
+    background: var(--bg-header);
+    border: 2px dashed var(--border-light);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-secondary);
+    font-size: 28px;
+    margin-top: 10px;
+}
+.moments-upload-card:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(15, 153, 96, 0.08);
+}
+.moments-upload-card:active {
+    transform: scale(0.97);
+}
+/* 点赞列表 */
+.mp-likes {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    padding-left: 2px;
+}
+.mp-likes b { color: var(--text-primary); font-weight: 600; }
+/* 评论区 */
+.mp-comments {
+    font-size: 13px;
+}
+.mp-comment {
+    padding: 3px 0;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+.mp-comment b { color: var(--text-primary); font-weight: 600; }
+.mp-comment:hover b { color: var(--accent); }
+.mp-comment-input-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+}
+.mp-comment-input {
+    flex: 1;
+    background: var(--input-bg);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 13px;
+    color: var(--text-primary);
+    outline: none;
+}
+.mp-comment-input:focus { border-color: var(--accent); }
+.mp-comment-send-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.mp-comment-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+/* 帖子右上角菜单 */
+.mp-post-menu {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+.mp-post-menu:hover { background: var(--input-bg); }
+.stats-page-title {
+    padding-left: 44px;
+    margin-bottom: 16px;
+}
+
+/* 页面标题行（标题+右侧操作按钮）*/
+.view-title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+}
+.view-title-row h2 {
+    flex: 1;
+}
+
+/* 导入导出图标按钮组（旧，兼容保留） */
+.import-export-icons {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-shrink: 0;
+    padding-top: 2px;
+}
+
+/* 导入导出卡片（各界面独立栏目） */
+.import-export-card {
+    padding: 14px 16px !important;
+}
+.import-export-card h3 {
+    margin-bottom: 12px !important;
+    font-size: 14px !important;
+}
+.import-export-btn-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* 上下排列间距（抽屉导出导入竖向按钮） */
+.flex-col-gap-8 {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.flex-col-gap-10 {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.icon-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+    background: var(--bg-header);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+.icon-btn:hover {
+    background: var(--menu-btn-hover);
+    color: var(--accent);
+    border-color: var(--accent);
+}
+.ml-8 { margin-left: 8px; }
+
+/* 统计栏目切换 */
+.stats-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    flex-wrap: nowrap;
+}
+.stats-tab {
+    padding: 8px 16px;
+    border: 1px solid var(--border-light);
+    border-radius: 20px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.stats-tab:hover {
+    background: var(--menu-btn-hover);
+    color: var(--text-primary);
+}
+.stats-tab.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+    font-weight: 600;
+}
+
+/* 统计内容区 */
+.stats-content {
+    display: none;
+}
+.stats-content.active {
+    display: block;
+}
+
+/* 统计卡片 */
+.stats-card {
+    background: var(--bg-header);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border-light);
+}
+.stats-card h3 {
+    font-size: 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-primary);
+}
+.stats-card h3 i {
+    color: var(--accent);
+}
+
+/* 日程相关 */
+.schedule-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+.schedule-date {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+.schedule-timeline {
+    position: relative;
+    padding: 0 8px;
+}
+.schedule-empty {
+    text-align: center;
+    padding: 24px;
+    color: var(--text-secondary);
+}
+
+/* 新时间线布局 */
+.timeline-container {
+    display: flex;
+    flex-direction: column;
+}
+.timeline-row {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+}
+.timeline-left {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-right: 12px;
+}
+.timeline-right {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    padding-left: 12px;
+}
+.timeline-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    width: 40px;
+}
+.timeline-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg-header);
+    z-index: 2;
+    flex-shrink: 0;
+}
+.timeline-dot.char-dot {
+    background: #9b59b6;
+}
+.timeline-dot.user-dot {
+    background: var(--accent);
+}
+.timeline-line {
+    width: 2px;
+    flex: 1;
+    background: var(--border-strong);
+    min-height: 24px;
+}
+.timeline-time {
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+.timeline-content {
+    font-size: 13px;
+    color: var(--text-primary);
+    padding: 4px 10px;
+    border-radius: 8px;
+    background: var(--bg-chat-main);
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.timeline-content i {
+    margin-right: 4px;
+    opacity: 0.7;
+}
+.timeline-marker {
+    font-size: 14px;
+    font-weight: bold;
+}
+.char-marker {
+    color: #9b59b6;
+}
+.user-marker {
+    color: var(--accent);
+}
+.char-content {
+    background: rgba(155, 89, 182, 0.1);
+    border: 1px solid rgba(155, 89, 182, 0.2);
+}
+.user-content {
+    background: rgba(15, 153, 96, 0.1);
+    border: 1px solid rgba(15, 153, 96, 0.2);
+}
+
+/* 旧样式保留但隐藏（兼容） */
+.schedule-item { display: none; }
+.schedule-timeline::before { display: none; }
+
+/* 聊天统计 */
+.chat-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+.chat-stat-item {
+    text-align: center;
+    padding: 16px;
+    background: var(--bg-chat-main);
+    border-radius: 12px;
+}
+.chat-stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent);
+}
+.chat-stat-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+
+
+/* 消息统计 */
+.message-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+.message-stat-item {
+    text-align: center;
+    padding: 16px;
+    background: var(--bg-chat-main);
+    border-radius: 12px;
+}
+.message-stat-value {
+    font-size: 32px;
+    font-weight: 700;
+}
+.message-stat-value.user-color { color: var(--accent); }
+.message-stat-value.char-color { color: #9b59b6; }
+.message-stat-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+
+/* 词排行 */
+.word-ranking-list {
+    background: var(--bg-chat-main);
+    border-radius: 12px;
+    padding: 12px;
+}
+.word-ranking-empty {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 24px;
+}
+.word-ranking-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: 8px;
+}
+.word-ranking-item:hover {
+    background: var(--bg-header);
+}
+.word-ranking-rank {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    background: var(--border-light);
+    color: var(--text-secondary);
+}
+.word-ranking-item:nth-child(1) .word-ranking-rank {
+    background: #f1c40f;
+    color: #fff;
+}
+.word-ranking-item:nth-child(2) .word-ranking-rank {
+    background: #bdc3c7;
+    color: #fff;
+}
+.word-ranking-item:nth-child(3) .word-ranking-rank {
+    background: #cd7f32;
+    color: #fff;
+}
+.word-ranking-word {
+    flex: 1;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+.word-ranking-count {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* 专注统计 */
+.focus-total-stats {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+.focus-total-stats:last-child {
+    margin-bottom: 0;
+}
+.focus-total-row {
+    justify-content: center;
+}
+.focus-total-shared {
+    max-width: 200px;
+    width: 100%;
+}
+.focus-total-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    background: var(--bg-chat-main);
+    border-radius: 12px;
+    flex: 1;
+    justify-content: center;
+    max-width: 200px;
+}
+.focus-total-item i {
+    font-size: 28px;
+    color: var(--accent);
+}
+.focus-total-item.user-side i { color: var(--accent); }
+.focus-total-item.char-side i { color: #9b59b6; }
+.focus-total-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.focus-total-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.focus-records-list {
+    background: var(--bg-chat-main);
+    border-radius: 12px;
+    padding: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+.focus-record-empty {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 24px;
+}
+.focus-record-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    background: var(--bg-header);
+}
+.focus-record-item:last-child {
+    margin-bottom: 0;
+}
+.focus-record-time {
+    min-width: 50px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+.focus-record-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.focus-record-dot.user-dot { background: var(--accent); }
+.focus-record-dot.char-dot { background: #9b59b6; }
+.focus-record-info {
+    flex: 1;
+}
+.focus-record-owner {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+.focus-record-activity {
+    font-size: 14px;
+    color: var(--text-primary);
+}
+.focus-record-duration {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+}
+
+/* 添加日程弹窗 */
+.schedule-form-group {
+    margin-bottom: 12px;
+}
+.schedule-form-group label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+.schedule-form-group input,
+.schedule-form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    font-size: 14px;
+}
+.schedule-owner-toggle {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+.schedule-owner-btn {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.schedule-owner-btn.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+}
+.schedule-owner-btn.char-btn.active {
+    background: #9b59b6;
+    border-color: #9b59b6;
+}
+
+/* 日程卡片式弹窗样式 */
+.schedule-dialog-container {
+    padding: 4px 0;
+}
+.schedule-preset-section {
+    margin-bottom: 16px;
+}
+.schedule-preset-section label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+.schedule-preset-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.schedule-preset-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 6px;
+    background: var(--input-bg);
+    border: 2px solid var(--border-strong);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    gap: 6px;
+}
+.schedule-preset-card:hover {
+    border-color: var(--card-color, var(--accent));
+    background: rgba(255, 255, 255, 0.05);
+}
+.schedule-preset-card.selected {
+    border-color: var(--card-color, var(--accent));
+    background: var(--card-color, var(--accent));
+}
+.schedule-preset-card.selected span {
+    color: #fff;
+}
+.schedule-preset-card.selected i {
+    color: #fff;
+}
+.schedule-preset-card i {
+    font-size: 18px;
+    color: var(--card-color, var(--accent));
+}
+.schedule-preset-card span {
+    font-size: 12px;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+.schedule-custom-btn {
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    border: 1px dashed var(--border-strong);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+.schedule-custom-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+.schedule-custom-form {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-light);
+}
+.schedule-form-row {
+    margin-bottom: 12px;
+}
+
+/* 专注记录分页样式 */
+.focus-records-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    margin-top: 8px;
+    border-top: 1px solid var(--border-light);
+}
+.focus-records-info {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+.focus-records-btns {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.focus-page-btn {
+    padding: 6px 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.focus-page-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+.focus-page-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+.focus-page-num {
+    font-size: 12px;
+    color: var(--text-secondary);
+    min-width: 50px;
+    text-align: center;
+}
+
+/* 专注历史记录按钮 */
+.focus-page-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.focus-history-btn {
+    margin-left: auto;
+    padding: 6px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.focus-history-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* 历史专注记录抽屉 */
+.focus-history-drawer {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 380px;
+    height: 100vh;
+    background: var(--bg-chat-main);
+    border-left: 1px solid var(--border-light);
+    z-index: 2000;
+    transition: right 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+.focus-history-drawer.open {
+    right: 0;
+}
+.focus-history-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+.focus-history-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+.focus-history-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    border-bottom: 1px solid var(--border-light);
+}
+.focus-history-drawer-header h3 {
+    margin: 0;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.focus-history-drawer-close {
+    padding: 8px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.focus-history-drawer-close:hover {
+    background: var(--menu-btn-hover);
+    color: var(--text-primary);
+}
+.focus-history-drawer-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+}
+.focus-history-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+}
+.focus-history-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    background: var(--bg-sidebar);
+}
+.focus-history-item:hover {
+    background: var(--menu-btn-hover);
+}
+.focus-history-time {
+    font-size: 11px;
+    color: var(--text-secondary);
+    min-width: 80px;
+}
+.focus-history-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin: 4px 8px 0;
+    flex-shrink: 0;
+}
+.focus-history-dot.user-dot { background: var(--accent); }
+.focus-history-dot.char-dot { background: #9b59b6; }
+.focus-history-info {
+    flex: 1;
+}
+.focus-history-owner {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+}
+.focus-history-activity {
+    font-size: 13px;
+    color: var(--text-primary);
+}
+.focus-history-duration {
+    font-size: 12px;
+    color: var(--accent);
+    white-space: nowrap;
+    margin-left: 8px;
+}
+
+/* 专注记录限制提示 */
+.focus-record-hint {
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: var(--bg-chat-main);
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.focus-record-hint i {
+    color: var(--accent);
+}
+
+/* 小按钮样式 */
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+.mr-4 { margin-right: 4px; }
+.fs-32 { font-size: 32px; }
+
+/* 响应式 */
+@media (max-width: 600px) {
+    .stats-view {
+        padding: 16px 14px;
+    }
+    .stats-page-title {
+        padding-left: 44px;
+    }
+    .stats-tabs {
+        gap: 6px;
+    }
+    .stats-tab {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+    .chat-stats-grid {
+        grid-template-columns: 1fr;
+    }
+    .focus-total-stats {
+        flex-direction: column;
+    }
+    .message-stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ===== 角色主页弹窗 ===== */
+/* 样式已在上方统一声明 */
+
+/* 封面背景 */
+.cpp-cover {
+    height: 72px;
+    background: linear-gradient(135deg, var(--accent-color, #4f6ef7) 0%, #2d1f6e 100%);
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+.cpp-cover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.45) 100%);
+}
+
+/* 顶部信息区 */
+.cpp-top {
+    padding: 0 14px 10px;
+    background: var(--bg-chat-main);
+}
+.cpp-avatar {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    border: 3px solid var(--bg-chat-main);
+    background: var(--bg-header);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    color: var(--text-secondary);
+    overflow: hidden;
+    margin-top: -28px;
+    position: relative;
+    z-index: 1;
+}
+.cpp-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.cpp-namerow { display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+.cpp-name {
+    font-size: 15px; font-weight: 700;
+    color: var(--text-primary, #fff);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cpp-bio {
+    font-size: 12px;
+    color: var(--text-secondary, rgba(255,255,255,0.55));
+    margin-top: 3px; line-height: 1.5;
+    display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* 分割线 */
+.cpp-divider { height: 1px; background: var(--border-light); }
+
+/* 元数据区 */
+.cpp-meta {
+    padding: 10px 14px 6px;
+    display: flex; flex-direction: column;
+    background: var(--bg-chat-main);
+}
+.cpp-meta-item {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border-light);
+}
+.cpp-meta-item:last-child { border-bottom: none; }
+.cpp-meta-label {
+    font-size: 11px; font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: 0.05em;
+    flex-shrink: 0; width: 44px; padding-top: 1px;
+}
+.cpp-meta-val {
+    font-size: 12px;
+    color: var(--text-primary);
+    flex: 1; word-break: break-word; line-height: 1.5;
+}
+
+/* 底部按钮 */
+.cpp-footer {
+    padding: 8px 14px 12px;
+    border-top: 1px solid var(--border-light);
+    background: var(--bg-chat-main);
+}
+
+/* ===== 角色主页信息折叠卡 ===== */
+.char-info-collapse-card { overflow: hidden; }
+.char-info-collapse-header {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    cursor: pointer; user-select: none;
+}
+.char-info-collapse-header span {
+    font-size: 14px; font-weight: 600;
+    color: var(--text-primary);
+    display: flex; align-items: center; gap: 6px;
+}
+.char-info-collapse-header span i { color: var(--accent-color); }
+.char-info-collapse-arrow {
+    font-size: 11px; color: var(--text-secondary);
+    transition: transform 0.2s ease; flex-shrink: 0;
+}
+.char-info-collapse-card.open .char-info-collapse-arrow { transform: rotate(180deg); }
+.char-info-collapse-body { display: none; margin-top: 14px; }
+.char-info-collapse-card.open .char-info-collapse-body { display: block; }
+
+/* ===== 抽屉内备注与描述区域 ===== */
+.char-note-section {
+    background: var(--bg-header);
+    border-radius: 12px;
+    padding: 14px 14px 12px;
+    border: 1px solid var(--border-light);
+    margin-bottom: 4px;
+}
+.char-note-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.char-note-label i {
+    color: var(--accent);
+    font-size: 11px;
+}
+.char-note-input {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    padding: 8px 10px;
+    color: var(--text-primary);
+    font-size: 13px;
+    outline: none;
+    resize: vertical;
+    transition: border-color 0.15s;
+    box-sizing: border-box;
+}
+.char-note-input:focus {
+    border-color: var(--accent);
+}
+.char-note-input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.6;
+}
+.char-note-hint {
+    font-size: 10px;
+    color: var(--text-secondary);
+    opacity: 0.6;
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* 在线状态切换行 */
+.online-status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+}
+.online-status-label {
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+/* ===== 用户主页弹窗 ===== */
+.user-profile-popup {
+    display: none;
+    position: fixed;
+    z-index: 99999;
+    width: 268px;
+    background: var(--bg-chat-main);
+    border-radius: 10px;
+    box-shadow: 0 8px 32px var(--shadow), 0 0 0 1px var(--border-light);
+    overflow: hidden;
+    color: var(--text-primary);
+    pointer-events: auto;
+    font-size: 13px;
+}
+.user-profile-popup.visible {
+    display: block;
+    animation: profile-popup-enter 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ===== 角色主页弹窗动画 ===== */
+.char-profile-popup {
+    display: none;
+    position: fixed;
+    z-index: 99999;
+    width: 268px;
+    background: var(--bg-chat-main);
+    border-radius: 10px;
+    box-shadow: 0 8px 32px var(--shadow), 0 0 0 1px var(--border-light);
+    overflow: hidden;
+    color: var(--text-primary);
+    pointer-events: auto;
+    font-size: 13px;
+    animation: profile-popup-enter 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.char-profile-popup.visible { display: block; }
+
+/* 弹窗进入动画 */
+@keyframes profile-popup-enter {
+    0% {
+        opacity: 0;
+        transform: scale(0.88) translateY(-6px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* 弹窗关闭动画 */
+.char-profile-popup.closing,
+.user-profile-popup.closing {
+    animation: profile-popup-exit 0.15s ease-out forwards;
+}
+@keyframes profile-popup-exit {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.92);
+    }
+}
+
+/* ===== 在线状态文字标志 ===== */
+/* 替换旧的在线小绿点，改用文字样式 */
+.online-status-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+.online-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.online-status-text.online .online-status-dot {
+    background: #4ade80;
+}
+.online-status-text.online .online-status-label {
+    color: #4ade80;
+}
+.online-status-text.offline .online-status-dot {
+    background: #9ca3af;
+}
+.online-status-text.offline .online-status-label {
+    color: #9ca3af;
+}
+.online-status-text .online-status-label {
+    font-weight: 500;
+}
+
+/* 教程字段示例（正确/错误对比） */
+.tutorial-field-example {
+    font-size: 12.5px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 7px;
+    padding: 10px 12px;
+    margin-top: 8px;
+    line-height: 2;
+    color: var(--text-secondary);
+}
+.tfe-label {
+    font-weight: 600;
+    margin-right: 6px;
+}
+.tfe-wrong { color: #f87171; }
+
+/* ===== 卡片右上角帮助按钮 ===== */
+.card-help-btn {
+    margin-left: auto;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 17px;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 50%;
+    transition: color 0.15s, transform 0.15s;
+    line-height: 1;
+    flex-shrink: 0;
+}
+.card-help-btn:hover {
+    color: var(--accent);
+    transform: scale(1.15);
+}
+
+/* ===== 云端备份教程弹窗 ===== */
+.w-560 {
+    max-width: 560px !important;
+}
+.cloud-tutorial-body {
+    padding: 20px 24px;
+    overflow-y: auto;
+    max-height: calc(90vh - 130px);
+}
+.tutorial-intro {
+    background: var(--input-bg);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    line-height: 1.6;
+}
+.tutorial-intro i {
+    color: var(--accent);
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+/* 步骤列表 */
+.tutorial-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 24px;
+    position: relative;
+}
+.tutorial-steps::before {
+    content: '';
+    position: absolute;
+    left: 17px;
+    top: 28px;
+    bottom: 28px;
+    width: 2px;
+    background: var(--border-light);
+    z-index: 0;
+}
+.tutorial-step {
+    display: flex;
+    gap: 16px;
+    padding: 14px 0;
+    position: relative;
+    z-index: 1;
+}
+.tutorial-step-num {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 3px var(--bg-sidebar);
+}
+.tutorial-step-content {
+    flex: 1;
+    padding-top: 6px;
+}
+.tutorial-step-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+.tutorial-step-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 8px;
+}
+.tutorial-step-desc:last-child {
+    margin-bottom: 0;
+}
+
+/* 代码块 */
+.tutorial-code-block {
+    position: relative;
+    background: rgba(0,0,0,0.25);
+    border-radius: 8px;
+    margin: 8px 0;
+    overflow: hidden;
+}
+.tutorial-code-block pre {
+    font-size: 11.5px;
+    padding: 12px 14px;
+    padding-right: 72px;
+    overflow-x: auto;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-family: 'Courier New', monospace;
+    white-space: pre;
+}
+.tutorial-copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 11px;
+    padding: 4px 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+}
+.tutorial-copy-btn:hover { opacity: 0.85; }
+.tutorial-copy-btn.copied { background: #22c55e; }
+
+/* 提示框 */
+.tutorial-tip {
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: var(--input-bg);
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-top: 8px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    line-height: 1.5;
+}
+.tutorial-tip i { flex-shrink: 0; margin-top: 1px; color: var(--accent); }
+.tutorial-tip.warn i { color: #f59e0b; }
+
+/* 无序列表 */
+.tutorial-list {
+    margin: 8px 0 8px 16px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.8;
+}
+.tutorial-list li { margin-bottom: 2px; }
+
+/* FAQ */
+.tutorial-faq {
+    border-top: 1px solid var(--border-light);
+    padding-top: 20px;
+}
+.tutorial-faq-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.tutorial-faq-title i { color: var(--accent); }
+.tutorial-faq-item {
+    border-bottom: 1px solid var(--border-light);
+    padding: 10px 0;
+}
+.tutorial-faq-item:last-child { border-bottom: none; }
+.tutorial-faq-item summary {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.tutorial-faq-item summary::before {
+    content: '\f054';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: 10px;
+    color: var(--accent);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+.tutorial-faq-item[open] summary::before {
+    transform: rotate(90deg);
+}
+.tutorial-faq-item p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-top: 8px;
+    padding-left: 18px;
+}
+
+/* ============================================================ */
+/* ===================== 朋友圈完整样式 ========================= */
+/* ============================================================ */
+
+/* 发帖按钮 */
+.moments-post-btn {
+    background: var(--accent);
+    border: none;
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+.moments-post-btn:hover {
+    background: var(--accent-hover);
+    transform: scale(1.05);
+}
+.moments-post-btn:active {
+    transform: scale(0.95);
+}
+
+/* Tab 切换 */
+.moments-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 8px 20px;
+    border-bottom: 1px solid var(--border-light);
+    flex-shrink: 0;
+}
+.moments-tab {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 8px 12px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+.moments-tab:hover {
+    background: var(--menu-btn-hover);
+    color: var(--text-primary);
+}
+.moments-tab.active {
+    background: var(--accent);
+    color: white;
+    font-weight: 600;
+}
+
+/* 空状态 */
+.moments-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: var(--text-secondary);
+}
+.moments-empty i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+.moments-empty p {
+    font-size: 14px;
+}
+
+/* 帖子时间 */
+.mp-time {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+/* 下拉菜单 */
+.mp-actions-dropdown {
+    position: relative;
+    margin-left: auto;
+}
+.mp-action-btn[data-action="more"] {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 4px 8px;
+}
+.mp-dropdown-menu {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background: var(--bg-header);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px var(--shadow);
+    overflow: hidden;
+    z-index: 100;
+    min-width: 100px;
+}
+.mp-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 14px;
+    background: none;
+    border: none;
+    font-size: 13px;
+    color: var(--text-primary);
+    cursor: pointer;
+    text-align: left;
+}
+.mp-dropdown-item:hover {
+    background: var(--menu-btn-hover);
+}
+.mp-dropdown-item i {
+    width: 16px;
+    color: var(--text-secondary);
+}
+
+/* 点赞/评论/转发按钮样式 */
+.mp-action-like,
+.mp-action-comment,
+.mp-action-repost {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.15s;
+}
+.mp-action-like:hover,
+.mp-action-comment:hover,
+.mp-action-repost:hover {
+    background: var(--menu-btn-hover);
+    color: var(--accent);
+}
+.mp-action-like.liked {
+    color: #e74c3c;
+}
+.mp-action-like.liked i {
+    font-weight: 900;
+}
+.mp-action-like span,
+.mp-action-comment span {
+    min-width: 14px;
+}
+
+/* 评论预览 */
+.mp-comments-preview {
+    font-size: 13px;
+    color: var(--text-secondary);
+    background: var(--bg-header);
+    border-radius: 6px;
+    padding: 6px 10px;
+    margin-bottom: 6px;
+}
+.mcp-item {
+    line-height: 1.6;
+    padding: 2px 0;
+}
+.mcp-author {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+.mcp-content {
+    color: var(--text-secondary);
+    margin-left: 4px;
+}
+.mcp-more {
+    color: var(--text-secondary);
+    font-size: 12px;
+    margin-top: 4px;
+    opacity: 0.7;
+}
+
+/* ===== 发帖弹窗 ===== */
+.moments-account-switcher {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.moments-account-btn {
+    flex: 1;
+    padding: 10px 12px;
+    background: var(--input-bg);
+    border: 2px solid var(--border-light);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+.moments-account-btn:hover {
+    border-color: var(--accent);
+    color: var(--text-primary);
+}
+.moments-account-btn.active {
+    border-color: var(--accent);
+    background: rgba(15, 153, 96, 0.1);
+    color: var(--accent);
+}
+.moments-account-btn i {
+    font-size: 14px;
+}
+
+/* 媒体预览区 */
+.moments-media-preview {
+    display: none;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin: 10px 0;
+}
+.mmp-item {
+    position: relative;
+    aspect-ratio: 1;
+    background: var(--input-bg);
+    border-radius: 6px;
+    overflow: hidden;
+}
+.mmp-item img,
+.mmp-item video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.mmp-remove {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    background: rgba(0,0,0,0.6);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.mmp-remove:hover {
+    background: rgba(231, 76, 60, 0.9);
+}
+
+/* 媒体按钮行 */
+.moments-media-btns {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+/* 媒体计数 */
+.moments-media-count {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+/* ===== 评论区弹窗 ===== */
+.moments-comment-post-preview {
+    background: var(--input-bg);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+}
+.mcp-preview-author {
+    font-size: 14px;
+}
+.mcp-preview-name {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+.mcp-preview-content {
+    color: var(--text-secondary);
+    margin-left: 4px;
+}
+
+/* 评论列表 */
+.moments-comment-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+.mcl-item {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 13px;
+    line-height: 1.5;
+}
+.mcl-item:last-child {
+    border-bottom: none;
+}
+.mcl-author {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+.mcl-content {
+    color: var(--text-secondary);
+    margin-left: 4px;
+}
+.moments-empty-comments {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+/* 评论底部输入 */
+.moments-comment-footer {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.moments-comment-footer input {
+    flex: 1;
+    background: var(--input-bg);
+    border: 1px solid var(--border-light);
+    border-radius: 20px;
+    padding: 8px 14px;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+.moments-comment-footer input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+.moments-comment-footer input::placeholder {
+    color: var(--text-secondary);
+}
+
+/* 图片网格布局 */
+.mp-media-grid {
+    display: grid;
+    gap: 3px;
+}
+.mp-media-grid.cols-1 { grid-template-columns: 1fr; }
+.mp-media-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+.mp-media-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+.mp-media-single {
+    max-width: 60%;
+}
+.mp-media-single img,
+.mp-media-single video {
+    width: 100%;
+    max-height: 300px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.mp-media-video video {
+    width: 100%;
+    max-height: 300px;
+    border-radius: 8px;
+}
+
+/* ============================================================
+   推文九宫格（个人主页 & 角色主页）
+   ============================================================ */
+.profile-content {
+    flex: 1;
+    padding: 0;
+    background: var(--bg-chat-main);
+}
+
+.profile-posts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3px;
+    padding: 3px;
+    min-height: 120px;
+}
+
+/* 空状态 */
+.profile-posts-grid .profile-empty {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: var(--text-secondary);
+    gap: 12px;
+    font-size: 14px;
+}
+.profile-posts-grid .profile-empty i {
+    font-size: 36px;
+    opacity: 0.4;
+}
+
+/* 单个格子 */
+.post-grid-item {
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+    background: var(--bg-sidebar);
+    border-radius: 0;
+    transition: opacity 0.15s;
+}
+.post-grid-item:hover {
+    opacity: 0.85;
+}
+
+/* 有图片的格子：固定正方形高度 */
+.post-grid-item.has-media {
+    aspect-ratio: 1 / 1;
+    display: flex;
+    flex-direction: column;
+}
+.post-grid-item.has-media .pgi-img-wrap {
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+}
+.post-grid-item.has-media .pgi-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.post-grid-item.has-media .pgi-img-wrap .pgi-img-count {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: rgba(0,0,0,0.55);
+    color: #fff;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 10px;
+}
+.post-grid-item.has-media .pgi-text {
+    padding: 5px 7px 6px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.35;
+    max-height: 38px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    flex-shrink: 0;
+    background: var(--bg-sidebar);
+}
+
+/* 纯文字的格子：固定文本显示高度 */
+.post-grid-item.text-only {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    min-height: 90px;
+    padding: 10px;
+}
+.post-grid-item.text-only .pgi-text-content {
+    font-size: 12.5px;
+    color: var(--text-primary);
+    line-height: 1.5;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    word-break: break-word;
+    flex: 1;
+}
+.post-grid-item.text-only .pgi-time {
+    font-size: 10px;
+    color: var(--text-secondary);
+    margin-top: 6px;
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   单条推文详情页内容样式
+   ============================================================ */
+.post-detail-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 20px 32px;
+}
+
+/* 详情页推文内容 */
+.pd-author-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+.pd-avatar {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--bg-sidebar);
+    overflow: hidden;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+.pd-avatar img {
+    width: 100%; height: 100%; object-fit: cover;
+}
+.pd-name {
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--text-primary);
+}
+.pd-time {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+.pd-content {
+    font-size: 15px;
+    color: var(--text-primary);
+    line-height: 1.65;
+    margin-bottom: 16px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.pd-media-grid {
+    display: grid;
+    gap: 4px;
+    margin-bottom: 16px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.pd-media-grid.cols-1 { grid-template-columns: 1fr; }
+.pd-media-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+.pd-media-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.pd-media-grid img, .pd-media-grid video {
+    width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block;
+}
+.pd-media-grid.cols-1 img, .pd-media-grid.cols-1 video {
+    aspect-ratio: auto; max-height: 400px; object-fit: contain; background: #000;
+}
+
+.pd-divider {
+    height: 1px;
+    background: var(--border-light);
+    margin: 14px 0;
+}
+.pd-stats {
+    display: flex;
+    gap: 20px;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+.pd-stats span strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.pd-actions {
+    display: flex;
+    gap: 0;
+    margin: 14px 0;
+    border-top: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-light);
+    padding: 6px 0;
+}
+.pd-action-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    padding: 8px 0;
+    cursor: pointer;
+    border-radius: 8px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background 0.15s, color 0.15s;
+}
+.pd-action-btn:hover { background: var(--bg-hover); color: var(--accent); }
+.pd-action-btn.liked { color: #e0245e; }
+.pd-action-btn.liked i { color: #e0245e; }
+
+/* 评论列表 */
+.pd-comment-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin: 16px 0 10px;
+}
+.pd-comment-item {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+.pd-comment-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--bg-sidebar);
+    overflow: hidden;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; color: var(--text-secondary);
+}
+.pd-comment-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.pd-comment-body {
+    flex: 1;
+}
+.pd-comment-author {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.pd-comment-text {
+    font-size: 13px;
+    color: var(--text-primary);
+    line-height: 1.5;
+    margin-top: 2px;
+}
+
+/* ============================================================
+   角色主页视图
+   ============================================================ */
+.char-home-view {
+    position: absolute;
+    top: 56px; left: 0; right: 0; bottom: 0;
+    background: var(--bg-chat-main);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.char-home-back-btn {
+    position: absolute;
+    top: 12px;
+    left: 14px;
+    z-index: 10;
+    background: rgba(0,0,0,0.35);
+    border: none;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+}
+.char-home-back-btn:hover {
+    background: rgba(0,0,0,0.55);
+}
+body.light-theme .char-home-back-btn {
+    background: rgba(255,255,255,0.55);
+    color: var(--text-primary);
+}
+body.light-theme .char-home-back-btn:hover {
+    background: rgba(255,255,255,0.8);
+}
+
+/* ============================================================
+   推文筛选与搜索
+   ============================================================ */
+.moments-filter-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 6px;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.moments-filter-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+.moments-filter-btn.active {
+    color: var(--accent);
+}
+
+/* 筛选菜单 */
+.moments-filter-menu {
+    background: var(--bg-chat-main);
+    border-bottom: 1px solid var(--border-light);
+    padding: 8px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+.moments-filter-menu .moments-filter-btn {
+    background: var(--bg-input);
+    border: 1px solid var(--border-light);
+    border-radius: 16px;
+    padding: 4px 12px;
+    font-size: 13px;
+}
+.moments-filter-menu .moments-filter-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}
+.moments-filter-divider {
+    width: 1px;
+    height: 20px;
+    background: var(--border-light);
+    margin: 0 4px;
+}
+
+/* 搜索栏 */
+.moments-search-bar {
+    background: var(--bg-chat-main);
+    border-bottom: 1px solid var(--border-light);
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.moments-search-bar i {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+.moments-search-input {
+    flex: 1;
+    background: var(--bg-input);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 14px;
+    color: var(--text-primary);
+    outline: none;
+}
+.moments-search-input:focus {
+    border-color: var(--accent);
+}
+.moments-search-input::placeholder {
+    color: var(--text-secondary);
+}
+.moments-search-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    font-size: 14px;
+}
+.moments-search-close:hover {
+    color: var(--text-primary);
+}
+/* ===== 推文主界面标题 ===== */
+.moments-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px 0 44px;
+    height: 56px;
+    border-bottom: 1px solid var(--border-light);
+    background: var(--bg-header);
+    flex-shrink: 0;
+}
+.moments-header-btns {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.moments-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* ===== 推文详情页 ===== */
+.post-detail-view {
+    position: absolute;
+    top: 56px; left: 0; right: 0; bottom: 0;
+    background: var(--bg-chat-main);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.post-detail-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-light);
+    background: var(--bg-chat-main);
+    flex-shrink: 0;
+}
+.post-detail-back-btn {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: background 0.15s;
+    line-height: 1;
+}
+.post-detail-back-btn:hover {
+    background: var(--bg-hover);
+}
+.post-detail-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* ===== 评论弹窗发送按钮（模仿聊天发送按钮） ===== */
+.moments-comment-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: var(--bg-input-area);
+    border-top: 1px solid var(--border-light);
+    flex-shrink: 0;
+}
+.moments-comment-input {
+    flex: 1;
+    border: none;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 14px;
+    outline: none;
+    resize: none;
+    min-height: 36px;
+    max-height: 80px;
+}
+.moments-comment-send-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: opacity 0.15s;
+}
+.moments-comment-send-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* ===== 统计视图 ===== */
+.stats-view {
+    flex: 1;
+    background: var(--bg-chat-main);
+    padding: 24px 32px;
+    overflow-y: auto;
+    color: var(--text-primary);
+    display: none;
+}
+
+/* ===== 统一滚动条样式 ===== */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--border-light);
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-light) transparent;
+}
